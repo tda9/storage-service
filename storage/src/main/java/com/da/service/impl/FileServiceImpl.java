@@ -1,13 +1,16 @@
 package com.da.service.impl;
 
+import com.da.dto.request.FilterFileRequest;
 import com.da.entity.FileEntity;
 import com.da.exception.ErrorResponseException;
 import com.da.exception.FileNotFoundException;
 import com.da.repo.FileRepo;
 import com.da.repo.impl.FileRepoImpl;
+import com.da.utils.FileUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -26,8 +29,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -35,6 +41,7 @@ import java.util.UUID;
 public class FileServiceImpl {
     private final FileRepoImpl fileRepoImpl;
     private final FileRepo fileRepo;
+    private final FileUtils fileUtils;
 
     @Value("${spring.application.upload-folder}")
     private String uploadDir;
@@ -50,18 +57,21 @@ public class FileServiceImpl {
                 long fileSize = f.getSize();
                 validateFile(f);
                 String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+                fileUtils.validateFileExtension(fileExtension);
                 // Create user folder
                 Path userFolder = mainUploadDir.resolve(userId);
                 createFolderIfNotExist(userFolder);
                 // Create and save the FileEntity
+                String md5Checksum = computeMD5Checksum(f.getBytes());
                 FileEntity storedAvatar = FileEntity.builder()
                         .fileType(fileType)
                         .fileName(originalFileName)
                         .userId(UUID.fromString(userId))
                         .size(fileSize)
+                        .checkSum(md5Checksum)
                         .build();
                 FileEntity fileEntity = fileRepo.save(storedAvatar);
-                Path destinationFilePath = userFolder.resolve(fileEntity.getFile_id()+fileExtension);
+                Path destinationFilePath = userFolder.resolve(fileEntity.getFile_id() + fileExtension);
                 //update file path in database
                 fileEntity.setFilePath(destinationFilePath.toString());
                 fileRepo.save(fileEntity);
@@ -75,15 +85,50 @@ public class FileServiceImpl {
             log.error("An unexpected error occurred during file upload: {}", ex.getMessage(), ex);
         }
     }
+
+    public void deleteFileById(String userId, String fileId) {
+        // Get the path to the main upload directory
+        Path mainUploadDir = Paths.get(System.getProperty("user.dir"), uploadDir);
+        Path filePath = Paths.get(mainUploadDir.toString(), userId, fileId);
+        try {
+            // Attempt to delete the file
+            if (Files.deleteIfExists(filePath)) {
+                log.info("File deleted successfully: " + filePath);
+            } else {
+                log.info("File does not exist: " + filePath);
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to delete file: " + filePath + ". Error: " + e.getMessage());
+        }
+        fileRepo.deleteById(UUID.fromString(getFileNameWithoutExtension(fileId)));
+    }
+    private String computeMD5Checksum(byte[] fileBytes) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(fileBytes);
+            return Hex.encodeHexString(digest); // Convert byte array to hex string
+        } catch (NoSuchAlgorithmException ex) {
+            log.error("Failed to compute MD5 checksum: {}", ex.getMessage(), ex);
+            throw new RuntimeException("Error computing MD5 checksum", ex);
+        }
+    }
     public ResponseEntity<Resource> getFileById(String userId, String fileId) {
+        UUID realFileId = UUID.fromString(getFileNameWithoutExtension(fileId));
+
+        FileEntity fileEntity = fileRepo.findById(realFileId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found with ID: " + fileId));
+
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, userId, fileId);
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists() && resource.isReadable() ) {
-                if(!fileRepo.existsById(UUID.fromString(getFileNameWithoutExtension(fileId)))){
-                    throw new IllegalArgumentException("File id not found");
+            if (resource.exists() && resource.isReadable()) {
+                String currentMD5Checksum = computeMD5Checksum(resource.getContentAsByteArray());
+
+                if (!currentMD5Checksum.equals(fileEntity.getCheckSum())) {
+                    throw new RuntimeException("File checksum mismatch. File might be corrupted.");
                 }
+
                 // Determine content type dynamically
                 String contentType = Files.probeContentType(filePath);
                 if (contentType == null) {
@@ -91,11 +136,11 @@ public class FileServiceImpl {
                 }
 
                 // For non-images, force download, postman not auto download, paste link to chrome, it will auto download
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_DISPOSITION,
-                                    "attachment; filename=\"" + fileId + "\"")
-                            .contentType(MediaType.valueOf(contentType))
-                            .body(resource);
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + fileId + "\"")
+                        .contentType(MediaType.valueOf(contentType))
+                        .body(resource);
 
             } else {
                 log.warn("File not found: {}", filePath);
@@ -106,16 +151,18 @@ public class FileServiceImpl {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    public List<FileEntity> getFilesByUserId(String userId){
+
+    public List<FileEntity> getFilesByUserId(String userId) {
         return fileRepo.findByUserId(UUID.fromString(userId));
     }
-    public ResponseEntity<?> getImageByUserId(String userId, String fileId,int width, int height){
+
+    public ResponseEntity<?> getImageByUserId(String userId, String fileId, int width, int height) {
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, userId, fileId);
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists() && resource.isReadable() ) {
-                if(!fileRepo.existsById(UUID.fromString(getFileNameWithoutExtension(fileId)))){
+            if (resource.exists() && resource.isReadable()) {
+                if (!fileRepo.existsById(UUID.fromString(getFileNameWithoutExtension(fileId)))) {
                     throw new IllegalArgumentException("File id not found");
                 }
                 // Determine content type dynamically
@@ -127,7 +174,7 @@ public class FileServiceImpl {
                     // Read the original image
                     BufferedImage originalImage = ImageIO.read(resource.getFile());
                     // Resize the image
-                    if(width == 0 || height == 0){
+                    if (width == 0 || height == 0) {
                         return ResponseEntity.ok()
                                 .contentType(MediaType.valueOf(contentType))
                                 .body(resource);
@@ -186,26 +233,36 @@ public class FileServiceImpl {
         }
     }
 
-    public List<FileEntity> searchByKeyword(String keyword, String sortBy,String sort,int currentSize,int currentPage) {
-        return fileRepoImpl.searchByKeyword(keyword,sortBy,sort,currentSize, currentPage);
+    public List<FileEntity> searchByKeyword(String keyword, String sortBy, String sort, int currentSize, int currentPage) {
+        return fileRepoImpl.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
     }
+    public List<FileEntity> filterByField(FilterFileRequest filterFileRequest, String sortBy, String sort, int currentSize, int currentPage) {
+
+        return fileRepoImpl.filterFileByField(filterFileRequest, sortBy, sort, currentSize, currentPage);
+    }
+
     public List<FileEntity> searchByField(String keyword) {
         List<FileEntity> user = fileRepoImpl.searchByField(keyword);
-        if(user == null || user.isEmpty()){
+        if (user == null || user.isEmpty()) {
             throw new ErrorResponseException("No user found");
         }
         return user;
     }
 
-    public FileEntity findById(String id){
-        return fileRepo.findById(UUID.fromString(id)).orElseThrow(()->new FileNotFoundException("User not found"));
+    public FileEntity findById(String id) {
+        return fileRepo.findById(UUID.fromString(id)).orElseThrow(() -> new FileNotFoundException("User not found"));
     }
-//    public FileEntity findByEmail(String email){
+
+    //    public FileEntity findByEmail(String email){
 //        return fileRepo.findByEmail(email).orElseThrow(()->new FileNotFoundException("User not found"));
 //    }
     public Long getTotalSize(String keyword) {
         return fileRepoImpl.getTotalSize(keyword);
     }
+    public Long getTotalSizeByFilter(FilterFileRequest keyword) {
+        return fileRepoImpl.getTotalSizeForFilter(keyword);
+    }
+
     public boolean validateFile(MultipartFile file) {
         // Check empty file
         if (file.isEmpty()) {
@@ -235,12 +292,14 @@ public class FileServiceImpl {
         }
         return fileName.substring(lastDotIndex + 1).toLowerCase(); // Return extension in lowercase
     }
+
     private String getFileNameWithoutExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex == -1) {
             return ""; // No extension found
         }
-        return fileName.substring(0,lastDotIndex).toLowerCase(); // Return extension in lowercase
+        return fileName.substring(0, lastDotIndex).toLowerCase(); // Return extension in lowercase
     }
+
 
 }

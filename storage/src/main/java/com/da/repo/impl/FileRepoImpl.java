@@ -1,5 +1,6 @@
 package com.da.repo.impl;
 
+import com.da.dto.request.FilterFileRequest;
 import com.da.entity.FileEntity;
 import com.da.repo.FileRepo;
 import com.da.repo.custom.FileRepoCustom;
@@ -64,29 +65,83 @@ public class FileRepoImpl implements FileRepoCustom {
         values.forEach(query::setParameter);
         return (Long) query.getSingleResult();
     }
+    public Long getTotalSizeForFilter(FilterFileRequest filterFileRequest) {
+        Map<String, Object> values = new HashMap<>();
+        String sql = "select count(f) from FileEntity f " + createWhereFilterQuery(filterFileRequest,values);
+        Query query = entityManager.createQuery(sql, Long.class);
+        values.forEach(query::setParameter);
+        return (Long) query.getSingleResult();
+    }
 
-    public List<FileEntity> searchByField(String keyword) {
+    public List<FileEntity> searchByField(String field) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select f from FileEntity f "
-                + createWhereAbsoluteSearchQuery(keyword, values);
+                + createWhereAbsoluteSearchQuery(field, values);
         Query query = entityManager.createQuery(sql, FileEntity.class);
         values.forEach(query::setParameter);
         return query.getResultList();
     }
 
     private String createWhereAbsoluteSearchQuery(String keyword, Map<String, Object> values) {
-
         StringBuilder sql = new StringBuilder();
         sql.append(" where 0=0");
         if (!keyword.isEmpty()) {
             sql.append(
-                    " and ( f.fileName like :keyword"
-                            + " or f.fileType like :keyword"
-                            + " or f.size like :keyword"
-                            + " or f.filePath like :keyword"
-                            + " or f.version like :keyword )");
+                    " and ( f.fileName = :keyword"
+                            + " or f.fileType = :keyword"
+                            + " or f.size = :keyword"
+                            + " or f.filePath = :keyword"
+                            + " or f.version = :keyword )");
             values.put("keyword", keyword);
         }
         return sql.toString();
+    }
+
+    public List<FileEntity> filterFileByField(FilterFileRequest filterFileRequest, String sortBy, String sort, int currentSize, int currentPage) {
+        Map<String, Object> values = new HashMap<>();
+        String sql = "select f from FileEntity f "
+                + createWhereFilterQuery(filterFileRequest,values)
+                + createOrderQuery(sortBy, sort);
+        Query query = entityManager.createQuery(sql, FileEntity.class);
+        values.forEach(query::setParameter);
+        query.setFirstResult((currentPage - 1) * currentSize);
+        query.setMaxResults(currentSize);
+        return query.getResultList();
+    }
+    private String createWhereFilterQuery(FilterFileRequest filterFileRequest, Map<String, Object> values) {
+        StringBuilder jpql = new StringBuilder();
+        jpql.append(" WHERE 1=1");  // Using 1=1 to make appending conditions easier
+
+        if (filterFileRequest.fileName() != null && !filterFileRequest.fileName().isEmpty()) {
+            jpql.append(" AND f.fileName LIKE :fileName");
+            // Add wildcards for partial matches
+            values.put("fileName", "%" + filterFileRequest.fileName() + "%");
+        }
+        if (filterFileRequest.fileType() != null && !filterFileRequest.fileType().isEmpty()) {
+            jpql.append(" AND f.fileType LIKE :fileType");
+            values.put("fileType", "%" + filterFileRequest.fileType() + "%");
+        }
+        if (filterFileRequest.size() != null) {
+            jpql.append(" AND f.size = :size");
+            values.put("size", filterFileRequest.size());
+        }
+        if (filterFileRequest.filePath() != null && !filterFileRequest.filePath().isEmpty()) {
+            jpql.append(" AND f.filePath LIKE :filePath");
+            values.put("filePath", "%" + filterFileRequest.filePath() + "%");
+        }
+        if (filterFileRequest.userId() != null && !filterFileRequest.userId().isEmpty()) {
+            jpql.append(" AND f.userId = :userId");
+            values.put("userId", filterFileRequest.userId());
+        }
+        if (filterFileRequest.createdDate() != null) {
+            jpql.append(" AND f.createDate = :createdDate");
+            values.put("createdDate", filterFileRequest.createdDate());
+        }
+        if (filterFileRequest.lastModifiedDate() != null) {
+            jpql.append(" AND f.lastModifiedDate = :lastModifiedDate");
+            values.put("lastModifiedDate", filterFileRequest.lastModifiedDate());
+        }
+
+        return jpql.toString();
     }
 }

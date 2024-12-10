@@ -1,6 +1,6 @@
 package com.da.controller;
 
-import com.da.dto.request.SearchFileRequest;
+import com.da.dto.request.FilterFileRequest;
 import com.da.dto.response.BasedResponse;
 import com.da.dto.response.PageResponse;
 import com.da.entity.FileEntity;
@@ -36,6 +36,24 @@ public class FileController {
         }
         return new PageResponse<>(currentPage, ((int) (totalSize / currentSize)), currentSize, totalSize, sortBy, sort, files);
     }
+    @GetMapping("/filter")
+    public BasedResponse<?> filterFiles(
+            @ModelAttribute FilterFileRequest filterFileRequest,
+            @RequestParam(required = false, defaultValue = "1") int currentPage,
+            @RequestParam(required = false, defaultValue = "1") int currentSize,
+            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
+            @RequestParam(required = false, defaultValue = "ASC") String sort) {
+
+        List<FileEntity> files = fileServiceImpl.filterByField(filterFileRequest, sortBy, sort, currentSize, currentPage);
+        Long totalSize = fileServiceImpl.getTotalSizeByFilter(filterFileRequest);
+        if (currentSize > totalSize&& totalSize!=0) {
+            currentSize = Math.toIntExact(totalSize);
+            currentSize = ((int) (totalSize / currentSize));
+        }else{
+            currentSize = 0;
+        }
+        return new PageResponse<>(currentPage, currentSize, currentSize, totalSize, sortBy, sort, files);
+    }
 
     @GetMapping("/image-resize/{userId}/{fileId}")
     public ResponseEntity<?> getImage(
@@ -48,8 +66,9 @@ public class FileController {
     }
 
     @PostMapping("/upload/{userId}")
-    public void uploadFiles(@RequestParam("files") MultipartFile[] files, @PathVariable String userId) {
+    public BasedResponse<?> uploadFiles(@RequestParam("files") MultipartFile[] files, @PathVariable String userId) {
         fileServiceImpl.uploadFiles(files, userId);
+        return BasedResponse.success("Upload successful",null);
     }
 
     @GetMapping("/{userId}/{fileId}")
@@ -66,6 +85,14 @@ public class FileController {
         }
         return fileServiceImpl.getFileById(userId, fileId);
     }
+    @DeleteMapping("/{userId}/{fileId}")
+    public BasedResponse<?> deleteById(@PathVariable String userId, @PathVariable String fileId) {
+        if (userId == null || userId.isEmpty() || fileId == null || fileId.isEmpty()){
+            throw new IllegalArgumentException("Illegal input");
+        }
+        fileServiceImpl.deleteFileById(userId, fileId);
+        return BasedResponse.success("Delete file successful",null);
+    }
     //api public ko can dang nhap
     //con lai yeu cau dang nhap
     //xoa : check tu iam
@@ -79,5 +106,6 @@ public class FileController {
     //white list file(check content type, extension file
     //multi module
     //Beare Filter check public key, check whitelist and blacklist
+    //tao bang client id secret sau nay co the them role
     // )
 }

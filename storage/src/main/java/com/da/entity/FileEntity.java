@@ -29,5 +29,7 @@ public class FileEntity extends BaseEntity {
     @Column(name = "user_id")
     private UUID userId;
     private int version;
+    @Column(name = "check_sum")
+    private String checkSum;
     //private byte[] content;
 }

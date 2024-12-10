@@ -11,6 +11,7 @@ spring:
   application:
     upload-folder: upload
     name: iam-service2
+    valid-extensions: ".txt|.jpg|.png|.docx|.pdf|.zip"
   jpa:
     hibernate:
       ddl-auto: create-drop

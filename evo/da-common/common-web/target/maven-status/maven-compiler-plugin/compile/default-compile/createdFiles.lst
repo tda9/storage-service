@@ -1,0 +1,8 @@
+org\example\web\config\HttpSecurityConfiguration.class
+org\example\web\config\JwtProperties.class
+org\example\Main.class
+org\example\web\config\JwkAuthenticationManagerResolver.class
+org\example\web\config\ForbiddenTokenFilter.class
+org\example\web\config\CustomAuthenticationFilter.class
+META-INF\spring-configuration-metadata.json
+org\example\web\security\AuthorityService.class

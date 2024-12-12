@@ -1,0 +1,4 @@
+org\example\model\UserAuthentication.class
+org\example\Main.class
+org\example\model\UserAuthority$UserAuthorityBuilder.class
+org\example\model\UserAuthority.class

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="da-storage" />
+        <module name="common-web" />
+        <module name="da-iam" />
+        <module name="common-client" />
+        <module name="common-model" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="demo" target="21" />
+      <module name="evo-common" target="21" />
+      <module name="iam" target="21" />
+      <module name="product" target="21" />
+      <module name="storage" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="common-client" options="-parameters" />
+      <module name="common-model" options="-parameters" />
+      <module name="common-web" options="-parameters" />
+      <module name="da-common" options="" />
+      <module name="da-iam" options="-parameters" />
+      <module name="da-storage" options="-parameters" />
+      <module name="demo" options="-parameters" />
+      <module name="evo-common" options="-parameters" />
+      <module name="iam" options="-parameters" />
+      <module name="product" options="-parameters" />
+      <module name="storage" options="-parameters" />
+    </option>
+  </component>
+</project>

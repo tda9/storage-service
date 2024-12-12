@@ -1,0 +1,62 @@
+{
+  "groups": [
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt",
+      "type": "org.example.web.config.JwtProperties",
+      "sourceType": "org.example.web.config.JwtProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.audiences",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.authorities-claim-delimiter",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.authorities-claim-name",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.authority-prefix",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.issuer-uri",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.jwk-set-uris",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.jws-algorithms",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.principal-claim-name",
+      "type": "java.lang.String",
+      "sourceType": "org.example.web.config.JwtProperties"
+    },
+    {
+      "name": "spring.security.oauth2.resourceserver.jwt.public-key-location",
+      "type": "org.springframework.core.io.Resource",
+      "sourceType": "org.example.web.config.JwtProperties"
+    }
+  ],
+  "hints": []
+}

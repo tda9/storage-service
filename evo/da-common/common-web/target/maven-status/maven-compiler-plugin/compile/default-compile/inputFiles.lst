@@ -1,0 +1,7 @@
+D:\da\evo\da-common\common-web\src\main\java\org\example\Main.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\config\CustomAuthenticationFilter.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\config\ForbiddenTokenFilter.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\config\HttpSecurityConfiguration.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\config\JwkAuthenticationManagerResolver.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\config\JwtProperties.java
+D:\da\evo\da-common\common-web\src\main\java\org\example\web\security\AuthorityService.java

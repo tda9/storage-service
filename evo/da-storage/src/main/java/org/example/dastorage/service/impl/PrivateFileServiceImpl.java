@@ -86,7 +86,7 @@ public class PrivateFileServiceImpl {
             } else {
                 log.info("File does not exist in upload folder: " + filePath);
             }
-            validateFile(fileId, userId);
+            validatePrivateFile(fileId, userId);
             //fileRepo.deleteById(UUID.fromString(fileUtils.removeFileExtension(fileId)));
             UUID id = UUID.fromString(fileId);
             if (fileRepo.existsById(id)) {
@@ -99,7 +99,7 @@ public class PrivateFileServiceImpl {
         }
 
     }
-    private FileEntity validateFile(String fileId, String userId){
+    private FileEntity validatePrivateFile(String fileId, String userId){
         FileEntity fileEntity = fileRepo.findById(UUID.fromString(fileUtils.removeFileExtension(fileId)))
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         if(fileEntity.isDeleted()){
@@ -112,7 +112,7 @@ public class PrivateFileServiceImpl {
     }
 
     public ResponseEntity<Resource> downloadPublicFile(String fileId, String userId) {
-        FileEntity fileEntity = validateFile(fileId, userId);
+        FileEntity fileEntity = validatePrivateFile(fileId, userId);
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), privateDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
@@ -142,17 +142,13 @@ public class PrivateFileServiceImpl {
         }
     }
 
-    public List<FileEntity> getFilesByUserId(String userId) {
-        return fileRepo.findByUserId(UUID.fromString(userId));
-    }
-
     public ResponseEntity<?> getPrivateFileByFileId(String fileId,String userId, int width, int height) {
 
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), privateDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
             //check file existence in database first
-            FileEntity fileEntity = validateFile(fileId,userId);
+            FileEntity fileEntity = validatePrivateFile(fileId,userId);
             if (resource.exists() && resource.isReadable()) {
                 // Determine content type dynamically
                 String contentType = Files.probeContentType(filePath);

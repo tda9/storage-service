@@ -1,6 +1,7 @@
 package org.example.daiam.repo.impl;
 
 
+import org.example.daiam.dto.request.ExportUsersExcelRequest;
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.custom.UserRepoCustom;
 import jakarta.persistence.EntityManager;
@@ -88,5 +89,50 @@ public class UserRepoImpl implements UserRepoCustom {
             values.put("keyword", keyword);
         }
         return sql.toString();
+    }
+    public List<User> filterFileByField(ExportUsersExcelRequest exportUsersExcelRequest, String sortBy, String sort, int currentSize, int currentPage) {
+        Map<String, Object> values = new HashMap<>();
+        String sql = "select u from User u "
+                + createWhereFilterQuery(exportUsersExcelRequest, values)
+                + createOrderQuery(sortBy, sort);
+        Query query = entityManager.createQuery(sql, User.class);
+        values.forEach(query::setParameter);
+        query.setFirstResult((currentPage - 1) * currentSize);
+        query.setMaxResults(currentSize);
+        return query.getResultList();
+    }
+    public String createWhereFilterQuery(ExportUsersExcelRequest request, Map<String, Object> values) {
+        StringBuilder query = new StringBuilder(" WHERE 0=0 ");
+
+        if (request.email() != null && !request.email().isEmpty()) {
+            query.append(" AND u.email = :email");
+            values.put("email", request.email());
+        }
+
+        if (request.dob() != null) {
+            query.append(" AND u.dob = :dob");
+            values.put("dob", request.dob());
+        }
+
+        if (request.phone() != null && !request.phone().isEmpty()) {
+            query.append(" AND u.phone = :phone");
+            values.put("phone", request.phone());
+        }
+
+        if (request.username() != null && !request.username().isEmpty()) {
+            query.append(" AND u.username = :username");
+            values.put("username", request.username());
+        }
+
+        if (request.firstName() != null && !request.firstName().isEmpty()) {
+            query.append(" AND u.firstName = :firstName");
+            values.put("firstName", request.firstName());
+        }
+
+        if (request.lastName() != null && !request.lastName().isEmpty()) {
+            query.append(" AND u.lastName = :lastName ");
+            values.put("lastName", request.lastName());
+        }
+        return query.toString();
     }
 }

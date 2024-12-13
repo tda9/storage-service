@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -97,9 +98,7 @@ public void deletePublicFileByFileId(String fileId) {
 }
 
     public ResponseEntity<Resource> downloadPublicFile(String fileId) {
-        UUID realFileId = UUID.fromString(fileUtils.removeFileExtension(fileId));
-        FileEntity fileEntity = fileRepo.findById(realFileId)
-                .orElseThrow(() -> new IllegalArgumentException("File not found in DB with ID: " + fileId));
+        FileEntity fileEntity = validatePublicFile(fileId);
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
@@ -128,18 +127,20 @@ public void deletePublicFileByFileId(String fileId) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-    public List<FileEntity> getFilesByUserId(String userId) {
-        return fileRepo.findByUserId(UUID.fromString(userId));
+    private FileEntity validatePublicFile(String fileId){
+        FileEntity fileEntity = fileRepo.findById(UUID.fromString(fileUtils.removeFileExtension(fileId)))
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+        if(fileEntity.isDeleted()){
+            throw new IllegalArgumentException("This file was deleted");
+        }
+        return fileEntity;
     }
-
     public ResponseEntity<?> getPublicFileByFileId(String fileId, int width, int height) {
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
             //check file existence in database first
-            FileEntity fileEntity = fileRepo.findById(UUID.fromString(fileUtils.removeFileExtension(fileId)))
-                    .orElseThrow(() -> new IllegalArgumentException("File not found in DB"));
+            FileEntity fileEntity = validatePublicFile(fileId);
 
             if (resource.exists() && resource.isReadable()) {
                 // Determine content type dynamically
@@ -194,11 +195,6 @@ public void deletePublicFileByFileId(String fileId) {
                 .filter(file -> file.getFilePath().contains("public"))
                 .collect(Collectors.toList());
     }
-
-    public FileEntity findById(String id) {
-        return fileRepo.findById(UUID.fromString(id)).orElseThrow(() -> new FileNotFoundException("File not found"));
-    }
-
     public Long getTotalSize(String keyword) {
         return fileRepoImpl.getTotalSize(keyword,"public");
     }

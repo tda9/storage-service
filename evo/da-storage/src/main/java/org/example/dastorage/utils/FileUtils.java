@@ -46,7 +46,7 @@ public class FileUtils {
     public String removeFileExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex == -1) {
-            return ""; // No extension found
+            return fileName; // No extension found
         }
         return fileName.substring(0, lastDotIndex).toLowerCase(); // Return extension in lowercase
     }

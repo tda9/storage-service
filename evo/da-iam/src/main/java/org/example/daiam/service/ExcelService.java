@@ -1,6 +1,7 @@
 package org.example.daiam.service;
 
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -8,12 +9,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.daiam.dto.UserExcel;
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.UserRepo;
+import org.example.daiam.utils.InputUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -22,28 +25,31 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class ExcelService {
 private final UserRepo userRepo;
+@Transactional
     public String importExcelData(MultipartFile file) {
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            Sheet sheet = workbook.getSheetAt(0); // Get the first sheet
-            isValidHeader(sheet.getRow(0));
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) { // Skip the header row (index 0)
-                Row row = sheet.getRow(i);
-                StringBuilder errorMessage = new StringBuilder();
-                User user = validateAndSetUserFromRow(row, errorMessage);
-                if (!errorMessage.isEmpty()) {
-                    log.error("Validation failed: " + errorMessage);
-                    return errorMessage.toString();
-                } else {
-                    log.info("User validated successfully.");
-                    //userRepo.save(user);
-                }
+    StringBuilder mainErrorMessage = new StringBuilder();
+    try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+        Sheet sheet = workbook.getSheetAt(0); // Get the first sheet
+        isValidHeader(sheet.getRow(0));
+
+        for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) { // Skip the header row (index 0)
+            Row row = sheet.getRow(i);
+            StringBuilder errorMessage = new StringBuilder();
+            User user = validateAndSetUserFromRow(row, errorMessage);
+            if (!errorMessage.isEmpty()) {
+                log.error("Validation failed: " + errorMessage);
+                mainErrorMessage.append(errorMessage);
+            } else {
+                log.info("User validated successfully.");
+                userRepo.save(user);
             }
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new IllegalArgumentException("Error during read file");
         }
-        return null;
+    } catch (IOException e) {
+        log.error(e.getMessage());
+        throw new IllegalArgumentException(e.getMessage());
     }
+    return mainErrorMessage.toString();
+}
     private String getCellValue(Row row, int columnIndex) {
         Cell cell = row.getCell(columnIndex);
         if (cell == null) {
@@ -59,84 +65,97 @@ private final UserRepo userRepo;
         User.UserBuilder userBuilder = User.builder();
         final int rowIndex = row.getRowNum();
         int columnIndex = 0;
+
         for (String header : EXPECTED_HEADERS) {
+            String value = getCellValue(row, columnIndex);
+
             switch (header) {
                 case "Email":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.email(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.EMAIL_PATTERN) && !userRepo.existsByEmail(value)) {
+                        userBuilder.email(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Email; ");
                     }
                     break;
                 case "Username":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.username(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty()) {
+                        userBuilder.username(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Username; ");
                     }
                     break;
                 case "First Name":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.firstName(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty()) {
+                        userBuilder.firstName(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid First Name; ");
                     }
                     break;
                 case "Last Name":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.lastName(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty()) {
+                        userBuilder.lastName(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Last Name; ");
                     }
                     break;
                 case "Phone":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.phone(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.PHONE_NUMBER_PATTERN)) {
+                        userBuilder.phone(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Phone; ");
                     }
                     break;
                 case "DOB":
-                    if (validateField(getCellValue(row, columnIndex), LocalDate.class)) {
-                        userBuilder.dob(LocalDate.parse(getCellValue(row, columnIndex)));
+                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.DOB_PATTERN)) {
+                        try {
+                            userBuilder.dob(LocalDate.parse(value));
+                        } catch (DateTimeParseException e) {
+                            userBuilder.dob(LocalDate.MIN); // Set to a default value if invalid
+                            errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid DOB format; ");
+                        }
                     } else {
-                        userBuilder.dob(LocalDate.MIN);
+                        userBuilder.dob(LocalDate.MIN); // Set to a default value if empty
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid DOB; ");
                     }
                     break;
                 case "Street":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.street(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty() ) {
+                        userBuilder.street(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Street; ");
                     }
                     break;
                 case "Ward":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.ward(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty() ) {
+                        userBuilder.ward(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Ward; ");
                     }
                     break;
                 case "Province":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.province(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty()) {
+                        userBuilder.province(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Province; ");
                     }
                     break;
                 case "District":
-                    if (validateField(getCellValue(row, columnIndex), String.class)) {
-                        userBuilder.district(getCellValue(row, columnIndex));
+                    if (value != null && !value.trim().isEmpty()) {
+                        userBuilder.district(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid District; ");
                     }
                     break;
                 case "Experience":
-                    if (validateField(getCellValue(row, columnIndex), Integer.class)) {
-                        userBuilder.experience(Integer.parseInt(getCellValue(row, columnIndex)));
+                    if (value != null && !value.trim().isEmpty()) {
+                        try {
+                            userBuilder.experience(Integer.parseInt(value));
+                        } catch (NumberFormatException e) {
+                            userBuilder.experience(0); // Set to default value if invalid
+                            errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Experience; ");
+                        }
                     } else {
-                        userBuilder.experience(0);
+                        userBuilder.experience(0); // Set to default value if empty
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Experience; ");
                     }
                     break;
@@ -256,7 +275,6 @@ private final UserRepo userRepo;
         CellStyle defaultCellStyle = sheet.getWorkbook().createCellStyle();
         defaultCellStyle.setFont(timesNewRomanFont);
         // Iterate over the list of users and create data rows
-        //TODO: check case an user field in database is null
         int index = 0;
         int rowNum = 1;
         for (User user : users) {

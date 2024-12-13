@@ -14,6 +14,7 @@ import org.example.daiam.entity.Role;
 
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.RoleRepo;
+import org.example.daiam.repo.impl.UserRepoImpl;
 import org.example.daiam.service.ExcelService;
 import org.example.daiam.service.impl.AuthorityServiceImpl;
 import org.example.daiam.service.impl.UserService;
@@ -43,6 +44,7 @@ public class UserManagementController {
     private final RoleRepo userRoleRepo;
     private final ExcelService excelService;
     private final AuthorityServiceImpl authorityServiceImpl;
+    private final UserRepoImpl userRepoImpl;
 
     @PreAuthorize("hasPermission('USERS','CREATE')")
     @PostMapping("/create")
@@ -90,11 +92,17 @@ public class UserManagementController {
         return BasedResponse.success("User found", user);
     }
 
-    @PostMapping("/export")
-    public ResponseEntity<byte[]> exportUsers(@RequestBody ExportUsersExcelRequest request) {
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportUsers(
+            @ModelAttribute ExportUsersExcelRequest request,
+            @RequestParam(required = false, defaultValue = "1") int currentPage,
+            @RequestParam(required = false, defaultValue = "1") int currentSize,
+            @RequestParam(required = false, defaultValue = "email") String sortBy,
+            @RequestParam(required = false, defaultValue = "ASC") String sort) {
         try {
+            List<User> users = userRepoImpl.filterFileByField(request,sortBy,sort,currentSize,currentPage);
             // Generate Excel file as byte array
-            byte[] excelFile = excelService.writeUsersToExcel(request.users());
+            byte[] excelFile = excelService.writeUsersToExcel(users);
 
             // Set HTTP headers for file download
             HttpHeaders headers = new HttpHeaders();
@@ -110,38 +118,8 @@ public class UserManagementController {
 
     @PostMapping("/import")
     public ResponseEntity<?> importUsers(@RequestParam("file") MultipartFile file) {
-        excelService.importExcelData(file);
-        return ResponseEntity.ok(excelService.importExcelData(file));
-    }
-    @GetMapping("/export-test")
-    public ResponseEntity<byte[]> exportTestUsers() {
-        try {
-            // Hardcoded user data for testing
-            List<User> testUsers = List.of(
-                    new User(
-                            "123 Elm St", "Ward 1", "Ontario", "Toronto", 5,
-                            "john_doe", "john.doe@example.com", "John", "Doe", "123456789",
-                            LocalDate.of(1990, 1, 1)
-                    ),
-                    new User(
-                            "456 Oak St", "Ward 2", "Ontario", "Ottawa", 10,
-                            "jane_smith", "jane.smith@example.com", "Jane", "Smith", "987654321",
-                            LocalDate.of(1985, 5, 15)
-                    )
-            );
-            // Generate Excel file as byte array
-            byte[] excelFile = excelService.writeUsersToExcel(testUsers);
-
-            // Set HTTP headers for file download
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Disposition", "attachment; filename=users-test.xlsx");
-            headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-            return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        String msg = excelService.importExcelData(file);
+        return ResponseEntity.ok(msg);
     }
 //    @GetMapping("/api/users/{userId}/authorities")
 //    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {

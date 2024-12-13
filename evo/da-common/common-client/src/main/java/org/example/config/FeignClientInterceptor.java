@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -22,6 +23,18 @@ public class FeignClientInterceptor implements RequestInterceptor {
         String token = getClientToken();
         if (token != null && !token.isEmpty()) {
             requestTemplate.header("Authorization", "Bearer " + token);
+//            String url = requestTemplate.url();
+//            if ("da-iam".equals(client_id) && url != null && url.contains("/upload")) {
+//                // Set the Content-Type to multipart/form-data
+//                requestTemplate.header("Content-Type", "multipart/form-data");
+//
+//                // Optionally add an Authorization header
+//                if (StringUtils.hasText(token)) {
+//                    requestTemplate.header("Authorization", "Bearer " + token);
+//                } else {
+//                    System.out.println("Token is null or empty. Authorization header will not be applied.");
+//                }
+//            }
         }
     }
 

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class AuthenticationController {
     private final PasswordService passwordService;
-    private final AuthorityServiceImpl authorityService;
+    private final AuthorityServiceImpl authorityServiceImpl;
     private final AuthenticationServiceFactory authenticationServiceFactory;
 
     @GetMapping("/confirmation-registration")
@@ -128,7 +128,7 @@ public class AuthenticationController {
 
     @GetMapping("/api/users/{username}/authorities-by-username")
     BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
-        return BasedResponse.success("Get authorities successful for " + username, authorityService.getUserAuthority(username));
+        return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
     }
 
 }

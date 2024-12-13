@@ -2,12 +2,16 @@ package org.example.daiam.controller;
 
 import org.example.daiam.controller.factory.AuthenticationServiceFactory;
 import org.example.daiam.dto.request.*;
-import org.example.daiam.dto.response.BasedResponse;
+
+import org.example.daiam.dto.response.DefaultClientTokenResponse;
 import org.example.daiam.exception.ErrorResponseException;
 import org.example.daiam.service.PasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.daiam.service.impl.AuthorityServiceImpl;
 import org.example.daiam.utils.RSAKeyUtil;
+import org.example.model.UserAuthority;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +20,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class AuthenticationController {
     private final PasswordService passwordService;
+    private final AuthorityServiceImpl authorityService;
     private final AuthenticationServiceFactory authenticationServiceFactory;
 
     @GetMapping("/confirmation-registration")
-    public BasedResponse<?> confirmRegister(@RequestParam String email, @RequestParam String token){
+    public BasedResponse<?> confirmRegister(@RequestParam String email, @RequestParam String token) {
         try {
             passwordService.confirmRegisterEmail(email, token);
-            return BasedResponse.success("Confirm successful",email);
+            return BasedResponse.success("Confirm successful", email);
         } catch (Exception e) {
             throw new ErrorResponseException(e.getMessage());
         }
@@ -31,7 +36,7 @@ public class AuthenticationController {
     @PostMapping("/register")
     public BasedResponse<?> register(@RequestBody @Valid RegisterRequest request) {
         return BasedResponse.success("Register successful",
-                        authenticationServiceFactory.getService().register(request));
+                authenticationServiceFactory.getService().register(request));
     }
 
     @PostMapping("/login")
@@ -39,6 +44,7 @@ public class AuthenticationController {
         return BasedResponse.success("Login successful",
                 authenticationServiceFactory.getService().login(request));
     }
+
     @PostMapping("/api/logout")
     public String logout(@RequestBody LogoutRequest request) {
         authenticationServiceFactory.getService().logout(request);
@@ -50,6 +56,7 @@ public class AuthenticationController {
         return BasedResponse.success("Refresh token successful",
                 authenticationServiceFactory.getService().refreshToken(request.refreshToken()));
     }
+
     @PostMapping("/change-password")
     public BasedResponse<?> changePassword(
             @RequestBody ChangePasswordRequest request) {
@@ -79,7 +86,7 @@ public class AuthenticationController {
     @GetMapping("/reset-password")
     public BasedResponse<?> resetPassword(@RequestParam String email, @RequestParam String newPassword, @RequestParam String token) {
         authenticationServiceFactory.getService().resetPassword(email, newPassword, token);
-        return BasedResponse.success("Reset password successful",email);
+        return BasedResponse.success("Reset password successful", email);
     }
 
     @PreAuthorize("hasPermission('HOMEPAGE','VIEW')")
@@ -93,6 +100,7 @@ public class AuthenticationController {
     public String test1() {
         return "Hello DASHBOARD ";
     }
+
     @GetMapping("/custom-login")
     public BasedResponse<?> redirectToKeycloakLogin() {
         return BasedResponse.builder()
@@ -104,8 +112,23 @@ public class AuthenticationController {
     }
 
     private final RSAKeyUtil rsaKeyUtil;
+
     @GetMapping("/iam/certificate/.well-known/public.pem")
-    public ResponseEntity<?> getPublicKeyIam() throws Exception {
+    public ResponseEntity<?> getPublicKeyIam() {
         return ResponseEntity.ok(rsaKeyUtil.jwkSet().toJSONObject());
     }
+
+    @GetMapping("/iam/client-token/{clientId}/{clientSecret}")
+    public ResponseEntity<?> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret) throws Exception {
+        return ResponseEntity.ok(authenticationServiceFactory.getService().getClientToken(DefaultClientTokenResponse.builder()
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .build()));
+    }
+
+    @GetMapping("/api/users/{username}/authorities-by-username")
+    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
+        return BasedResponse.success("Get authorities successful for " + username, authorityService.getUserAuthority(username));
+    }
+
 }

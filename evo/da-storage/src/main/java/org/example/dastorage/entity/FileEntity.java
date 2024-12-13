@@ -17,7 +17,7 @@ public class FileEntity extends BaseEntity {
     @Id
     @Column(name = "file_id")
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID file_id;
+    private UUID fileId;
     @Builder.Default
     private boolean deleted =false;
     @Column(name = "file_type")
@@ -27,10 +27,11 @@ public class FileEntity extends BaseEntity {
     private String fileName;
     @Column(name = "file_path")
     private String filePath;
-    @Column(name = "user_id")
-    private UUID userId;
     private int version;
     @Column(name = "check_sum")
     private String checkSum;
-    //private byte[] content;
+    @Column(name = "is_public")
+    private Boolean isPublic;
+    @Column(name = "user_id")
+    private UUID userId;
 }

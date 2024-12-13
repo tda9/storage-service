@@ -4,10 +4,11 @@ package org.example.daiam.controller;
 import org.example.daiam.dto.request.CreatePermissionRequest;
 import org.example.daiam.dto.request.DeletePermissionRequest;
 import org.example.daiam.dto.request.UpdatePermissionRequest;
-import org.example.daiam.dto.response.BasedResponse;
+
 import org.example.daiam.service.PermissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 

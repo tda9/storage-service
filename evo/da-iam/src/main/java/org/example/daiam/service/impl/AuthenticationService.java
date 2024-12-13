@@ -4,26 +4,16 @@ import org.example.daiam.dto.request.LoginRequest;
 import org.example.daiam.dto.request.LogoutRequest;
 import org.example.daiam.dto.request.RegisterRequest;
 import org.example.daiam.dto.response.BaseTokenResponse;
-import org.example.daiam.dto.response.BasedResponse;
+import org.example.daiam.dto.response.DefaultClientTokenResponse;
 import org.example.daiam.dto.response.DefaultTokenResponse;
+import org.example.daiam.entity.ServiceClient;
 import org.example.daiam.entity.User;
 import org.example.daiam.exception.ErrorResponseException;
 import org.example.daiam.exception.UserNotFoundException;
-
-
-
-
 import lombok.extern.slf4j.Slf4j;
-import org.example.daiam.repo.BlackListTokenRepo;
-import org.example.daiam.repo.RoleRepo;
-import org.example.daiam.repo.UserRepo;
-import org.example.daiam.repo.UserRoleRepo;
+import org.example.daiam.repo.*;
 import org.example.daiam.service.*;
-import org.example.model.UserAuthority;
-import org.example.web.security.AuthorityService;
-import org.springframework.security.authentication.AuthenticationManager;
-
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +27,9 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final UserRoleRepo userRoleRepo;
-    private final AuthenticationManager authenticationManager;
+
     private final PasswordService passwordService;
+    private final ServiceClientRepo serviceClientRepo;
 
     public AuthenticationService(UserRepo userRepo,
                                  RoleRepo roleRepo,
@@ -47,14 +38,15 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
                                  UserRoleRepo userRoleRepo,
                                  JWTService jwtService,
                                  BlackListTokenRepo blackListTokenRepo,
-                                 AuthenticationManager authenticationManager, PasswordService passwordService) {
+                                  PasswordService passwordService, ServiceClientRepo serviceClientRepo) {
         super(userRepo, roleRepo,blackListTokenRepo,jwtService);
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.userRoleRepo = userRoleRepo;
-        this.authenticationManager = authenticationManager;
         this.passwordService = passwordService;
+        this.serviceClientRepo = serviceClientRepo;
     }
+
 
     @Override
     @Transactional
@@ -94,7 +86,7 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
         String password = request.password();
         User userEntity = userRepo.findByEmail(request.email())
                 .orElseThrow(() -> new UserNotFoundException("User not found during login"));
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        //authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         return generateDefaultToken(email, userEntity.getUserId());
     }
 
@@ -141,6 +133,14 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
     @Override
     public void changePassword(String currentPassword, String newPassword, String confirmPassword, String email) {
         passwordService.changePassword(currentPassword, newPassword, confirmPassword, email);
+    }
+
+    @Override
+    @Transactional
+    public String getClientToken(DefaultClientTokenResponse request) {
+        ServiceClient serviceClient= serviceClientRepo.findByClientIdAndClientSecret(request.getClientId(), request.getClientSecret())
+                .orElseThrow(()-> new IllegalArgumentException("Client not found"));
+        return jwtService.generateClientToken(serviceClient.getClientId(), serviceClient.getClientHost());
     }
 
 

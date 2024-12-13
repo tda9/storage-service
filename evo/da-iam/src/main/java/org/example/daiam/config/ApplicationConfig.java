@@ -33,17 +33,17 @@ public class ApplicationConfig {
     @Value("${application.security.keycloak.password}")
     private String password;
 
-    @Bean
-    public JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter() {
-        return new JwtGrantedAuthoritiesConverter();
-    }
+//    @Bean
+//    public JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter() {
+//        return new JwtGrantedAuthoritiesConverter();
+//    }
 
     //chu y cai nay, can co cai nay cho secureconfig, neu ko co se ko decode duoc jwt cua keyckoak
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        // Replace the URI with the issuer URI of your Keycloak or other OIDC provider
-        return JwtDecoders.fromIssuerLocation(serverUrl + "/realms/" + realm);
-    }
+//    @Bean
+//    public JwtDecoder jwtDecoder() {
+//        // Replace the URI with the issuer URI of your Keycloak or other OIDC provider
+//        return JwtDecoders.fromIssuerLocation(serverUrl + "/realms/" + realm);
+//    }
 
     @Bean
     public ClassLoaderTemplateResolver templateResolver() {
@@ -76,17 +76,17 @@ public class ApplicationConfig {
                 .build();
     }
 
-    @Bean
-    public PermissionEvaluator permissionEvaluator() {
-        return new CustomPermissionEvaluator();
-    }
+//    @Bean
+//    public PermissionEvaluator permissionEvaluator() {
+//        return new CustomPermissionEvaluator();
+//    }
 
-    @Bean
-    public MethodSecurityExpressionHandler expressionHandler(PermissionEvaluator permissionEvaluator) {
-        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-        expressionHandler.setPermissionEvaluator(permissionEvaluator);
-        return expressionHandler;
-    }
+//    @Bean
+//    public MethodSecurityExpressionHandler expressionHandler(PermissionEvaluator permissionEvaluator) {
+//        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+//        expressionHandler.setPermissionEvaluator(permissionEvaluator);
+//        return expressionHandler;
+//    }
 
 
     @Bean

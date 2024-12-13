@@ -4,6 +4,7 @@ import org.example.daiam.dto.request.LoginRequest;
 import org.example.daiam.dto.request.LogoutRequest;
 import org.example.daiam.dto.request.RegisterRequest;
 import org.example.daiam.dto.response.BaseTokenResponse;
+import org.example.daiam.dto.response.DefaultClientTokenResponse;
 import org.example.daiam.entity.User;
 
 
@@ -19,4 +20,6 @@ public interface  BaseAuthenticationService {
     void resetPassword(String email, String newPassword, String token);
 
     void changePassword(String currentPassword, String newPassword, String confirmPassword, String email);
+
+    String getClientToken(DefaultClientTokenResponse request);
 }

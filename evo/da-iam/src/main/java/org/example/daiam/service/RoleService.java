@@ -3,7 +3,7 @@ package org.example.daiam.service;
 import org.example.daiam.dto.request.CreateRoleRequest;
 import org.example.daiam.dto.request.DeleteRoleRequest;
 import org.example.daiam.dto.request.UpdateRoleRequest;
-import org.example.daiam.dto.response.BasedResponse;
+
 import org.example.daiam.entity.Permission;
 import org.example.daiam.entity.Role;
 import org.example.daiam.entity.RolePermissions;
@@ -12,6 +12,7 @@ import org.example.daiam.repo.RolePermissionRepo;
 import org.example.daiam.repo.RoleRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;

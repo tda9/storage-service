@@ -20,7 +20,6 @@ public class AuthenticationServiceFactory {
         return switch (authProvider) {
             case "DEFAULT" -> authenticationService;
             case "KEYCLOAK" -> keycloakAuthenticationService;
-
             default -> throw new IllegalArgumentException("Invalid service type: " + authProvider);
         };
     }

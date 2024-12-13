@@ -1,32 +1,39 @@
 package org.example.daiam.controller;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.controller.factory.UserServiceFactory;
 import org.example.daiam.dto.request.CreateUserRequest;
+import org.example.daiam.dto.request.ExportUsersExcelRequest;
 import org.example.daiam.dto.request.UpdateUserRequest;
-import org.example.daiam.dto.response.BasedResponse;
-import org.example.daiam.dto.response.PageResponse;
+
+
 import org.example.daiam.dto.response.UserDtoResponse;
 import org.example.daiam.entity.Role;
 
 
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.RoleRepo;
+import org.example.daiam.service.ExcelService;
 import org.example.daiam.service.impl.AuthorityServiceImpl;
 import org.example.daiam.service.impl.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import org.example.model.UserAuthority;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.PageResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -34,6 +41,7 @@ public class UserManagementController {
     private final UserServiceFactory userServiceFactory;
     private final UserService userService;
     private final RoleRepo userRoleRepo;
+    private final ExcelService excelService;
     private final AuthorityServiceImpl authorityServiceImpl;
 
     @PreAuthorize("hasPermission('USERS','CREATE')")
@@ -47,6 +55,7 @@ public class UserManagementController {
     public BasedResponse<?> updateById(@RequestBody @Valid UpdateUserRequest request) {
         return BasedResponse.success("Update successful", userServiceFactory.getUserService().updateById(request));
     }
+
     @PreAuthorize("hasPermission('USERS','READ')")
     @GetMapping("/search")
     public BasedResponse<?> searchByKeyword(
@@ -58,10 +67,10 @@ public class UserManagementController {
     ) {
         List<User> users = userService.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
         Long totalSize = userService.getTotalSize(keyword);
-        if(currentSize>totalSize){
-         currentSize = Math.toIntExact(totalSize);
+        if (currentSize > totalSize) {
+            currentSize = Math.toIntExact(totalSize);
         }
-        return new PageResponse<>(currentPage, ((int) (totalSize / currentSize) ), currentSize, totalSize, sortBy, sort, users);
+        return new PageResponse<>(currentPage, ((int) (totalSize / currentSize)), currentSize, totalSize, sortBy, sort, users);
     }
 
     @GetMapping("/{id}")
@@ -81,13 +90,66 @@ public class UserManagementController {
         return BasedResponse.success("User found", user);
     }
 
-    @GetMapping("/api/users/{userId}/authorities")
-    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {
-        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(userId));
+    @PostMapping("/export")
+    public ResponseEntity<byte[]> exportUsers(@RequestBody ExportUsersExcelRequest request) {
+        try {
+            // Generate Excel file as byte array
+            byte[] excelFile = excelService.writeUsersToExcel(request.users());
+
+            // Set HTTP headers for file download
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=users.xlsx");
+            headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/api/users/{username}/authorities-by-username")
-    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable String username) {
-        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(username));
+    @PostMapping("/import")
+    public ResponseEntity<?> importUsers(@RequestParam("file") MultipartFile file) {
+        excelService.importExcelData(file);
+        return ResponseEntity.ok(excelService.importExcelData(file));
     }
+    @GetMapping("/export-test")
+    public ResponseEntity<byte[]> exportTestUsers() {
+        try {
+            // Hardcoded user data for testing
+            List<User> testUsers = List.of(
+                    new User(
+                            "123 Elm St", "Ward 1", "Ontario", "Toronto", 5,
+                            "john_doe", "john.doe@example.com", "John", "Doe", "123456789",
+                            LocalDate.of(1990, 1, 1)
+                    ),
+                    new User(
+                            "456 Oak St", "Ward 2", "Ontario", "Ottawa", 10,
+                            "jane_smith", "jane.smith@example.com", "Jane", "Smith", "987654321",
+                            LocalDate.of(1985, 5, 15)
+                    )
+            );
+            // Generate Excel file as byte array
+            byte[] excelFile = excelService.writeUsersToExcel(testUsers);
+
+            // Set HTTP headers for file download
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=users-test.xlsx");
+            headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+//    @GetMapping("/api/users/{userId}/authorities")
+//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {
+//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(userId));
+//    }
+//
+//    @GetMapping("/api/users/{username}/authorities-by-username")
+//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable String username) {
+//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(username));
+//    }
 }

@@ -83,8 +83,16 @@ CREATE TABLE black_list_token
 --Để lấy access token mới với refresh token thì trong request để lấy access token, các bạn chỉ cần truyền grant_type=refresh_token, giá trị của refresh token mà chúng ta có trong request lấy access token trước, client ID và client secret.
 -- -- Insert default roles
 -- Insert permissions with UUIDs
+INSERT INTO public.service_client(client_host, client_id, client_secret)
+VALUES ('da-storage', 'da-storage', '123');
+VALUES ('da-iam', 'da-iam', '123');
 INSERT INTO public.permissions (permission_id, deleted, resource_code, resource_name, scope)
 VALUES
+    (gen_random_uuid(), false, 'FILES', 'TAT_CA_QUYEN_DOC_FILES', 'READ'),
+    (gen_random_uuid(), false, 'FILES', 'TAT_CA_QUYEN_SUA_FILES', 'UPDATE'),
+    (gen_random_uuid(), false, 'FILES', 'TAT_CA_QUYEN_XOA_FILES', 'DELETE'),
+    (gen_random_uuid(), false, 'FILES', 'TAT_CA_QUYEN_TAO_FILES', 'CREATE'),
+
     (gen_random_uuid(), false, 'PERMISSIONS', 'TAT_CA_QUYEN_DOC_PERMISSION', 'READ'),
     (gen_random_uuid(), false, 'PERMISSIONS', 'TAT_CA_QUYEN_SUA_PERMISSION', 'UPDATE'),
     (gen_random_uuid(), false, 'PERMISSIONS', 'TAT_CA_QUYEN_XOA_PERMISSION', 'DELETE'),
@@ -107,18 +115,18 @@ VALUES (gen_random_uuid(), false, 'ADMIN');
 -- Use variables to reference UUIDs for role and permissions
 DO $$
     DECLARE
-        admin_role_id UUID;
+admin_role_id UUID;
         permission_record RECORD;
-    BEGIN
+BEGIN
         -- Retrieve the UUID of the ADMIN role
-        SELECT role_id INTO admin_role_id FROM public.roles WHERE name = 'ADMIN';
+SELECT role_id INTO admin_role_id FROM public.roles WHERE name = 'ADMIN';
 
-        -- Loop through all permissions to assign them to the ADMIN role
-        FOR permission_record IN
-            SELECT permission_id, resource_code, scope FROM public.permissions
-            LOOP
-                INSERT INTO public.role_permissions (permission_id, role_id, resource_code, scope)
-                VALUES (permission_record.permission_id, admin_role_id, permission_record.resource_code, permission_record.scope);
-            END LOOP;
-    END $$;
+-- Loop through all permissions to assign them to the ADMIN role
+FOR permission_record IN
+SELECT permission_id, resource_code, scope FROM public.permissions
+                                                    LOOP
+    INSERT INTO public.role_permissions (permission_id, role_id, resource_code, scope)
+VALUES (permission_record.permission_id, admin_role_id, permission_record.resource_code, permission_record.scope);
+END LOOP;
+END $$;
 

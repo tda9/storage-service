@@ -4,6 +4,7 @@ package org.example.web.security.impl;
 import org.example.client.iam.IamClient;
 import org.example.model.UserAuthority;
 import org.example.web.security.AuthorityService;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -18,12 +19,12 @@ public class RemoteAuthorityServiceImpl implements AuthorityService {
 
     @Override
     public UserAuthority getUserAuthority(UUID userId) {
-        return iamClient.getUserAuthority(userId).getBody();
+        return iamClient.getUserAuthority(userId).getData();
     }
 
     @Override
     public UserAuthority getUserAuthority(String username) {
-        return iamClient.getUserAuthority(username).getBody();
+        return iamClient.getUserAuthority(username).getData();
     }
 
     @Override

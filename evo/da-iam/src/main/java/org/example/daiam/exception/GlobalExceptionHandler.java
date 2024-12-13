@@ -1,12 +1,13 @@
 package org.example.daiam.exception;
 
 
-import org.example.daiam.dto.response.BasedResponse;
+
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.UnexpectedTypeException;
 import lombok.extern.slf4j.Slf4j;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,6 +26,7 @@ public class GlobalExceptionHandler {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
     }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<BasedResponse<?>> handleUserNotFoundException(UserNotFoundException ex) {
         log.error(ex.getMessage());

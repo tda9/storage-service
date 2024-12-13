@@ -4,7 +4,8 @@ import org.example.daiam.dto.request.LoginRequest;
 import org.example.daiam.dto.request.LogoutRequest;
 import org.example.daiam.dto.request.RegisterRequest;
 import org.example.daiam.dto.response.BaseTokenResponse;
-import org.example.daiam.dto.response.BasedResponse;
+
+import org.example.daiam.dto.response.DefaultClientTokenResponse;
 import org.example.daiam.dto.response.KeycloakTokenResponse;
 
 
@@ -19,6 +20,7 @@ import org.example.daiam.service.BaseAuthenticationService;
 import org.example.daiam.service.BaseKeycloakService;
 import org.example.daiam.service.JWTService;
 import org.example.daiam.service.PasswordService;
+import org.example.model.dto.response.BasedResponse;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -109,6 +111,11 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
         } catch (Exception ex) {
             throw new ErrorResponseException("Failed change keycloak password: " + ex.getMessage());
         }
+    }
+
+    @Override
+    public String getClientToken(DefaultClientTokenResponse request) {
+        return null;
     }
 
 

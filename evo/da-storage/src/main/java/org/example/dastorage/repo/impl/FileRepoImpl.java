@@ -21,7 +21,7 @@ public class FileRepoImpl implements FileRepoCustom {
     @PersistenceContext
     private final EntityManager entityManager;
 
-    private String createWhereQuery(String keyword, Map<String, Object> values) {
+    private String createWhereQuery(String keyword, Map<String, Object> values, String fileFolder) {
         StringBuilder sql = new StringBuilder();
         sql.append("where 1=1 ");
         if (!keyword.isEmpty()) {
@@ -30,19 +30,21 @@ public class FileRepoImpl implements FileRepoCustom {
                     + "("
                     + "(lower(f.fileName) like :keyword and 2=2)"
                     + " or (lower(f.fileType) like :keyword and 2=2)"
-                    + " or (lower(f.filePath) like :keyword and 2=2)" +
-                    ") "
+                    + " or (lower(f.filePath) like :keyword and 2=2)"
+                    + ")"
+                    + " and filePath like :fileFolder "
             );
             values.put("keyword", formattedKeyword);
+            values.put("fileFolder","%"+fileFolder+"%");
         }
         return sql.toString();
     }
 
     @Override
-    public List<FileEntity> searchByKeyword(String keyword, String sortBy, String sort, int currentSize, int currentPage) {
+    public List<FileEntity> searchByKeyword(String keyword, String sortBy, String sort, int currentSize, int currentPage, String fileFolder) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select f from FileEntity f "
-                + createWhereQuery(keyword, values)
+                + createWhereQuery(keyword, values, fileFolder)
                 + createOrderQuery(sortBy, sort);
         Query query = entityManager.createQuery(sql, FileEntity.class);
         values.forEach(query::setParameter);
@@ -57,49 +59,41 @@ public class FileRepoImpl implements FileRepoCustom {
         return hql;
     }
 
-    public Long getTotalSize(String keyword) {
+    public Long getTotalSize(String keyword, String fileFolder) {
         Map<String, Object> values = new HashMap<>();
-        String sql = "select count(f) from FileEntity f " + createWhereQuery(keyword, values);
-        Query query = entityManager.createQuery(sql, Long.class);
-        values.forEach(query::setParameter);
-        return (Long) query.getSingleResult();
-    }
-    public Long getTotalSizeForFilter(FilterFileRequest filterFileRequest) {
-        Map<String, Object> values = new HashMap<>();
-        String sql = "select count(f) from FileEntity f " + createWhereFilterQuery(filterFileRequest,values);
+        String sql = "select count(f) from FileEntity f " + createWhereQuery(keyword, values, fileFolder);
         Query query = entityManager.createQuery(sql, Long.class);
         values.forEach(query::setParameter);
         return (Long) query.getSingleResult();
     }
 
-    public List<FileEntity> searchByField(String field) {
+    public Long getTotalSizeForFilter(FilterFileRequest filterFileRequest, String fileFolder) {
         Map<String, Object> values = new HashMap<>();
-        String sql = "select f from FileEntity f "
-                + createWhereAbsoluteSearchQuery(field, values);
-        Query query = entityManager.createQuery(sql, FileEntity.class);
+        String sql = "select count(f) from FileEntity f " + createWhereFilterQuery(filterFileRequest, values, fileFolder);
+        Query query = entityManager.createQuery(sql, Long.class);
         values.forEach(query::setParameter);
-        return query.getResultList();
+        return (Long) query.getSingleResult();
     }
+//
+//    private String createWhereAbsoluteSearchQuery(String keyword, Map<String, Object> values) {
+//        StringBuilder sql = new StringBuilder();
+//        sql.append(" where 0=0");
+//        if (!keyword.isEmpty()) {
+//            sql.append(
+//                    " and ( f.fileName = :keyword"
+//                            + " or f.fileType = :keyword"
+//                            + " or f.size = :keyword"
+//                            + " or f.filePath = :keyword"
+//                            + " or f.version = :keyword )");
+//            values.put("keyword", keyword);
+//        }
+//        return sql.toString();
+//    }
 
-    private String createWhereAbsoluteSearchQuery(String keyword, Map<String, Object> values) {
-        StringBuilder sql = new StringBuilder();
-        sql.append(" where 0=0");
-        if (!keyword.isEmpty()) {
-            sql.append(
-                    " and ( f.fileName = :keyword"
-                            + " or f.fileType = :keyword"
-                            + " or f.size = :keyword"
-                            + " or f.filePath = :keyword"
-                            + " or f.version = :keyword )");
-            values.put("keyword", keyword);
-        }
-        return sql.toString();
-    }
-
-    public List<FileEntity> filterFileByField(FilterFileRequest filterFileRequest, String sortBy, String sort, int currentSize, int currentPage) {
+    public List<FileEntity> filterFileByField(FilterFileRequest filterFileRequest, String sortBy, String sort, int currentSize, int currentPage, String fileFoldler) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select f from FileEntity f "
-                + createWhereFilterQuery(filterFileRequest,values)
+                + createWhereFilterQuery(filterFileRequest, values, fileFoldler)
                 + createOrderQuery(sortBy, sort);
         Query query = entityManager.createQuery(sql, FileEntity.class);
         values.forEach(query::setParameter);
@@ -107,7 +101,8 @@ public class FileRepoImpl implements FileRepoCustom {
         query.setMaxResults(currentSize);
         return query.getResultList();
     }
-    private String createWhereFilterQuery(FilterFileRequest filterFileRequest, Map<String, Object> values) {
+
+    private String createWhereFilterQuery(FilterFileRequest filterFileRequest, Map<String, Object> values, String fileFolder) {
         StringBuilder jpql = new StringBuilder();
         jpql.append(" WHERE 1=1");  // Using 1=1 to make appending conditions easier
 
@@ -140,7 +135,8 @@ public class FileRepoImpl implements FileRepoCustom {
             jpql.append(" AND f.lastModifiedDate = :lastModifiedDate");
             values.put("lastModifiedDate", filterFileRequest.lastModifiedDate());
         }
-
+        jpql.append(" AND f.filePath like :fileFolder");
+        values.put("fileFolder","%"+fileFolder+"%");
         return jpql.toString();
     }
 }

@@ -10,4 +10,5 @@ import java.util.UUID;
 
 public interface FileRepo extends JpaRepository<FileEntity, UUID>, FileRepoCustom {
     List<FileEntity> findByUserId(UUID id);
+
 }

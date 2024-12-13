@@ -3,17 +3,49 @@ package org.example.config;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Component
 public class FeignClientInterceptor implements RequestInterceptor {
+
+    @Value("${spring.application.client-id}")
+    private String client_id;
+    @Value("${spring.application.client-secret}")
+    private String client_secret;
+
     @Override
     public void apply(RequestTemplate requestTemplate) {
-        // @TODO header bearer token
-        // Set headers
-        requestTemplate.header("Authorization", "Bearer " + "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUV2Fma1RIRnI4ZjV0T2pNcERBeFV2RGp2aGhWWUhPVWREV1Vnc1JHYkxBIn0.eyJleHAiOjE3MzM5MTA3OTAsImlhdCI6MTczMzkxMDczMCwianRpIjoiNWU1ZDhiZDQtZTU4MS00MjdjLWFjYWQtZGUzYTA3OWJkM2E4IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL3JlYWxtcy9tYXN0ZXIiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYWZjMmEyODAtMmFiNC00N2ZjLTlhMWEtMzJjZGY3MjYwMDk4IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiaWFtLXNlcnZpY2UtY2xpZW50LW1hc3RlciIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cDovL2xvY2FsaG9zdDo4MDgyIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLW1hc3RlciIsIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJjbGllbnRIb3N0IjoiMTcyLjE4LjAuMSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWlhbS1zZXJ2aWNlLWNsaWVudC1tYXN0ZXIiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImlhbS1zZXJ2aWNlLWNsaWVudC1tYXN0ZXIifQ.b_4EyBve0J1GC_4WZu-j-SPN7bg2u-45yehR0Dg9tqYQ6vm7hCcxYsi-DbHELe6-60XD5K3fKUBGbxc5K-PIeoIVOp9qNSQSk-gHgqDdJiMkUdwucXBusekR0T2ZrRInUWsVdenihcO1SVmWPpLcHGp8V-cfAX9t9Y-Tvk_CfU8gNxGXiBC6cBfJC492cUiX_AjT7XY-buXHA_8iOD-nNSkmrWlq9ndsVboHUDBY4xYWiw1UgojHtwLQfC13F2EE2nApMdEwi1Qg6j5Kbi_XL8WCeiNhorP1WX0lY6OurT9rUdlG_hzFDxSKrrKLGVmspTc5MqN_GzoI6N8P1_qz9Q");
+        String token = getClientToken();
+        if (token != null && !token.isEmpty()) {
+            requestTemplate.header("Authorization", "Bearer " + token);
+        }
     }
 
+    private String getClientToken() {
+        String tokenUrl = "http://localhost:8080/iam/client-token/{clientId}/{clientSecret}";
+        String clientId = client_id;
+        String clientSecret = client_secret;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            // Call the auth service to get the token
+            ResponseEntity<String> response = restTemplate.getForEntity(
+                    tokenUrl,
+                    String.class,
+                    clientId,
+                    clientSecret
+            );
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody(); // Assuming the token is the plain response body
+            } else {
+                throw new RuntimeException("Failed to retrieve token. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching client token: " + e.getMessage(), e);
+        }
+    }
 
 }

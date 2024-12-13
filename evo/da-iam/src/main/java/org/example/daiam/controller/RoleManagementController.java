@@ -3,10 +3,11 @@ package org.example.daiam.controller;
 import org.example.daiam.dto.request.CreateRoleRequest;
 import org.example.daiam.dto.request.DeleteRoleRequest;
 import org.example.daiam.dto.request.UpdateRoleRequest;
-import org.example.daiam.dto.response.BasedResponse;
+
 import org.example.daiam.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 

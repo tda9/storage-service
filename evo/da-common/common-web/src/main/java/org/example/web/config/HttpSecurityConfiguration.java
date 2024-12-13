@@ -46,6 +46,9 @@ public class HttpSecurityConfiguration {
                                 .requestMatchers("/api/logout","/reset-password").permitAll()
                                 .requestMatchers("/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs/*").permitAll()
                                 .requestMatchers("/iam/certificate/.well-known/public.pem").permitAll()
+                                .requestMatchers("/iam/client-token/**").permitAll()
+                                .requestMatchers("/files/public/*").permitAll()
+                                .requestMatchers("/users/export","/users/import","/export-test").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -60,7 +63,7 @@ public class HttpSecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
+@Bean
     public AuthenticationManagerResolver<HttpServletRequest> jwkResolver(JwtProperties jwtProperties) {
         return new JwkAuthenticationManagerResolver(jwtProperties);
     }

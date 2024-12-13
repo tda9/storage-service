@@ -1,24 +1,28 @@
 package org.example.daiam.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.daiam.dto.UserExcel;
 import org.example.daiam.entity.User;
+import org.example.daiam.repo.UserRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ExcelService {
-    public void importExcelData(MultipartFile file) {
+private final UserRepo userRepo;
+    public String importExcelData(MultipartFile file) {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0); // Get the first sheet
             isValidHeader(sheet.getRow(0));
@@ -26,9 +30,9 @@ public class ExcelService {
                 Row row = sheet.getRow(i);
                 StringBuilder errorMessage = new StringBuilder();
                 User user = validateAndSetUserFromRow(row, errorMessage);
-
                 if (!errorMessage.isEmpty()) {
-                    log.error("Validation failed: " + errorMessage.toString());
+                    log.error("Validation failed: " + errorMessage);
+                    return errorMessage.toString();
                 } else {
                     log.info("User validated successfully.");
                     //userRepo.save(user);
@@ -36,10 +40,10 @@ public class ExcelService {
             }
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new IllegalArgumentException("Error during read excel file");
+            throw new IllegalArgumentException("Error during read file");
         }
+        return null;
     }
-
     private String getCellValue(Row row, int columnIndex) {
         Cell cell = row.getCell(columnIndex);
         if (cell == null) {
@@ -51,99 +55,101 @@ public class ExcelService {
             default -> "";
         };
     }
-
     private User validateAndSetUserFromRow(Row row, StringBuilder errorMessage) {
-        User userData = new User();
-        // Street
-        if (validateField(getCellValue(row, 0), String.class)) {
-            userData.setStreet(getCellValue(row, 0));
-        } else {
-            userData.setStreet(null);  // Set to null if invalid
-            errorMessage.append("Invalid Street; ");
+        User.UserBuilder userBuilder = User.builder();
+        final int rowIndex = row.getRowNum();
+        int columnIndex = 0;
+        for (String header : EXPECTED_HEADERS) {
+            switch (header) {
+                case "Email":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.email(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Email; ");
+                    }
+                    break;
+                case "Username":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.username(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Username; ");
+                    }
+                    break;
+                case "First Name":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.firstName(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid First Name; ");
+                    }
+                    break;
+                case "Last Name":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.lastName(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Last Name; ");
+                    }
+                    break;
+                case "Phone":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.phone(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Phone; ");
+                    }
+                    break;
+                case "DOB":
+                    if (validateField(getCellValue(row, columnIndex), LocalDate.class)) {
+                        userBuilder.dob(LocalDate.parse(getCellValue(row, columnIndex)));
+                    } else {
+                        userBuilder.dob(LocalDate.MIN);
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid DOB; ");
+                    }
+                    break;
+                case "Street":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.street(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Street; ");
+                    }
+                    break;
+                case "Ward":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.ward(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Ward; ");
+                    }
+                    break;
+                case "Province":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.province(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Province; ");
+                    }
+                    break;
+                case "District":
+                    if (validateField(getCellValue(row, columnIndex), String.class)) {
+                        userBuilder.district(getCellValue(row, columnIndex));
+                    } else {
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid District; ");
+                    }
+                    break;
+                case "Experience":
+                    if (validateField(getCellValue(row, columnIndex), Integer.class)) {
+                        userBuilder.experience(Integer.parseInt(getCellValue(row, columnIndex)));
+                    } else {
+                        userBuilder.experience(0);
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Experience; ");
+                    }
+                    break;
+            }
+            columnIndex++;
         }
-        // Ward
-        if (validateField(getCellValue(row, 1), String.class)) {
-            userData.setWard(getCellValue(row, 1));
-        } else {
-            userData.setWard(null);  // Set to null if invalid
-            errorMessage.append("Invalid Ward; ");
-        }
-        // Province
-        if (validateField(getCellValue(row, 2), String.class)) {
-            userData.setProvince(getCellValue(row, 2));
-        } else {
-            userData.setProvince(null);  // Set to null if invalid
-            errorMessage.append("Invalid Province; ");
-        }
-        // District
-        if (validateField(getCellValue(row, 3), String.class)) {
-            userData.setDistrict(getCellValue(row, 3));
-        } else {
-            userData.setDistrict(null);  // Set to null if invalid
-            errorMessage.append("Invalid District; ");
-        }
-        // Experience (set to 0 if invalid)
-        if (validateField(getCellValue(row, 4), Integer.class)) {
-            userData.setExperience(Integer.parseInt(getCellValue(row, 4)));
-        } else {
-            userData.setExperience(0);  // Set to 0 if invalid
-            errorMessage.append("Invalid Experience; ");
-        }
-        // Username
-        if (validateField(getCellValue(row, 5), String.class)) {
-            userData.setUsername(getCellValue(row, 5));
-        } else {
-            userData.setUsername(null);  // Set to null if invalid
-            errorMessage.append("Invalid Username; ");
-        }
-        // Email
-        if (validateField(getCellValue(row, 6), String.class) ) {//&&getCellValue(row, 9).match(InputUtils.EMAIL_PATTERN) && !userRepo.existedByEmail(getCellValue(row, 6))
-            userData.setEmail(getCellValue(row, 6));
-        } else {
-            userData.setEmail(null);  // Set to null if invalid
-            errorMessage.append("Invalid Email; ");
-        }
-        // First Name
-        if (validateField(getCellValue(row, 7), String.class)) {
-            userData.setFirstName(getCellValue(row, 7));
-        } else {
-            userData.setFirstName(null);  // Set to null if invalid
-            errorMessage.append("Invalid First Name; ");
-        }
-        // Last Name
-        if (validateField(getCellValue(row, 8), String.class)) {
-            userData.setLastName(getCellValue(row, 8));
-        } else {
-            userData.setLastName(null);  // Set to null if invalid
-            errorMessage.append("Invalid Last Name; ");
-        }
-        // Phone
-        if (validateField(getCellValue(row, 9), String.class)) {//&&getCellValue(row, 9).match(InputUtils.PHONE_NUMBER_PATTERN)
-            userData.setPhone(getCellValue(row, 9));
-        } else {
-            userData.setPhone(null);  // Set to null if invalid
-            errorMessage.append("Invalid Phone; ");
-        }
-        // DOB (set to LocalDate.MIN if invalid)
-        if (validateField(getCellValue(row, 10), LocalDate.class)) {//&&getCellValue(row, 9).match(InputUtils.DOB_PATTERN)
-            userData.setDob(LocalDate.parse(getCellValue(row, 10)));
-        } else {
-            userData.setDob(LocalDate.MIN);  // Set to LocalDate.MIN if invalid
-            errorMessage.append("Invalid DOB; ");
-        }
-        // If the error message is not empty, return the user object with the errors appended
-        if (!errorMessage.isEmpty()) {
-            errorMessage.delete(errorMessage.length() - 2, errorMessage.length());  // Remove last "; "
-        }
-
-        return userData;  // Return the User object with invalid fields set to default values
+        return userBuilder.build();
     }
 
-    private static final List<String> EXPECTED_HEADERS = Arrays.asList(
-            "Email", "Username", "First Name", "Last Name", "Phone", "DOB",
-            "Street", "Ward", "Province", "District", "Experience"
+    private static final List<String> EXPECTED_HEADERS = List.of(
+            "Email", "Username", "First Name", "Last Name", "Phone",
+            "DOB", "Street", "Ward", "Province", "District", "Experience"
     );
-
     private void isValidHeader(Row headerRow) {
         if (headerRow == null) {
             throw new IllegalArgumentException("Header must be presented in this order: " + EXPECTED_HEADERS.toString());
@@ -186,7 +192,7 @@ public class ExcelService {
             case "LocalDate":
                 LocalDate dateValue = (LocalDate) value;
                 if (dateValue.isAfter(LocalDate.now())) {
-                    return false; // LocalDate should not be in the future (example check)
+                    return false;
                 }
                 break;
             case "Double":
@@ -204,8 +210,9 @@ public class ExcelService {
         return true;
     }
     // Main method to generate the Excel file
-    public static byte[] writeUsersToExcel(List<User> users) throws IOException {
+    public byte[] writeUsersToExcel(List<User> users) throws IOException {
         // Create a workbook and a sheet
+
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("User Data");
         sheet.setDefaultColumnWidth(20);
@@ -222,65 +229,51 @@ public class ExcelService {
     }
 
     // Method to create the header row with blue and bold styling
-    private static void createHeaderRow(Sheet sheet) {
+    private void createHeaderRow(Sheet sheet) {
         // Create a bold and blue font for the header
         Font headerFont = sheet.getWorkbook().createFont();
         headerFont.setFontName("Times New Roman");
         headerFont.setFontHeightInPoints((short) 16);
         headerFont.setBold(true);
         headerFont.setColor(IndexedColors.BLACK.getIndex());  // Blue color for the header
-
         // Create a cell style for the header (Times New Roman, Bold, Blue)
         CellStyle headerCellStyle = sheet.getWorkbook().createCellStyle();
         headerCellStyle.setFont(headerFont);
         headerCellStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex()); // Light blue background for header
         headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); // Apply background fill
-
         // Create the header row
-
         Row headerRow = sheet.createRow(0);
-        createCell(headerRow, 1, "Email", headerCellStyle);
-        createCell(headerRow, 2, "Username", headerCellStyle);
-        createCell(headerRow, 3, "First Name", headerCellStyle);
-        createCell(headerRow, 4, "Last Name", headerCellStyle);
-        createCell(headerRow, 5, "Phone", headerCellStyle);
-        createCell(headerRow, 6, "DOB", headerCellStyle);
-        createCell(headerRow, 7, "Street", headerCellStyle);
-        createCell(headerRow, 1, "Ward", headerCellStyle);
-        createCell(headerRow, 2, "Province", headerCellStyle);
-        createCell(headerRow, 3, "District", headerCellStyle);
-        createCell(headerRow, 4, "Experience", headerCellStyle);
-
-
+        IntStream.range(0, EXPECTED_HEADERS.size())
+                .forEach(i -> createCell(headerRow, i, EXPECTED_HEADERS.get(i), headerCellStyle));
     }
-
     // Method to create data rows for each user
-    private static void createDataRow(Sheet sheet, List<User> users) {
+    private void createDataRow(Sheet sheet, List<User> users) {
         // Create a font for Times New Roman
         Font timesNewRomanFont = sheet.getWorkbook().createFont();
         timesNewRomanFont.setFontName("Times New Roman");
         timesNewRomanFont.setFontHeightInPoints((short) 16);  // Default font size
-
         // Create a cell style for Times New Roman font
         CellStyle defaultCellStyle = sheet.getWorkbook().createCellStyle();
         defaultCellStyle.setFont(timesNewRomanFont);
-
         // Iterate over the list of users and create data rows
         //TODO: check case an user field in database is null
+        int index = 0;
         int rowNum = 1;
         for (User user : users) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(Optional.ofNullable(user.getStreet()).orElse(""));
-            row.createCell(1).setCellValue(Optional.ofNullable(user.getWard()).orElse(""));
-            row.createCell(2).setCellValue(Optional.ofNullable(user.getProvince()).orElse(""));
-            row.createCell(3).setCellValue(Optional.ofNullable(user.getDistrict()).orElse(""));
-            row.createCell(4).setCellValue(Math.min(user.getExperience(), 0));
-            row.createCell(5).setCellValue(Optional.ofNullable(user.getUsername()).orElse(""));
-            row.createCell(6).setCellValue(Optional.ofNullable(user.getEmail()).orElse(""));
-            row.createCell(7).setCellValue(Optional.ofNullable(user.getFirstName()).orElse(""));
-            row.createCell(8).setCellValue(Optional.ofNullable(user.getLastName()).orElse(""));
-            row.createCell(9).setCellValue(Optional.ofNullable(user.getPhone()).orElse(""));
-            row.createCell(10).setCellValue(Optional.ofNullable(user.getDob()).map(LocalDate::toString).orElse("null"));
+            //if(userRepo.existsById(users.get(index).getUserId())){
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(Optional.ofNullable(user.getEmail()).orElse(""));
+                row.createCell(1).setCellValue(Optional.ofNullable(user.getUsername()).orElse(""));
+                row.createCell(2).setCellValue(Optional.ofNullable(user.getFirstName()).orElse(""));
+                row.createCell(3).setCellValue(Optional.ofNullable(user.getLastName()).orElse(""));
+                row.createCell(4).setCellValue(Optional.ofNullable(user.getPhone()).orElse(""));
+                row.createCell(5).setCellValue(Optional.ofNullable(user.getDob()).map(LocalDate::toString).orElse("null"));
+                row.createCell(6).setCellValue(Optional.ofNullable(user.getStreet()).orElse(""));
+                row.createCell(7).setCellValue(Optional.ofNullable(user.getWard()).orElse(""));
+                row.createCell(8).setCellValue(Optional.ofNullable(user.getProvince()).orElse(""));
+                row.createCell(9).setCellValue(Optional.ofNullable(user.getDistrict()).orElse(""));
+                row.createCell(10).setCellValue(Math.min(user.getExperience(), -1));
+            //}
         }
     }
 

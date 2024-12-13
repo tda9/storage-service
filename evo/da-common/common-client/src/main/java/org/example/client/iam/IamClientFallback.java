@@ -1,11 +1,8 @@
 //package org.example.client.iam;
 //
-//import com.evo.common.UserAuthority;
-//import com.evo.common.dto.response.Response;
-//import com.evo.common.enums.ServiceUnavailableError;
-//import com.evo.common.exception.ForwardInnerAlertException;
-//import com.evo.common.exception.ResponseException;
+//
 //import lombok.extern.slf4j.Slf4j;
+//import org.example.model.UserAuthority;
 //import org.springframework.cloud.openfeign.FallbackFactory;
 //import org.springframework.http.ResponseEntity;
 //import org.springframework.stereotype.Component;

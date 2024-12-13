@@ -7,8 +7,13 @@ spring:
       max-request-size: 2MB
       #If you are running your Spring Boot application as a packaged JAR, using a path relative to src/main/resources is not recommended for file uploads because it is not writable. Use a path outside of resources or a path defined by a system property.
   application:
-    upload-folder: upload
     name: da-storage
+    client-id: da-storage
+    client-secret: 123
+    upload-folder:
+      public: upload/public
+      private: upload/private
+
     valid-extensions: ".txt|.jpg|.png|.docx|.pdf|.zip|.csv|.xlsx|.xls"
   jpa:
     hibernate:

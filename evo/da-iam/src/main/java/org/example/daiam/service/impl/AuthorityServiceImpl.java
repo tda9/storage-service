@@ -40,7 +40,7 @@ public class AuthorityServiceImpl implements AuthorityService {
     @Override
     public UserAuthority getUserAuthority(String username) {
         User user = userRepo.findByEmail(username)
-                .orElseThrow(()->new IllegalArgumentException("User not found"));
+                .orElseThrow(()->new IllegalArgumentException("Username not found during getUserAuthority() "));
         Set<Role> roles = roleRepo.findRolesByUserId(user.getUserId());
         List<RolePermissions> rolePermissions = rolePermissionRepo.findAllByRoleIdIn(roles.stream().map(Role::getRoleId).collect(Collectors.toSet()));
         log.info("---USER GRANT---" + mapRolesToAuthorities(roles, rolePermissions).toString());

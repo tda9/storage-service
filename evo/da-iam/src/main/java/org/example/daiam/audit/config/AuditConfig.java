@@ -1,6 +1,5 @@
 package org.example.daiam.audit.config;
 
-import org.example.daiam.service.impl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,6 @@ import java.util.Optional;
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider",
         dateTimeProviderRef = "dateTimeProvider")
 public class AuditConfig {
-private final CustomUserDetailsService customUserDetailsService;
     @Bean
     public AuditorAware<String> auditorProvider() {
         return new AuditorAwareImpl();

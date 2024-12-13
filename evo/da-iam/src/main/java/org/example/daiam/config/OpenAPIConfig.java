@@ -25,25 +25,28 @@ public class OpenAPIConfig {
                 .info(new Info().title("My REST API")
                         .description("Some custom description of API.")
                         .version("1.0").contact(new Contact().name("Tran Duc Anh")
-                                .email( "tducanh157@gmail.com").url("tducanh157@gmail.com"))
+                                .email("tducanh157@gmail.com").url("tducanh157@gmail.com"))
                         .license(new License().name("License of API")
                                 .url("API license URL")));
     }
-@Bean
-public WebMvcConfigurer webMvcConfigurer() {
-    return new WebMvcConfigurer() {
-        @Override
-        public void addResourceHandlers(ResourceHandlerRegistry registry) {
-            registry.addResourceHandler("/swagger-ui/**")
-                    .addResourceLocations("classpath:/META-INF/resources/webjars/");
-        }
-    };
-}
+
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                registry.addResourceHandler("/swagger-ui/**")
+                        .addResourceLocations("classpath:/META-INF/resources/webjars/");
+            }
+        };
+    }
+
     private SecurityScheme createAPIKeyScheme() {
         return new SecurityScheme().type(SecurityScheme.Type.HTTP)
                 .bearerFormat("JWT")
                 .scheme("bearer");
     }
+
     @Bean
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
@@ -51,6 +54,7 @@ public WebMvcConfigurer webMvcConfigurer() {
                 .pathsToMatch("/**")
                 .build();
     }
+
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()

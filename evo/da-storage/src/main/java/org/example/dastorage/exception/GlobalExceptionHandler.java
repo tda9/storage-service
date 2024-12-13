@@ -5,7 +5,8 @@ package org.example.dastorage.exception;
 
 import jakarta.validation.UnexpectedTypeException;
 import lombok.extern.slf4j.Slf4j;
-import org.example.dastorage.dto.response.BasedResponse;
+
+import org.example.model.dto.response.BasedResponse;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -45,32 +45,33 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         JwtAuthenticationToken authentication = (JwtAuthenticationToken) securityContext.getAuthentication();
         Jwt token = authentication.getToken();
+
         String claim;
-        Boolean isRoot = Boolean.FALSE;
+        Boolean isRoot;
         Boolean isClient = Boolean.FALSE;
         String username;
         Set<SimpleGrantedAuthority> grantedPermissions = new HashSet<>();
+
+        //TH1: client token
         if (StringUtils.hasText(token.getClaimAsString("client_id")) && StringUtils.hasText(token.getClaimAsString("clientHost"))) {
-            username = token.getClaimAsString("preferred_username");
+            username = token.getClaimAsString("clientHost");
             isRoot = Boolean.TRUE;
+            //TH2: user token| a. token iam, b.token keycloak
         } else {
+            //token keycloak
             if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {
                 username = token.getClaimAsString("preferred_username");
                 claim = "preferred_username";
-            } else {
-                username = token.getClaimAsString("sub");
+            } else {//token iam
+                username = token.getClaimAsString("user_id");
                 claim = "user_id";
             }
-            UserAuthority optionalUserAuthority = enrichAuthority(token,claim).orElseThrow();
-            grantedPermissions = optionalUserAuthority.getGrantedPermissions().stream()
-                    .map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
+            UserAuthority optionalUserAuthority = enrichAuthority(token, claim).orElseThrow();
+            grantedPermissions = optionalUserAuthority.getGrantedPermissions().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
             isRoot = optionalUserAuthority.getIsRoot();
-
         }
 
-
-
-        User principal = new User(username, "", grantedPermissions);
+        User principal = new User(username, "", grantedPermissions);//tim hieu tai sau username null khong dc chap nhan o day
         AbstractAuthenticationToken auth = new UserAuthentication(principal, token, grantedPermissions, isRoot, isClient);
         SecurityContextHolder.getContext().setAuthentication(auth);
         filterChain.doFilter(request, response);
@@ -83,9 +84,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         return !(authentication instanceof JwtAuthenticationToken);
     }
 
-    private Optional<UserAuthority> enrichAuthority(Jwt token,String represent) {
+    private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
         // Call lấy UserAuthority từ IAM dựa vào AuthorityService lưu ý với service khác IAM thì impl sẽ là RemoteAuthorityServiceImpl, IAM thì sẽ dùng AuthorityServiceImpl(@Primary)
-        String username = token.getClaimAsString(represent);
+        String username = token.getClaimAsString(claim);
         UserAuthority userAuthority = authorityService.getUserAuthority(username);
         return Optional.ofNullable(userAuthority);
     }

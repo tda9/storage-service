@@ -39,9 +39,23 @@ public class JWTService {
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
+    public String generateClientToken(String client_id, String clientHost) {
+        PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
+        return Jwts.builder()
+                .claim("user_id",client_id)
+                .claim("client_id",client_id)
+                .claim("clientHost",clientHost)
+                .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+    }
     public String generateToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("user_id",username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }

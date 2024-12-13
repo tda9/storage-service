@@ -3,7 +3,7 @@ package org.example.daiam.service;
 import org.example.daiam.dto.request.CreatePermissionRequest;
 import org.example.daiam.dto.request.DeletePermissionRequest;
 import org.example.daiam.dto.request.UpdatePermissionRequest;
-import org.example.daiam.dto.response.BasedResponse;
+
 import org.example.daiam.entity.Permission;
 
 import org.example.daiam.entity.Scope;
@@ -12,8 +12,8 @@ import org.example.daiam.repo.PermissionRepo;
 import org.example.daiam.repo.RolePermissionRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
+import org.example.model.dto.response.BasedResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

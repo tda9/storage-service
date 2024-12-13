@@ -140,6 +140,7 @@ public class UserService extends BaseService implements BaseUserService {
 
     @Transactional
     public void addRolesToUser(UUID userId, List<UUID> roleIds) {
+        userRoleRepo.deleteByUserId(userId);
         for (UUID roleId : roleIds) {
             userRoleRepo.insertUserRoles(userId, roleId);
         }

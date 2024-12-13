@@ -45,11 +45,25 @@ public class User extends BaseEntity {
     @Builder.Default
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
-
+    private int stt;
     private String street;
     private String ward;
     private String province;
     private String district;
     private int experience;
 
+        public User(String street, String ward, String province, String district, int experience, String username,
+                String email, String firstName, String lastName, String phone, LocalDate dob) {
+        this.street = street;
+        this.ward = ward;
+        this.province = province;
+        this.district = district;
+        this.experience = experience;
+        this.username = username;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.dob = dob;
+    }
 }

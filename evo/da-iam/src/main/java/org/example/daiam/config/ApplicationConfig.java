@@ -1,5 +1,6 @@
 package org.example.daiam.config;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.keycloak.admin.client.Keycloak;

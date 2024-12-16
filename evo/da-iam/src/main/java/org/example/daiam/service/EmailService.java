@@ -2,6 +2,7 @@ package org.example.daiam.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.ws.rs.InternalServerErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -22,7 +23,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String from;
     @Value("${confirmation.registration.url}")
-    private String confirmationRegistrationUrl;
+    private String verifyEmailUrl;
 
     @Value("${confirmation.registration.url}")
     private String forgotPasswordUrl;
@@ -30,7 +31,7 @@ public class EmailService {
     private final TemplateEngine templateEngine;
     private final JavaMailSender javaMailSender;
     @Value("${spring.mail.registrationTemplateName}")
-    private String registrationTemplateName;
+    private String verifyEmailTemplateName;
     @Value("${spring.mail.passwordResetTemplateName}")
     private String passwordResetTemplateName;
 
@@ -43,15 +44,16 @@ public class EmailService {
             simpleMailMessage.setText(body);
             javaMailSender.send(simpleMailMessage);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error while sending mail");
+            //logger.log(Level.SEVERE, "Error while sending mail:"+ e.getMessage());
+            throw new InternalServerErrorException(e.getMessage());
         }
     }
 
-    public void sendConfirmationRegistrationEmail(String to, String token) {
-        sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service",registrationTemplateName,confirmationRegistrationUrl + "?email=" + to + "&token=" + token);
+    public void verifyEmail(String to, String token) {
+        sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service", verifyEmailTemplateName, verifyEmailUrl + "?email=" + to + "&token=" + token);
     }
     public void sendForgotPasswordEmail(String to, String token) {
-        sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service",registrationTemplateName,confirmationRegistrationUrl + "email=" + to + "&token=" + token);
+        sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service", verifyEmailTemplateName, verifyEmailUrl + "email=" + to + "&token=" + token);
     }
     public void sendEmailWithHtmlTemplate(String to, String subject, String templateName, String link) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -65,7 +67,8 @@ public class EmailService {
             helper.setText(htmlContent, true);
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            logger.log(Level.SEVERE, "Error while sending mail");
+            logger.log(Level.SEVERE, e.getMessage());
+            throw new InternalServerErrorException(e.getMessage());
         }
     }
     public void sendResetPassword(String to, String subject, String templateName, String content) {

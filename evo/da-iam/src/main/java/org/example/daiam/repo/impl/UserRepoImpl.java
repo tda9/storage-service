@@ -1,7 +1,7 @@
 package org.example.daiam.repo.impl;
 
 
-import org.example.daiam.dto.request.ExportUsersExcelRequest;
+import org.example.daiam.dto.request.FilterUsersRequest;
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.custom.UserRepoCustom;
 import jakarta.persistence.EntityManager;
@@ -23,17 +23,20 @@ public class UserRepoImpl implements UserRepoCustom {
     private String createWhereQuery(String keyword, Map<String, Object> values) {
         StringBuilder sql = new StringBuilder();
         sql.append("where 1=1 ");
-        if (!keyword.isEmpty()) {
-            String formattedKeyword = "%" + keyword.toLowerCase() + "%";
-            sql.append("and "
-                    + "("
-                    + "(lower(u.username) like :keyword and 2=2)"
-                    + " or (lower(u.email) like :keyword and 2=2)"
-                    + " or (lower(u.firstName) like :keyword and 2=2)"
-                    + " or (lower(u.phone) like :keyword and 2=2)"
-                    + " or (lower(u.lastName) like :keyword and 2=2)" +
-                    ") "
-            );
+        if (!keyword.isBlank()) {
+            String formattedKeyword = "%" + keyword + "%";
+            sql.append("and (");
+            for (int i = 0; i < fieldNames.size(); i++) {
+                String field = fieldNames.get(i);
+                if (specialFields.contains(field)) {// Skip special fields
+                    continue;//TODO: handler special field
+                }
+                if (i > 0 && !sql.toString().endsWith("and (")) {
+                    sql.append(" or ");
+                }
+                sql.append("(lower(u.").append(field).append(") like :keyword)");
+            }
+            sql.append(") ");
             values.put("keyword", formattedKeyword);
         }
         return sql.toString();
@@ -53,9 +56,9 @@ public class UserRepoImpl implements UserRepoCustom {
     }
 
     public StringBuilder createOrderQuery(String sortBy, String sort) {
-        StringBuilder hql = new StringBuilder(" ");
-        hql.append("order by u.").append(sortBy).append(" ").append(sort);
-        return hql;
+        StringBuilder sql = new StringBuilder(" ");
+        sql.append("order by u.").append(sortBy).append(" ").append(sort);
+        return sql;
     }
 
     public Long getTotalSize(String keyword) {
@@ -65,35 +68,18 @@ public class UserRepoImpl implements UserRepoCustom {
         values.forEach(query::setParameter);
         return (Long) query.getSingleResult();
     }
-
-    public List<User> searchByField(String keyword) {
+    public Long getTotalFilterSize(FilterUsersRequest request) {
         Map<String, Object> values = new HashMap<>();
-        String sql = "select u from User u "
-                + createWhereAbsoluteSearchQuery(keyword, values);
-        Query query = entityManager.createQuery(sql, User.class);
+        String sql = "select count(u) from User u " + createWhereFilterQuery(request, values);
+        Query query = entityManager.createQuery(sql, Long.class);
         values.forEach(query::setParameter);
-        return query.getResultList();
+        return (Long) query.getSingleResult();
     }
 
-    private String createWhereAbsoluteSearchQuery(String keyword, Map<String, Object> values) {
-
-        StringBuilder sql = new StringBuilder();
-        sql.append(" where 0=0");
-        if (!keyword.isEmpty()) {
-            sql.append(
-                    " and ( u.username like :keyword"
-                            + " or u.email like :keyword"
-                            + " or u.firstName like :keyword"
-                            + " or u.phone like :keyword"
-                            + " or u.lastName like :keyword )");
-            values.put("keyword", keyword);
-        }
-        return sql.toString();
-    }
-    public List<User> filterFileByField(ExportUsersExcelRequest exportUsersExcelRequest, String sortBy, String sort, int currentSize, int currentPage) {
+    public List<User> filterByField(FilterUsersRequest request, String sortBy, String sort, int currentSize, int currentPage) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select u from User u "
-                + createWhereFilterQuery(exportUsersExcelRequest, values)
+                + createWhereFilterQuery(request, values)
                 + createOrderQuery(sortBy, sort);
         Query query = entityManager.createQuery(sql, User.class);
         values.forEach(query::setParameter);
@@ -101,38 +87,45 @@ public class UserRepoImpl implements UserRepoCustom {
         query.setMaxResults(currentSize);
         return query.getResultList();
     }
-    public String createWhereFilterQuery(ExportUsersExcelRequest request, Map<String, Object> values) {
-        StringBuilder query = new StringBuilder(" WHERE 0=0 ");
 
-        if (request.email() != null && !request.email().isEmpty()) {
-            query.append(" AND u.email = :email");
-            values.put("email", request.email());
+    public String createWhereFilterQuery(FilterUsersRequest request, Map<String, Object> values) {
+        StringBuilder query = new StringBuilder(" WHERE 0=0 "); // Bypass statement inspector
+        Map<String,String> fields = new HashMap<>();
+        for (String fieldName : fieldNames) {
+            try {
+                // Get the method associated with the field (getter)
+                String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                Object value = request.getClass().getMethod(methodName).invoke(request);
+                // If the value is not null, put it in the map
+                if (value != null) {
+                    fields.put(fieldName, value.toString());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
-
+        fields.forEach((field, value) -> { // Loop through fields and build query dynamically
+            if (value != null && !value.isEmpty() && !specialFields.contains(field)) { // Skip special fields
+                query.append(" AND u.").append(field).append(" LIKE :").append(field);
+                values.put(field, "%" + value + "%");
+            }
+        });
+        // Handle date of birth separately
         if (request.dob() != null) {
             query.append(" AND u.dob = :dob");
             values.put("dob", request.dob());
         }
-
-        if (request.phone() != null && !request.phone().isEmpty()) {
-            query.append(" AND u.phone = :phone");
-            values.put("phone", request.phone());
-        }
-
-        if (request.username() != null && !request.username().isEmpty()) {
-            query.append(" AND u.username = :username");
-            values.put("username", request.username());
-        }
-
-        if (request.firstName() != null && !request.firstName().isEmpty()) {
-            query.append(" AND u.firstName = :firstName");
-            values.put("firstName", request.firstName());
-        }
-
-        if (request.lastName() != null && !request.lastName().isEmpty()) {
-            query.append(" AND u.lastName = :lastName ");
-            values.put("lastName", request.lastName());
-        }
         return query.toString();
     }
+
+    private final List<String> fieldNames = List.of(
+            "userId", "email", "username",
+            "isRoot", "isLock", "isVerified", "deleted",
+            "stt", "experience",
+            "firstName", "lastName", "phone", "dob",
+            "street", "ward", "province", "district"
+    );
+    List<String> specialFields = List.of(
+            "isRoot", "isLock", "isVerified", "deleted",
+            "stt", "experience", "dob");
 }

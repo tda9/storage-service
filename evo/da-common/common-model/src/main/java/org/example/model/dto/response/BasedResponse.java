@@ -21,7 +21,6 @@ public class BasedResponse<T> implements Serializable {
     private long timestamp = Instant.now().toEpochMilli();
     private String message;
     private T data;
-
     @JsonIgnore
     private Exception exception;
 
@@ -31,7 +30,7 @@ public class BasedResponse<T> implements Serializable {
     public static <T> BasedResponse<T> fail(String message, Exception ex){
         BasedResponse<T> response = new BasedResponse<>();
         response.setException(ex);
-        response.setHttpStatusCode(400);
+        response.setHttpStatusCode(500);
         response.setMessage(message);
         response.setRequestStatus(false);
         return response;
@@ -54,11 +53,21 @@ public class BasedResponse<T> implements Serializable {
         response.setData(data);
         return response;
     }
-    public BasedResponse<T> badRequest(String message){
-        this.setRequestStatus(false);
-        this.setHttpStatusCode(400);
-        this.setMessage(message);
-        return this;
+    public static<T> BasedResponse<T> badRequest(String message,T data){
+        BasedResponse<T> response = new BasedResponse<>();
+        response.setRequestStatus(false);
+        response.setHttpStatusCode(400);
+        response.setMessage(message);
+        response.setData(data);
+        return response;
+    }
+    public static<T> BasedResponse<T> notFound(String message,T data){
+        BasedResponse<T> response = new BasedResponse<>();
+        response.setRequestStatus(false);
+        response.setHttpStatusCode(404);
+        response.setMessage(message);
+        response.setData(data);
+        return response;
     }
 
 }

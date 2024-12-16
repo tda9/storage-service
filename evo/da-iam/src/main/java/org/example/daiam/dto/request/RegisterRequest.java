@@ -1,10 +1,8 @@
 package org.example.daiam.dto.request;
 
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.*;
 import org.example.daiam.utils.InputUtils;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -14,22 +12,27 @@ import java.util.Set;
 
 @Builder
 public record RegisterRequest(
-        @NotEmpty(message = "Email cannot be empty")
-        @Pattern(regexp = InputUtils.EMAIL_PATTERN, message = "Invalid email format")
+        @NotBlank(message = "Register email cannot be empty")
+        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
-        @Pattern(regexp = InputUtils.PASSWORD_PATTERN, message = "Invalid password format")
+        @NotBlank(message = "Register password cannot be empty")
+        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid password format")
         String password,
-        @DateTimeFormat(pattern = InputUtils.DOB_PATTERN)
+        @NotBlank(message = "Username cannot be empty")
+        String username,
+        @Min(value = 0, message = "stt must equal or greater than 0")
+        Integer experience,
+
+        String firstName,
+        String lastName,
+        @DateTimeFormat(pattern = "yyyy-MM-dd")//TODO: handle case -2023-02-02
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_NUMBER_PATTERN, message = "Invalid phone number format")
+        @Pattern(regexp = InputUtils.PHONE_FORMAT, message = "Invalid register phone number format")
         String phone,
-        @NotNull(message = "username cannot be null")
-        String username,
-        @NotNull(message = "firstName cannot be null")
-        String firstName,
-        @NotNull(message = "lastName cannot be null")
-        String lastName,
-        @NotEmpty(message = "User's roles cannot be empty")
-        Set<String> role) {
+        String street,
+        String ward,
+        String province,
+        String district,
+        Set<String> roles) {// does spring set hash same string request?
 }

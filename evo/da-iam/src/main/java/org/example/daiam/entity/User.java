@@ -20,39 +20,52 @@ public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
-    private UUID userId = UUID.randomUUID();
+    private UUID userId;
     @Column(name = "email", nullable = false, unique = true)
     private String email;
-    @Column(name = "username", nullable = true)
+    @Column(name = "username", nullable = false)
     private String username;
     @Column(name = "password", nullable = false)
     private String password;
-    @Column(name = "first_name", nullable = true)
-    private String firstName;
-    @Column(name = "last_name", nullable = true)
-    private String lastName;
-    @Column(name = "phone", nullable = true)
-    private String phone;
-    @Column(name = "dob", nullable = true)
-    private LocalDate dob;
-    @Column(name = "image", nullable = true)
-    private String image;
+    @Builder.Default
+    @Column(name = "is_root", nullable = false)
+    private boolean isRoot = false;
     @Builder.Default
     @Column(name = "is_lock", nullable = false)
     private boolean isLock = false;
+    @Builder.Default
     @Column(name = "is_verified", nullable = false)
-    private boolean isVerified;
+    private boolean isVerified = false;
     @Builder.Default
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
-    private int stt;
-    private String street;
-    private String ward;
-    private String province;
-    private String district;
-    private int experience;
+    @Builder.Default
+    private int stt = 0;
+    @Builder.Default
+    private int experience = 0;
+    @Builder.Default
+    @Column(name = "first_name")
+    private String firstName = null;
+    @Builder.Default
+    @Column(name = "last_name")
+    private String lastName = null;
+    @Builder.Default
+    private String phone = null;
+    @Builder.Default
+    @Column(name = "dob")
+    private LocalDate dob = null;
+    @Builder.Default
+    private String image = null;
+    @Builder.Default
+    private String street = null;
+    @Builder.Default
+    private String ward = null;
+    @Builder.Default
+    private String province = null;
+    @Builder.Default
+    private String district = null;
 
-        public User(String street, String ward, String province, String district, int experience, String username,
+    public User(String street, String ward, String province, String district, int experience, String username,
                 String email, String firstName, String lastName, String phone, LocalDate dob) {
         this.street = street;
         this.ward = ward;

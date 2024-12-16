@@ -50,7 +50,7 @@ public class AuthorityServiceImpl implements AuthorityService {
                 .isLocked(user.isLock())
                 .isDeleted(user.isDeleted())
                 .isVerified(user.isVerified())
-                .isRoot(false)
+                .isRoot(user.isRoot())
                 .password(user.getPassword())
                 .grantedPermissions(mapRolesToAuthorities(roles,rolePermissions))
                 .build();

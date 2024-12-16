@@ -27,10 +27,9 @@ public class BlackListToken extends BaseEntity {
     @Column(name = "expiration_date")
     private LocalDateTime expirationDate;
 
-
-    public BlackListToken(String token,LocalDateTime expirationDate,UUID userId){
-        this.token = token;
-        this.expirationDate =expirationDate;
-        this.userId = userId;
-    }
+//    public BlackListToken(String token,LocalDateTime expirationDate,UUID userId){
+//        this.token = token;
+//        this.expirationDate =expirationDate;
+//        this.userId = userId;
+//    }
 }

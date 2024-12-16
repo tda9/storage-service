@@ -33,6 +33,6 @@ spring:
         jwt:
           jwk-set-uris:
             sso: ${JWK_SSO_URL:http://localhost:8082/realms/master/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:8080/iam/certificate/.well-known/public.pem}
+            internal: ${JWK_INTERNAL_URL:http://localhost:8080/auth/certificate/.well-known/jwks.json}
 
 

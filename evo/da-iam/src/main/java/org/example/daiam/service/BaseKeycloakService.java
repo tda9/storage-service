@@ -1,8 +1,10 @@
 package org.example.daiam.service;
 
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.NotFoundException;
 import org.example.daiam.dto.Credentials;
 import org.example.daiam.dto.request.UpdateUserRequest;
-import org.example.daiam.exception.ErrorResponseException;
 import org.example.daiam.repo.BlackListTokenRepo;
 import org.example.daiam.repo.RoleRepo;
 import org.example.daiam.repo.UserRepo;
@@ -38,6 +40,7 @@ public class BaseKeycloakService extends BaseService {
     @Value("${application.security.keycloak.newAccessTokenUrl}")
     private String NEW_ACCESS_TOKEN_URL;
     private final Keycloak keycloak;
+
     public BaseKeycloakService(Keycloak keycloak,
                                UserRepo userRepo,
                                RoleRepo roleRepo,
@@ -52,50 +55,41 @@ public class BaseKeycloakService extends BaseService {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm(realm)
-                .clientId(clientId)
-                .grantType(grantType)
-                .authorization("Bearer " + getAccessTokenMaster())
-                .username(username)
-                .clientSecret(clientSecret)
-                .password(password)
+                //.clientId(clientId)
+                // .clientSecret(clientSecret)
+                //.grantType(grantType)
+                .authorization("Bearer " + keycloak.tokenManager().getAccessTokenString())
+                //.username(username)
+                //.password(password)
                 .build();
     }
 
-    public String getAccessTokenMaster() {
-        return keycloak.tokenManager().getAccessTokenString();
-    }
+//    public String getAccessTokenMaster() {
+//        return keycloak.tokenManager().getAccessTokenString();
+//    }
 
     public void updateKeycloakUser(UpdateUserRequest request, String oldEmail) {
-        try {
-            UsersResource usersResource = keycloak().realm(realm).users();
-            // Use searchByEmail to find the user
-            List<UserRepresentation> users = usersResource.searchByEmail(oldEmail, true);
-            if (users.isEmpty()) {
-                throw new IllegalArgumentException("User with email " + oldEmail + " not found.");
-            }
-            UserRepresentation userRepresentation = users.get(0);
-            userRepresentation.setEnabled(!request.isLock());
-            userRepresentation.setEmail(request.email());
-            usersResource.get(userRepresentation.getId()).update(userRepresentation);
-            log.info("Update both keycloak and iam service successful");
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            throw new ErrorResponseException("Failed change keycloak password: " + ex.getMessage());
+        List<UserRepresentation> users = getUsersResource().searchByEmail(oldEmail, true);//Use searchByEmail to find exact email to find the user
+        if (users.isEmpty()) {
+            throw new NotFoundException("User with email " + oldEmail + " not found.");
         }
+        UserRepresentation userRepresentation = users.getFirst();
+        userRepresentation.setEnabled(!request.isLock());
+        userRepresentation.setEmail(request.email());
+        getUsersResource().get(userRepresentation.getId()).update(userRepresentation);
     }
 
-    public void createKeycloakUser(String email, String password) {
-        try {
-            UsersResource userResource = keycloak().realm(realm).users();
-            CredentialRepresentation credential = Credentials.createPasswordCredentials(password);
-            UserRepresentation user = new UserRepresentation();
-            user.setUsername(email);
-            user.setEmail(email);
-            user.setCredentials(Collections.singletonList(credential));
-            user.setEnabled(true);
-            userResource.create(user);
-        } catch (Exception e) {
-            throw new ErrorResponseException("Error at class BaseKeycloakService, function createKeycloakUser: " + e.getMessage());
-        }
+    protected void createKeycloakUser(String email, String password) {
+        CredentialRepresentation credential = Credentials.createPasswordCredentials(password);
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(email);
+        user.setEmail(email);
+        user.setCredentials(Collections.singletonList(credential));
+        user.setEnabled(true);
+        getUsersResource().create(user);
+    }
+
+    protected UsersResource getUsersResource() {
+        return keycloak.realm(realm).users();
     }
 }

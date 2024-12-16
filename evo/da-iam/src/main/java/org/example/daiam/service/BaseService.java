@@ -1,5 +1,7 @@
 package org.example.daiam.service;
 
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import org.example.daiam.dto.response.DefaultTokenResponse;
 import org.example.daiam.entity.BlackListToken;
 import org.example.daiam.repo.BlackListTokenRepo;
@@ -22,9 +24,9 @@ public abstract class BaseService {
     protected final RoleRepo roleRepo;
     protected final BlackListTokenRepo blackListTokenRepo;
     protected final JWTService jwtService;
-    protected void checkEmailExisted(String email) {
+    protected void checkExistedEmail(String email) {
         if (userRepo.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email existed");
+            throw new BadRequestException("Email existed");
         }
     }
 
@@ -34,7 +36,7 @@ public abstract class BaseService {
                 .map(roleRepo::findRoleIdByName)
                 .peek(role -> {
                     if (role.isEmpty() || roleRepo.isRoleDeleted(role.get()).orElseThrow()) {
-                        throw new IllegalArgumentException("Role not found or deleted");
+                        throw new NotFoundException("Role not found or deleted");
                     }
                 })
                 .map(Optional::get)
@@ -44,6 +46,7 @@ public abstract class BaseService {
     private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
+
     protected DefaultTokenResponse generateDefaultToken(String email, UUID userId) {
         var jwtToken = jwtService.generateToken(email);
         var jwtRefreshToken = jwtService.generateRefreshToken(email);

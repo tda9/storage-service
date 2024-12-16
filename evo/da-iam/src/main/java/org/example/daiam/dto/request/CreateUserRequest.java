@@ -1,35 +1,44 @@
 package org.example.daiam.dto.request;
 
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.*;
 import org.example.daiam.utils.InputUtils;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 public record CreateUserRequest(
-        @NotEmpty(message = "Email cannot be empty")
-        @Pattern(regexp = InputUtils.EMAIL_PATTERN, message = "Invalid email format")
+        @NotBlank(message = "Register email cannot be empty")
+        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
-        @DateTimeFormat(pattern = InputUtils.DOB_PATTERN)
+        @NotBlank(message = "Register password cannot be empty")
+        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid password format")
+        String password,
+        @NotBlank(message = "Username cannot be empty")
+        String username,
+        Boolean isRoot,
+        Boolean isLock,
+        Boolean isVerified,
+        @Min(value = 0, message = "stt must equal greater than 0")
+        Integer stt,
+        @Min(value = 0, message = "experience must equal greater than 0")
+        Integer experience,
+        String firstName,
+        String lastName,
+        @DateTimeFormat(pattern = "yyyy-MM-dd")
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_NUMBER_PATTERN, message = "Invalid phone number format")
+        @Pattern(regexp = InputUtils.PHONE_FORMAT, message = "Invalid create phone number format")
         String phone,
-        @NotNull(message = "username cannot be null")
-        @Pattern(regexp = "^[a-zA-Z0-9._-]{3,}$", message = "Username must contain letters or digits with minimum 3 character")
-        String username,
-        @NotNull(message = "firstName cannot be null")
-        @Pattern(regexp = "^[a-zA-Z0-9_-]{3,}$", message = "First name must contain letters or digits with minimum 3 character")
-        String firstName,
-        @NotNull(message = "lastName cannot be null")
-        @Pattern(regexp = "^[a-zA-Z0-9_-]{3,}$", message = "Last name must contain letters or digits with minimum 3 character")
-        String lastName,
-        @NotNull(message = "Roles cannot be null")
-        Set<String> role) {
-        //Default:
-        //deleted: false, isVerified: false, isLock: false
+        String street,
+        String ward,
+        String province,
+        String district,
+        Set<String> roles){
+
+    //Default:
+    //deleted: false, isVerified: false, isLock: false
+
+
 }

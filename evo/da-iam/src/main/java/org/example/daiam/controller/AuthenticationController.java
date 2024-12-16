@@ -1,14 +1,17 @@
 package org.example.daiam.controller;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import org.example.daiam.controller.factory.AuthenticationServiceFactory;
 import org.example.daiam.dto.request.*;
 
 import org.example.daiam.dto.response.DefaultClientTokenResponse;
-import org.example.daiam.exception.ErrorResponseException;
 import org.example.daiam.service.PasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.service.impl.AuthorityServiceImpl;
+import org.example.daiam.utils.InputUtils;
 import org.example.daiam.utils.RSAKeyUtil;
 import org.example.model.UserAuthority;
 import org.example.model.dto.response.BasedResponse;
@@ -18,19 +21,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/auth")
 public class AuthenticationController {
     private final PasswordService passwordService;
     private final AuthorityServiceImpl authorityServiceImpl;
     private final AuthenticationServiceFactory authenticationServiceFactory;
 
-    @GetMapping("/confirmation-registration")
-    public BasedResponse<?> confirmRegister(@RequestParam String email, @RequestParam String token) {
-        try {
-            passwordService.confirmRegisterEmail(email, token);
-            return BasedResponse.success("Confirm successful", email);
-        } catch (Exception e) {
-            throw new ErrorResponseException(e.getMessage());
-        }
+    @GetMapping("/verify-email")
+    public BasedResponse<?> verifyEmail(
+            @RequestParam @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email,
+            @RequestParam @NotBlank(message = "Missing email verification token") String token) {
+            passwordService.verifyEmail(email, token);
+            return BasedResponse.success("Verify email successful", email);
     }
 
     @PostMapping("/register")
@@ -45,11 +47,11 @@ public class AuthenticationController {
                 authenticationServiceFactory.getService().login(request));
     }
 
-    @PostMapping("/api/logout")
-    public String logout(@RequestBody LogoutRequest request) {
-        authenticationServiceFactory.getService().logout(request);
-        return "Logout request has been sent.";
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody @Valid LogoutRequest request) {
+        return authenticationServiceFactory.getService().logout(request);
     }
+
 
     @PostMapping("/refresh-token")
     public BasedResponse<?> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
@@ -57,30 +59,20 @@ public class AuthenticationController {
                 authenticationServiceFactory.getService().refreshToken(request.refreshToken()));
     }
 
+    @PreAuthorize("hasPermission('USERS','UPDATE')")
     @PostMapping("/change-password")
     public BasedResponse<?> changePassword(
             @RequestBody ChangePasswordRequest request) {
-        authenticationServiceFactory.getService().changePassword(
-                request.currentPassword(),
-                request.newPassword(),
-                request.confirmPassword(),
-                request.email());
-        return BasedResponse.builder()
-                .httpStatusCode(200)
-                .requestStatus(true)
-                .message("Change password successful")
-                .data(request.email())
-                .build();
+        authenticationServiceFactory.getService().changePassword(request);
+        return BasedResponse.success("Change password successful", request.email());
     }
 
     @PostMapping("/forgot-password")
-    public BasedResponse<?> forgotPassword(@RequestParam String email) {
-        try {
+    public BasedResponse<?> forgotPassword(
+            @RequestParam @NotEmpty(message = "Missing forgot email")
+            @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email")String email) {
             passwordService.forgotPassword(email);
-            return BasedResponse.success("If your email existed, you will receive a link", email);
-        } catch (Exception e) {
-            throw new ErrorResponseException("Error forgot password");
-        }
+            return BasedResponse.success("If your email existed, you will receive an email", email);
     }
 
     @GetMapping("/reset-password")
@@ -88,19 +80,6 @@ public class AuthenticationController {
         authenticationServiceFactory.getService().resetPassword(email, newPassword, token);
         return BasedResponse.success("Reset password successful", email);
     }
-
-    @PreAuthorize("hasPermission('HOMEPAGE','VIEW')")
-    @GetMapping("/hello")
-    public String test() {
-        return "Hello HOMEPAGE";
-    }
-
-    @PreAuthorize("hasPermission('DASHBOARD','VIEW')")
-    @GetMapping("/admin")
-    public String test1() {
-        return "Hello DASHBOARD ";
-    }
-
     @GetMapping("/custom-login")
     public BasedResponse<?> redirectToKeycloakLogin() {
         return BasedResponse.builder()
@@ -110,25 +89,16 @@ public class AuthenticationController {
                 .httpStatusCode(301)
                 .build();
     }
-
     private final RSAKeyUtil rsaKeyUtil;
 
-    @GetMapping("/iam/certificate/.well-known/public.pem")
+    @GetMapping("/certificate/.well-known/jwks.json")
     public ResponseEntity<?> getPublicKeyIam() {
         return ResponseEntity.ok(rsaKeyUtil.jwkSet().toJSONObject());
     }
 
-    @GetMapping("/iam/client-token/{clientId}/{clientSecret}")
-    public ResponseEntity<?> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret) throws Exception {
-        return ResponseEntity.ok(authenticationServiceFactory.getService().getClientToken(DefaultClientTokenResponse.builder()
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .build()));
+    @GetMapping("/client-token/{clientId}/{clientSecret}")
+    public ResponseEntity<?> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret) {
+        return ResponseEntity.ok(authenticationServiceFactory.getService()
+                .getClientToken(clientId, clientSecret));
     }
-
-    @GetMapping("/api/users/{username}/authorities-by-username")
-    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
-        return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
-    }
-
 }

@@ -6,7 +6,6 @@ import org.example.model.UserAuthority;
 import org.example.model.dto.response.BasedResponse;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -28,7 +27,7 @@ public interface IamClient {
     @LoadBalanced
     BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username);
 
-    @GetMapping("/iam/client-token/{clientId}/{clientSecret}")
+    @GetMapping("/auth/client-token/{clientId}/{clientSecret}")
     @LoadBalanced
     BasedResponse<String> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret);
 }

@@ -23,23 +23,11 @@ public class FeignClientInterceptor implements RequestInterceptor {
         String token = getClientToken();
         if (token != null && !token.isEmpty()) {
             requestTemplate.header("Authorization", "Bearer " + token);
-//            String url = requestTemplate.url();
-//            if ("da-iam".equals(client_id) && url != null && url.contains("/upload")) {
-//                // Set the Content-Type to multipart/form-data
-//                requestTemplate.header("Content-Type", "multipart/form-data");
-//
-//                // Optionally add an Authorization header
-//                if (StringUtils.hasText(token)) {
-//                    requestTemplate.header("Authorization", "Bearer " + token);
-//                } else {
-//                    System.out.println("Token is null or empty. Authorization header will not be applied.");
-//                }
-//            }
         }
     }
 
     private String getClientToken() {
-        String tokenUrl = "http://localhost:8080/iam/client-token/{clientId}/{clientSecret}";
+        String tokenUrl = "http://localhost:8080/auth/client-token/{clientId}/{clientSecret}";
         String clientId = client_id;
         String clientSecret = client_secret;
         RestTemplate restTemplate = new RestTemplate();

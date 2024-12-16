@@ -1,6 +1,9 @@
 package org.example.daiam.service;
 
 
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.NotFoundException;
 import org.example.daiam.entity.User;
 import org.example.daiam.exception.UserNotFoundException;
 import org.example.daiam.repo.BlackListTokenRepo;
@@ -27,10 +30,9 @@ public class JWTService {
     private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
-    @Autowired
-    BlackListTokenRepo blackListTokenRepo;
-    @Autowired
+    private final BlackListTokenRepo blackListTokenRepo;
     UserRepo userRepo;
+
     public String generateRefreshToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
@@ -39,21 +41,23 @@ public class JWTService {
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
+
     public String generateClientToken(String client_id, String clientHost) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
-                .claim("user_id",client_id)
-                .claim("client_id",client_id)
-                .claim("clientHost",clientHost)
+                .claim("user_id", clientHost)
+                .claim("client_id", client_id)
+                .claim("clientHost", clientHost)
                 .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
+
     public String generateToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setSubject(username)
-                .claim("user_id",username)
+                .claim("user_id", username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -62,43 +66,50 @@ public class JWTService {
 
     private final RSAKeyUtil rsaKeyUtil;
 
-    public Claims extractAllClaims(String token) throws Exception {
-        PublicKey publicKey = rsaKeyUtil.getPublicKey();
-        return Jwts.parserBuilder().setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimResolver) throws Exception {
-        final Claims claims = extractAllClaims(token);
-        return claimResolver.apply(claims);
-    }
-
-    public String extractEmail(String jwt) throws Exception {
+    public String extractEmail(String jwt) {
         return extractClaim(jwt, Claims::getSubject);
     }
 
-    private Date extractExpiration(String token) throws Exception {
+    private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private boolean isTokenExpired(String token) throws Exception {
+    private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) throws Exception {
-        User u = userRepo.findByEmail(userDetails.getUsername()).orElseThrow(()->new UserNotFoundException("User not found"));
-        if (!blackListTokenRepo.findTopByUserIdOrderByCreatedDateDesc(u.getUserId()).get().getToken().equals(token)) {
-            return false;
+//    public boolean isTokenValid(String token, UserDetails userDetails) throws Exception {
+//        User u = userRepo.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
+//        if (!blackListTokenRepo.findTopByUserIdOrderByCreatedDateDesc(u.getUserId()).get().getToken().equals(token)) {
+//            return false;
+//        }
+//        final String email = extractEmail(token);
+//        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
+//    }
+
+    public boolean isRefreshTokenValid(String token) {
+        String email = extractEmail(token);
+        if (!userRepo.existsByEmail(email)) {
+            throw new NotFoundException("Invalid email in refresh token");
         }
-        final String email = extractEmail(token);
-        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
-    }
-    public boolean isRefreshTokenValid(String token) throws Exception {
-        final String email = extractEmail(token);
-        userRepo.findByEmail(email).orElseThrow(()->new UserNotFoundException("User not found"));
         return !isTokenExpired(token);
     }
 
+    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
+        Claims claims = extractAllClaims(token);
+        return claimResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        try {
+            PublicKey publicKey = rsaKeyUtil.getPublicKey();
+            return Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            throw new BadRequestException(e.getMessage());
+        }
+    }
 }

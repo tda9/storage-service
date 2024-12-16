@@ -1,17 +1,14 @@
 package org.example.daiam.controller;
 
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.controller.factory.UserServiceFactory;
 import org.example.daiam.dto.request.CreateUserRequest;
-import org.example.daiam.dto.request.ExportUsersExcelRequest;
+import org.example.daiam.dto.request.FilterUsersRequest;
 import org.example.daiam.dto.request.UpdateUserRequest;
-
-
 import org.example.daiam.dto.response.UserDtoResponse;
 import org.example.daiam.entity.Role;
-
-
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.RoleRepo;
 import org.example.daiam.repo.impl.UserRepoImpl;
@@ -20,7 +17,7 @@ import org.example.daiam.service.impl.AuthorityServiceImpl;
 import org.example.daiam.service.impl.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+import org.example.model.UserAuthority;
 import org.example.model.dto.response.BasedResponse;
 import org.example.model.dto.response.PageResponse;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 @Slf4j
@@ -53,9 +49,11 @@ public class UserManagementController {
     }
 
     @PreAuthorize("hasPermission('USERS','UPDATE')")
-    @PutMapping("/update")
-    public BasedResponse<?> updateById(@RequestBody @Valid UpdateUserRequest request) {
-        return BasedResponse.success("Update successful", userServiceFactory.getUserService().updateById(request));
+    @PutMapping("/{id}/update")
+    public BasedResponse<?> updateById(
+            @PathVariable @NotBlank String id,
+            @RequestBody @Valid UpdateUserRequest request) {
+        return BasedResponse.success("Update successful", userServiceFactory.getUserService().updateById(request,id));
     }
 
     @PreAuthorize("hasPermission('USERS','READ')")
@@ -69,10 +67,36 @@ public class UserManagementController {
     ) {
         List<User> users = userService.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
         Long totalSize = userService.getTotalSize(keyword);
-        if (currentSize > totalSize) {
+        int totalPage;
+        if (currentSize >= totalSize&& totalSize!=0) {
             currentSize = Math.toIntExact(totalSize);
+            totalPage = ((int) (totalSize / currentSize));
+        }else{
+            totalPage = 0;
+            currentSize = 0;
         }
-        return new PageResponse<>(currentPage, ((int) (totalSize / currentSize)), currentSize, totalSize, sortBy, sort, users);
+        return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, users);
+    }
+    @PreAuthorize("hasPermission('USERS','READ')")
+    @GetMapping("/filter")
+    public BasedResponse<?> filter(
+            @ModelAttribute FilterUsersRequest request,
+            @RequestParam(required = false, defaultValue = "1") int currentPage,
+            @RequestParam(required = false, defaultValue = "1") int currentSize,
+            @RequestParam(required = false, defaultValue = "email") String sortBy,
+            @RequestParam(required = false, defaultValue = "ASC") String sort
+    ) {
+        List<User> users = userService.filter(request, sortBy, sort, currentSize, currentPage);
+        Long totalSize = userService.getTotalFilterSize(request);
+        int totalPage;
+        if (currentSize >= totalSize&& totalSize!=0) {
+            currentSize = Math.toIntExact(totalSize);
+            totalPage = ((int) (totalSize / currentSize));
+        }else{
+            totalPage = 0;
+            currentSize = 0;
+        }
+        return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, users);
     }
 
     @GetMapping("/{id}")
@@ -85,22 +109,15 @@ public class UserManagementController {
                 .build());
     }
 
-    @GetMapping("/absolute-search")
-    public BasedResponse<?> absoluteSearch(
-            @RequestParam(required = false) String keyword) {
-        List<User> user = userService.searchByField(keyword);
-        return BasedResponse.success("User found", user);
-    }
-
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportUsers(
-            @ModelAttribute ExportUsersExcelRequest request,
+            @ModelAttribute FilterUsersRequest request,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,
             @RequestParam(required = false, defaultValue = "email") String sortBy,
             @RequestParam(required = false, defaultValue = "ASC") String sort) {
         try {
-            List<User> users = userRepoImpl.filterFileByField(request,sortBy,sort,currentSize,currentPage);
+            List<User> users = userRepoImpl.filterByField(request,sortBy,sort,currentSize,currentPage);
             // Generate Excel file as byte array
             byte[] excelFile = excelService.writeUsersToExcel(users);
 
@@ -120,6 +137,10 @@ public class UserManagementController {
     public ResponseEntity<?> importUsers(@RequestParam("file") MultipartFile file) {
         String msg = excelService.importExcelData(file);
         return ResponseEntity.ok(msg);
+    }
+    @GetMapping("/{username}/authorities-by-username")
+    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
+        return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
     }
 //    @GetMapping("/api/users/{userId}/authorities")
 //    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {

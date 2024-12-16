@@ -14,7 +14,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
         String requiredPermission = targetDomainObject.toString()+"."+permission.toString();
         if (!(authentication instanceof UserAuthentication userAuthentication)) {
-            // @TODO throw exception
             throw new RuntimeException("NOT_SUPPORTED_AUTHENTICATION");
         }
         if (userAuthentication.isRoot()) {

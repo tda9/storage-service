@@ -9,7 +9,9 @@ import lombok.Builder;
 @Builder
 public record LoginRequest(
         @NotEmpty
-        @Pattern(regexp = InputUtils.EMAIL_PATTERN, message = "Invalid email format")
+        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid login email format")
         String email,
-        @NotEmpty String password) {
+        @NotEmpty
+        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid login password format")
+        String password) {
 }

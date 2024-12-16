@@ -34,7 +34,7 @@ public class PrivateFileController {
     }
     @PreAuthorize("hasPermission('FILES','CREATE')")
     @PostMapping("/upload")
-    public BasedResponse<?> uploadFiles(@RequestParam("files") MultipartFile[] files,@RequestParam String userId) {
+    public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files,@RequestParam String userId) {
         fileServiceImpl.uploadPrivateFiles(files,userId);
         return BasedResponse.success("Upload successful",null);
     }

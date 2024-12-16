@@ -84,8 +84,7 @@ CREATE TABLE black_list_token
 -- -- Insert default roles
 -- Insert permissions with UUIDs
 INSERT INTO public.service_client(client_host, client_id, client_secret)
-VALUES ('da-storage', 'da-storage', '123');
-VALUES ('da-iam', 'da-iam', '123');
+VALUES ('da-storage', 'da-storage', '123'),('da-iam', 'da-iam', '123');
 INSERT INTO public.permissions (permission_id, deleted, resource_code, resource_name, scope)
 VALUES
     (gen_random_uuid(), false, 'FILES', 'TAT_CA_QUYEN_DOC_FILES', 'READ'),

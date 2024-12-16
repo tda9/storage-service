@@ -13,15 +13,12 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        #enable statementinspector
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-#        session_factory:
-#          statement_inspector: com.da.iam.repo.custom.CustomInspector
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
-    password: secret
+    password: secret #secret 123456
   #  sql:
   #    init:
   #      schema-locations: classpath:scheme.sql
@@ -48,7 +45,7 @@ spring:
           issuer-uri: ${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}
           jwk-set-uris:
             sso: ${JWK_SSO_URL:${application.security.keycloak.serverUrl}/realms/master/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:${server.port}/iam/certificate/.well-known/public.pem}
+            internal: ${JWK_INTERNAL_URL:http://localhost:${server.port}/auth/certificate/.well-known/jwks.json}
           jws-algorithms: RS256
         opaquetoken:
           client-secret: ${application.security.keycloak.clientSecret}
@@ -73,11 +70,9 @@ confirmation:
 application:
   file:
     upload-dir: D:\\da\\images
-  #KEYCLOAK DEFAULT
-  authProvider: DEFAULT
+  authProvider: DEFAULT #KEYCLOAK DEFAULT
   security:
     jwt:
-      #privateKey
       expiration: 86400000 # 1day
       refresh-token:
         expiration: 604800000 # 7days
@@ -89,15 +84,8 @@ application:
       grantType: password
       username: admin
       password: admin
-      logoutUrl: ${application.security.keycloak.serverUrl}/realms/master/protocol/openid-connect/logout
-      newAccessTokenUrl: ${application.security.keycloak.serverUrl}/realms/master/protocol/openid-connect/token
-
-
-jwt:
-  auth:
-    converter:
-      principal-attribute: principal_username
-      resource-id: iam-service-client-master
+      logoutUrl: /realms/${application.security.keycloak.realm}/protocol/openid-connect/logout
+      newAccessTokenUrl: /realms/${application.security.keycloak.realm}/protocol/openid-connect/token
 
 logging:
   file:

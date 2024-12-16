@@ -8,6 +8,6 @@ import jakarta.validation.constraints.Pattern;
 public record LogoutRequest(
         @NotEmpty
         String refreshToken,
-        @Pattern(regexp = InputUtils.EMAIL_PATTERN, message = "Invalid email format")
+        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid logout email format")
         String email) {
 }

@@ -7,5 +7,5 @@ import org.example.daiam.entity.User;
 
 public interface BaseUserService {
     User create(CreateUserRequest request);
-    User updateById(UpdateUserRequest request);
+    User updateById(UpdateUserRequest request,String id);
 }

@@ -86,7 +86,7 @@ public void deletePublicFileByFileId(String fileId) {
             log.info("File does not exist in upload folder: " + filePath);
         }
         //fileRepo.deleteById(UUID.fromString(fileUtils.removeFileExtension(fileId)));
-        UUID id = UUID.fromString(fileId);
+        UUID id = UUID.fromString(fileUtils.removeFileExtension(fileId));
         if (fileRepo.existsById(id)) {
             FileEntity fileEntity = fileRepo.findById(id).get();
             fileEntity.setDeleted(true);

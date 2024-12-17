@@ -1,31 +1,28 @@
 package org.example.daiam.service.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import org.example.daiam.dto.mapper.RegisterRequestMapper;
 import org.example.daiam.dto.request.ChangePasswordRequest;
 import org.example.daiam.dto.request.LoginRequest;
 import org.example.daiam.dto.request.LogoutRequest;
 import org.example.daiam.dto.request.RegisterRequest;
-import org.example.daiam.dto.response.BaseTokenResponse;
+import org.example.daiam.entity.BlackListToken;
+import org.example.model.dto.response.BaseTokenResponse;
 import org.example.daiam.dto.response.DefaultClientTokenResponse;
-import org.example.daiam.dto.response.DefaultTokenResponse;
+import org.example.daiam.dto.response.DefaultAccessTokenResponse;
 import org.example.daiam.entity.ServiceClient;
 import org.example.daiam.entity.User;
-import org.example.daiam.exception.ErrorResponseException;
-import org.example.daiam.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.repo.*;
 import org.example.daiam.service.*;
-import org.example.model.dto.mapper.BaseMapper;
 import org.example.model.dto.response.BasedResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -73,18 +70,21 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
         if (rolesId != null) {
             rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));
         }
-        DefaultTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
+        DefaultAccessTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
         //5 phut hieu luc, trong thoi gian do khong duoc gui them
         //emailService.verifyEmail(request.email(), tokenResponse.getAccessToken());
         return user;
     }
 
     @Override
-    public BaseTokenResponse login(LoginRequest request) {
+    public BaseTokenResponse login(LoginRequest request, HttpServletRequest servletRequest) {
         User userEntity = userRepo.findByEmail(request.email())
                 .orElseThrow(() -> new NotFoundException("Login email not found"));
         checkValidUser(userEntity);
-        return generateDefaultToken(request.email(), userEntity.getUserId());
+        if (servletRequest != null && servletRequest.getHeader("Authorization") != null) {
+            saveInvalidToken(servletRequest, userEntity.getUserId());
+        }
+        return generateDefaultToken(userEntity.getEmail(), userEntity.getUserId());
     }
 
     private void checkValidUser(User user) {
@@ -112,12 +112,23 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
     }
 
     @Transactional//tim hieu tai sao o day can transactional
-    public ResponseEntity<?> logout(LogoutRequest request) {
+    public ResponseEntity<?> logout(LogoutRequest request, HttpServletRequest servletRequest) {
         String email = request.email();
         UUID id = userRepo.getUserIdByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        blackListTokenRepo.deleteAllByUserId(id);
+        saveInvalidToken(servletRequest, id);
         return ResponseEntity.ok(BasedResponse.success("Logout successful", email));
+    }
+
+    @Transactional
+    protected void saveInvalidToken(HttpServletRequest servletRequest, UUID id) {
+        String accessToken = servletRequest.getHeader("Authorization").substring(7);
+        blackListTokenRepo.save(BlackListToken.builder()
+                .token(accessToken)
+                .expirationDate(jwtService.extractExpiration(accessToken))
+                .userId(id)
+                .tokenId(UUID.fromString(jwtService.extractId(accessToken)))
+                .build());
     }
 
     @Override
@@ -132,11 +143,11 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
 
     @Override
     @Transactional
-    public BaseTokenResponse getClientToken(String clientId, String clientSecret) {
+    public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
         ServiceClient serviceClient = serviceClientRepo.findByClientIdAndClientSecret(clientId, clientSecret)
                 .orElseThrow(() -> new NotFoundException("Service client not found"));
         return DefaultClientTokenResponse.builder()
-                .accessToken(jwtService.generateClientToken(serviceClient.getClientId(), serviceClient.getClientHost()))
+                .accessToken(jwtService.generateClientToken(serviceClient.getClientId().toString(), serviceClient.getClientHost()))
                 .tokenType("Bearer")
                 .expiresIn(60)
                 .build();

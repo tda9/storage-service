@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Getter
@@ -25,7 +26,7 @@ public class BlackListToken extends BaseEntity {
     @Column(length = 10000)
     private String token;
     @Column(name = "expiration_date")
-    private LocalDateTime expirationDate;
+    private Date expirationDate;
 
 //    public BlackListToken(String token,LocalDateTime expirationDate,UUID userId){
 //        this.token = token;

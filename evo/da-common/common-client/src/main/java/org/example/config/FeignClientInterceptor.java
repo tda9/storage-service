@@ -3,11 +3,15 @@ package org.example.config;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.example.model.dto.response.BaseTokenResponse;
+import org.example.model.dto.response.ClientTokenResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -33,14 +37,14 @@ public class FeignClientInterceptor implements RequestInterceptor {
         RestTemplate restTemplate = new RestTemplate();
         try {
             // Call the auth service to get the token
-            ResponseEntity<String> response = restTemplate.getForEntity(
+            ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
                     tokenUrl,
-                    String.class,
+                    ClientTokenResponse.class,
                     clientId,
                     clientSecret
             );
             if (response.getStatusCode().is2xxSuccessful()) {
-                return response.getBody(); // Assuming the token is the plain response body
+                return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the token is the plain response body
             } else {
                 throw new RuntimeException("Failed to retrieve token. Status: " + response.getStatusCode());
             }

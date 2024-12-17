@@ -30,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -139,16 +141,15 @@ public class UserManagementController {
         return ResponseEntity.ok(msg);
     }
     @GetMapping("/{username}/authorities-by-username")
-    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
+    BasedResponse<UserAuthority> getUserAuthority(
+            @PathVariable String username) {
         return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
     }
-//    @GetMapping("/api/users/{userId}/authorities")
-//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {
-//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(userId));
-//    }
-//
-//    @GetMapping("/api/users/{username}/authorities-by-username")
-//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable String username) {
-//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(username));
-//    }
+    @GetMapping("/{clientId}/authorities-by-clientId")
+    BasedResponse<UserAuthority> getClientAuthority(
+            @PathVariable UUID clientId) {
+        return BasedResponse.success("Get authorities successful for " + clientId,
+                //TODO: use factory pattern to get keycloak authoriry
+                authorityServiceImpl.getClientAuthority(clientId));
+    }
 }

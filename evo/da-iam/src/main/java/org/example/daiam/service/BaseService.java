@@ -2,7 +2,7 @@ package org.example.daiam.service;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
-import org.example.daiam.dto.response.DefaultTokenResponse;
+import org.example.daiam.dto.response.DefaultAccessTokenResponse;
 import org.example.daiam.entity.BlackListToken;
 import org.example.daiam.repo.BlackListTokenRepo;
 import org.example.daiam.repo.RoleRepo;
@@ -47,15 +47,10 @@ public abstract class BaseService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
-    protected DefaultTokenResponse generateDefaultToken(String email, UUID userId) {
+
+    protected DefaultAccessTokenResponse generateDefaultToken(String email, UUID userId) {
         var jwtToken = jwtService.generateToken(email);
         var jwtRefreshToken = jwtService.generateRefreshToken(email);
-        DefaultTokenResponse tokenResponse = new DefaultTokenResponse(jwtToken, jwtRefreshToken, "Bearer", jwtExpiration, refreshExpiration);
-        blackListTokenRepo.save(BlackListToken.builder()
-                .token(jwtToken)
-                .expirationDate(LocalDateTime.now().plusMinutes(jwtExpiration))
-                .userId(userId)
-                .build());
-        return tokenResponse;
+        return new DefaultAccessTokenResponse(jwtToken, jwtRefreshToken, "Bearer", jwtExpiration, refreshExpiration);
     }
 }

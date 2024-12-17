@@ -42,12 +42,8 @@ public class HttpSecurityConfiguration {
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers("/auth/**").permitAll()
-//                                .requestMatchers("/login", "/refresh-token", "/forgot-password").permitAll()
-//                                .requestMatchers("/api/logout", "/reset-password").permitAll()
                                 .requestMatchers("/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs/*").permitAll()
-//                                .requestMatchers("/auth/certificate/.well-known/jwks.json").permitAll()
-//                                .requestMatchers("/auth/client-token/**").permitAll()
-                                .requestMatchers("/files/public/*").permitAll()
+                                .requestMatchers("/files/public/**").permitAll()
                                 .requestMatchers("/users/export", "/users/import").permitAll()
                                 .anyRequest().authenticated()
                 )

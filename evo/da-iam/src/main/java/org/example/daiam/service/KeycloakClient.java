@@ -1,7 +1,7 @@
 package org.example.daiam.service;
 
 import org.example.daiam.dto.response.KeycloakClientTokenResponse;
-import org.example.daiam.dto.response.KeycloakTokenResponse;
+import org.example.daiam.dto.response.KeycloakAccessTokenResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +21,13 @@ public interface KeycloakClient {
 
     @PostMapping(value = "${application.security.keycloak.newAccessTokenUrl}",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    ResponseEntity<KeycloakTokenResponse> refreshToken(@RequestBody MultiValueMap<String, String> body);
+    ResponseEntity<KeycloakAccessTokenResponse> refreshToken(@RequestBody MultiValueMap<String, String> body);
 
     @PostMapping(value = "${application.security.keycloak.newAccessTokenUrl}",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    ResponseEntity<KeycloakTokenResponse> getKeycloakUserToken(@RequestBody MultiValueMap<String, String> body);
+    ResponseEntity<KeycloakAccessTokenResponse> getKeycloakUserToken(@RequestBody MultiValueMap<String, String> body);
     @PostMapping(value = "${application.security.keycloak.newAccessTokenUrl}",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    ResponseEntity<KeycloakClientTokenResponse> getKeycloakClientToken(@RequestBody MultiValueMap<String, String> body);
+    ResponseEntity<KeycloakClientTokenResponse> getKeycloakClientToken(@RequestBody MultiValueMap<String, Object> body);
 
 }

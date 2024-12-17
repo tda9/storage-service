@@ -9,12 +9,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableFeignClients
 @EnableJpaRepositories(basePackages = "org.example.daiam.repo")//tai sao khong co cai nay trong micro thi project khong quet duoc repo folder
 @EnableAspectJAutoProxy
-@SpringBootApplication(scanBasePackages = {
-        "org.example.daiam",
-        "org.example.client",
-        "org.example.web",
-        "org.example.daiam.dto.mapper"
-})
+@SpringBootApplication
+//        (scanBasePackages = {
+//        "org.example.daiam",
+//        "org.example.client",
+//        "org.example.web",
+//        "org.example.daiam.dto.mapper"
+//})
 public class DaIamApplication {
 
     public static void main(String[] args) {

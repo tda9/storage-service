@@ -13,6 +13,5 @@ public interface BlackListTokenRepo extends JpaRepository<BlackListToken, UUID> 
     Optional<BlackListToken> findTopByUserIdOrderByCreatedDateDesc(UUID id);
     void deleteAllByUserId(UUID id);
 
-
     Optional<BlackListToken> findByToken(String token);
 }

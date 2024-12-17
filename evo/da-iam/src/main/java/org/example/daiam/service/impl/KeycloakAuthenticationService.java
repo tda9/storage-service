@@ -1,28 +1,25 @@
 package org.example.daiam.service.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
+import org.example.daiam.service.KeycloakClient;
 import org.example.daiam.dto.request.ChangePasswordRequest;
 import org.example.daiam.dto.request.LoginRequest;
 import org.example.daiam.dto.request.LogoutRequest;
 import org.example.daiam.dto.request.RegisterRequest;
-import org.example.daiam.dto.response.BaseTokenResponse;
+import org.example.model.dto.response.BaseTokenResponse;
 
-import org.example.daiam.dto.response.DefaultClientTokenResponse;
-import org.example.daiam.dto.response.KeycloakClientTokenResponse;
-import org.example.daiam.dto.response.KeycloakTokenResponse;
+import org.example.daiam.dto.response.KeycloakAccessTokenResponse;
 
 
 import org.example.daiam.entity.User;
-import org.example.daiam.exception.ErrorResponseException;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.repo.BlackListTokenRepo;
 import org.example.daiam.repo.RoleRepo;
 import org.example.daiam.repo.UserRepo;
 import org.example.daiam.service.*;
-import org.keycloak.adapters.springsecurity.KeycloakAuthenticationException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -79,14 +76,14 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
     }
 
     @Override
-    public BaseTokenResponse login(LoginRequest request) {
-        authenticationService.login(request);
+    public BaseTokenResponse login(LoginRequest request, HttpServletRequest servletRequest) {
+        authenticationService.login(request,servletRequest);
         return getKeycloakUserToken(request.email(), request.password());
     }
 
     @Override
-    public BaseTokenResponse getClientToken(String clientId, String clientSecret) {
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+    public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
         body.add("grant_type", "client_credentials");
@@ -95,7 +92,7 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
 
 
     @Override
-    public ResponseEntity<?> logout(LogoutRequest request) {
+    public ResponseEntity<?> logout(LogoutRequest request, HttpServletRequest servletRequest) {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
@@ -114,7 +111,7 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
         return keycloakClient.refreshToken(body).getBody();
     }
 
-    public KeycloakTokenResponse getKeycloakUserToken(String username, String password) {
+    public KeycloakAccessTokenResponse getKeycloakUserToken(String username, String password) {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
         body.add("client_id", clientId);

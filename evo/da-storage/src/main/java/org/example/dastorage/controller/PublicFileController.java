@@ -18,7 +18,8 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/files/public")
-public class PublicFileController {
+public class
+PublicFileController {
     private final PublicFileServiceImpl publicFileServiceImpl;
     public PublicFileController(PublicFileServiceImpl publicFileServiceImpl) {
         this.publicFileServiceImpl = publicFileServiceImpl;

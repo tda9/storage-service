@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "service_client")
 @Data
@@ -18,7 +20,7 @@ import lombok.NoArgsConstructor;
 public class ServiceClient {
     @Id
     @Column(name = "client_id")
-    private String clientId;
+    private UUID clientId;
     @Column(name = "client_secret")
     private String clientSecret;
     @Column(name = "client_host")

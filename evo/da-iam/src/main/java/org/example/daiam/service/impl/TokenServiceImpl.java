@@ -5,7 +5,9 @@ import org.example.daiam.entity.BlackListToken;
 import org.example.daiam.repo.BlackListTokenRepo;
 import org.example.daiam.service.JWTService;
 import org.example.web.security.TokenCacheService;
+import org.example.web.support.RedisService;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -14,23 +16,19 @@ import java.util.UUID;
 @Primary
 @RequiredArgsConstructor
 public class TokenServiceImpl implements TokenCacheService {
-    private final BlackListTokenRepo blackListTokenRepo;
-private final JWTService jwtService;
+    private final RedisService redisService;
+
     @Override
     public void invalidToken(String token) {
-        blackListTokenRepo.save(BlackListToken.builder()
-                        .token(token)
-                .build());
     }
 
     @Override
     public void invalidRefreshToken(String refreshToken) {
-
     }
 
     @Override
     public boolean isExisted(String cacheName, String token) {
-        return blackListTokenRepo.existsById(UUID.fromString(jwtService.extractId(token)));
+        return redisService.isEntryExist(token);
     }
 
     @Override

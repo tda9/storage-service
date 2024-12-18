@@ -31,18 +31,12 @@ public class FeignClientInterceptor implements RequestInterceptor {
     }
 
     private String getClientToken() {
-        String tokenUrl = "http://localhost:8080/auth/client-token/{clientId}/{clientSecret}";
-        String clientId = client_id;
-        String clientSecret = client_secret;
+        String tokenUrl = "http://localhost:8080/auth/client-token/"+client_id+"/"+client_secret;
         RestTemplate restTemplate = new RestTemplate();
         try {
-            // Call the auth service to get the token
             ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
                     tokenUrl,
-                    ClientTokenResponse.class,
-                    clientId,
-                    clientSecret
-            );
+                    ClientTokenResponse.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the token is the plain response body
             } else {

@@ -27,12 +27,12 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JWTService {
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+//    @Value("${application.security.jwt.expiration}")
+//    private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
     private final BlackListTokenRepo blackListTokenRepo;
-    UserRepo userRepo;
+    private final  UserRepo userRepo;
 
     public String generateRefreshToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
@@ -43,11 +43,11 @@ public class JWTService {
                 .compact();
     }
 
-    public String generateClientToken(String client_id, String clientHost) {
+    public String generateClientToken(String client_id, String clientHost,long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
-                .claim("preferred_email", clientHost)
+                .claim("preferred_username", clientHost)
                 .claim("clientAddress", clientHost)
                 .claim("client_id", client_id)
                 .claim("clientHost", clientHost)
@@ -56,12 +56,12 @@ public class JWTService {
                 .compact();
     }
 
-    public String generateToken(String email) {
+    public String generateToken(String email,long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
                 .setSubject(email)
-                .claim("preferred_email", email)
+                .claim("preferred_username", email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)

@@ -17,7 +17,7 @@ public interface  BaseAuthenticationService {
 
     BaseTokenResponse login(LoginRequest loginRequest, HttpServletRequest servletRequest);
 
-    BaseTokenResponse refreshToken(String refreshToken);
+    BaseTokenResponse refreshToken(String refreshToken, HttpServletRequest servletRequest);
 
     ResponseEntity<?> logout(LogoutRequest request,HttpServletRequest servletRequest);
 

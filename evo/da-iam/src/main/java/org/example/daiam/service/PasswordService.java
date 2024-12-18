@@ -69,7 +69,6 @@ public class PasswordService {
     public String generateToken() {
         return UUID.randomUUID().toString();
     }
-
     public void resetPassword(String email, String newPassword, String token) {
         //TODO: check format password here
         User user = userRepo.findByEmail(email).orElseThrow();

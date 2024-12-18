@@ -13,6 +13,7 @@ import org.example.daiam.repo.UserRoleRepo;
 
 import org.example.daiam.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.example.web.support.RedisService;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,10 +40,9 @@ public class KeycloakUserService extends BaseKeycloakService implements BaseUser
                                UserRoleRepo userRoleRepo,
                                PasswordService passwordService,
                                JWTService jwtService,
-                               BlackListTokenRepo blackListTokenRepo,
                                KeycloakAuthenticationService keycloakAuthenticationService,
-                               UserService userService, UserRequestMapper userRequestMapper) {
-        super(keycloak, userRepo, roleRepo, blackListTokenRepo, jwtService);
+                               UserService userService, UserRequestMapper userRequestMapper, RedisService redisService) {
+        super(keycloak, userRepo, roleRepo,jwtService,redisService);
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.userRoleRepo = userRoleRepo;

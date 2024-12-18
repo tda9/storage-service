@@ -17,6 +17,7 @@ import org.example.daiam.repo.impl.UserRepoImpl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.service.*;
+import org.example.web.support.RedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +44,10 @@ public class UserService extends BaseService implements BaseUserService {
                        UserRoleRepo userRoleRepo,
                        PasswordService passwordService,
                        UserRepoImpl userRepoImpl,
-                       BlackListTokenRepo blackListTokenRepo,
-                       JWTService jwtService, UserRequestMapper userRequestMapper) {
-        super(userRepo, roleRepo, blackListTokenRepo, jwtService);
+                       JWTService jwtService,
+                       UserRequestMapper userRequestMapper,
+                       RedisService  redisService) {
+        super(userRepo, roleRepo,jwtService,redisService);
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.userRoleRepo = userRoleRepo;

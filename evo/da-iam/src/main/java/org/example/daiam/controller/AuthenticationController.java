@@ -31,14 +31,6 @@ import java.util.UUID;
 public class AuthenticationController {
     private final PasswordService passwordService;
     private final AuthenticationServiceFactory authenticationServiceFactory;
-private final TokenServiceImpl tokenServiceImpl;
-    @GetMapping("/verify-email")
-    public BasedResponse<?> verifyEmail(
-            @RequestParam @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email,
-            @RequestParam @NotBlank(message = "Missing email verification token") String token) {
-            passwordService.verifyEmail(email, token);
-            return BasedResponse.success("Verify email successful", email);
-    }
 
     @PostMapping("/register")
     public BasedResponse<?> register(@RequestBody @Valid RegisterRequest request) {
@@ -47,21 +39,23 @@ private final TokenServiceImpl tokenServiceImpl;
     }
 
     @PostMapping("/login")
-    public BasedResponse<?> login(@RequestBody @Valid LoginRequest request,HttpServletRequest servletRequest) {
+    public BasedResponse<?> login(@RequestBody @Valid LoginRequest request, HttpServletRequest servletRequest) {
         return BasedResponse.success("Login successful",
-                authenticationServiceFactory.getService().login(request,servletRequest));
+                authenticationServiceFactory.getService().login(request, servletRequest));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody @Valid LogoutRequest request, HttpServletRequest servletRequest) {
-        return authenticationServiceFactory.getService().logout(request,servletRequest);
+        return authenticationServiceFactory.getService().logout(request, servletRequest);
     }
 
 
     @PostMapping("/refresh-token")
-    public BasedResponse<?> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
+    public BasedResponse<?> refreshToken(
+            @RequestBody @Valid RefreshTokenRequest request,
+            HttpServletRequest servletRequest) {
         return BasedResponse.success("Refresh token successful",
-                authenticationServiceFactory.getService().refreshToken(request.refreshToken()));
+                authenticationServiceFactory.getService().refreshToken(request.refreshToken(), servletRequest));
     }
 
     @PreAuthorize("hasPermission('USERS','UPDATE')")
@@ -72,14 +66,6 @@ private final TokenServiceImpl tokenServiceImpl;
         return BasedResponse.success("Change password successful", request.email());
     }
 
-    @PostMapping("/forgot-password")
-    public BasedResponse<?> forgotPassword(
-            @RequestParam @NotEmpty(message = "Missing forgot email")
-            @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email")String email) {
-            passwordService.forgotPassword(email);
-            return BasedResponse.success("If your email existed, you will receive an email", email);
-    }
-
     @GetMapping("/reset-password")
     public BasedResponse<?> resetPassword(
             @RequestParam @NotBlank @Pattern(regexp = InputUtils.EMAIL_FORMAT) String email,
@@ -88,6 +74,7 @@ private final TokenServiceImpl tokenServiceImpl;
         authenticationServiceFactory.getService().resetPassword(email, newPassword, token);
         return BasedResponse.success("Reset password successful", email);
     }
+
     @GetMapping("/custom-login")
     public BasedResponse<?> redirectToKeycloakLogin() {
         return BasedResponse.builder()
@@ -97,6 +84,7 @@ private final TokenServiceImpl tokenServiceImpl;
                 .httpStatusCode(301)
                 .build();
     }
+
     private final RSAKeyUtil rsaKeyUtil;
 
     @GetMapping("/certificate/.well-known/jwks.json")
@@ -111,9 +99,19 @@ private final TokenServiceImpl tokenServiceImpl;
         return ResponseEntity.ok(authenticationServiceFactory.getService()
                 .getClientToken(clientId, clientSecret));
     }
+    @GetMapping("/verify-email")
+    public BasedResponse<?> verifyEmail(
+            @RequestParam @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email,
+            @RequestParam @NotBlank(message = "Missing email verification token") String token) {
+        passwordService.verifyEmail(email, token);
+        return BasedResponse.success("Verify email successful", email);
+    }
 
-    @GetMapping("/blacklist/{token}")
-    BasedResponse<Boolean> isBlacklisted(@PathVariable String token) {
-        return BasedResponse.success("None",tokenServiceImpl.isInvalidToken(token));
+    @PostMapping("/forgot-password")
+    public BasedResponse<?> forgotPassword(
+            @RequestParam @NotEmpty(message = "Missing forgot email")
+            @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email) {
+        passwordService.forgotPassword(email);
+        return BasedResponse.success("If your email existed, you will receive an email", email);
     }
 }

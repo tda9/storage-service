@@ -5,12 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.client.iam.IamClient;
 import org.example.web.security.TokenCacheService;
+import org.example.web.support.RedisService;
 import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 @Slf4j
 public class TokenCacheServiceImpl implements TokenCacheService {
-private final IamClient iamClient;
+private final RedisService redisService;
     @Override
     public void invalidToken(String token) {
 
@@ -23,6 +24,6 @@ private final IamClient iamClient;
 
     @Override
     public boolean isExisted(String cacheName, String token) {
-        return iamClient.isBlacklisted(token).getData();
+        return redisService.isEntryExist(token);
     }
 }

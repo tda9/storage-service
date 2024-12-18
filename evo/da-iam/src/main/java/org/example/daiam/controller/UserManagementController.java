@@ -122,7 +122,6 @@ public class UserManagementController {
             List<User> users = userRepoImpl.filterByField(request,sortBy,sort,currentSize,currentPage);
             // Generate Excel file as byte array
             byte[] excelFile = excelService.writeUsersToExcel(users);
-
             // Set HTTP headers for file download
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Disposition", "attachment; filename=users.xlsx");
@@ -149,7 +148,6 @@ public class UserManagementController {
     BasedResponse<UserAuthority> getClientAuthority(
             @PathVariable UUID clientId) {
         return BasedResponse.success("Get authorities successful for " + clientId,
-                //TODO: use factory pattern to get keycloak authoriry
-                authorityServiceImpl.getClientAuthority(clientId));
+                authorityServiceImpl.getClientAuthority(clientId));//TODO: use factory pattern to get keycloak authoriry
     }
 }

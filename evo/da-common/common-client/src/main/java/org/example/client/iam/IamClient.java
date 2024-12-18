@@ -19,9 +19,6 @@ import java.util.UUID;
         //,fallbackFactory = IamClientFallback.class
 )
 public interface IamClient {
-//    @GetMapping("/api/users/{userId}/authorities")
-//    @LoadBalanced
-//    BasedResponse<UserAuthority> getUserAuthority(@PathVariable UUID userId);
 
     @GetMapping("/users/{username}/authorities-by-username")
     @LoadBalanced

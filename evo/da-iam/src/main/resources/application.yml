@@ -6,7 +6,7 @@ spring:
   application:
     name: da-iam
     client-id: 2c7f4d5e-8c12-4f8d-b321-6e1d9e9b5f72
-    client-secret: 123
+    client-secret: EhHKwFVOfHlMuj3CgqOBH9vAgC3xPdLH
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -70,7 +70,7 @@ confirmation:
 application:
   file:
     upload-dir: D:\\da\\images
-  authProvider: DEFAULT #KEYCLOAK DEFAULT
+  authProvider: KEYCLOAK #KEYCLOAK DEFAULT
   security:
     jwt:
       expiration: 86400000 # 1day
@@ -112,4 +112,5 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true
+
 

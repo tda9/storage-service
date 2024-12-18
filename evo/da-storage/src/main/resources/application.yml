@@ -9,7 +9,7 @@ spring:
   application:
     name: da-storage
     client-id:  2b7f4d5e-8c12-4f8d-b321-6e1d9e9b5f72
-    client-secret: 123
+    client-secret: Ieoaqb0FtguXpuQUXjESE7PUsVxCkXtq
     upload-folder:
       public: upload/public
       private: upload/private

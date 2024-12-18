@@ -70,7 +70,6 @@ public class AuthorityServiceImpl implements AuthorityService {
         // Map roles to authorities
         Stream<String> roleAuthorities = roles.stream()
                 .map(role -> "ROLE_" + role.getName());
-
         // Flatten the nested List<Permission> in the Set and map them to authorities
         Stream<String> permissionAuthorities = permissions.stream()
                 .map(permission -> (permission.getResourceCode() + "." + permission.getScope()));

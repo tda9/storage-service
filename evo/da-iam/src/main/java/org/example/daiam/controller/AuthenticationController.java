@@ -1,5 +1,6 @@
 package org.example.daiam.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -11,29 +12,25 @@ import org.example.daiam.service.PasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.service.impl.AuthorityServiceImpl;
+import org.example.daiam.service.impl.TokenServiceImpl;
 import org.example.daiam.utils.InputUtils;
 import org.example.daiam.utils.RSAKeyUtil;
 import org.example.model.UserAuthority;
 import org.example.model.dto.response.BasedResponse;
+import org.example.web.security.impl.TokenCacheServiceImpl;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
     private final PasswordService passwordService;
-    private final AuthorityServiceImpl authorityServiceImpl;
     private final AuthenticationServiceFactory authenticationServiceFactory;
-
-    @GetMapping("/verify-email")
-    public BasedResponse<?> verifyEmail(
-            @RequestParam @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email,
-            @RequestParam @NotBlank(message = "Missing email verification token") String token) {
-            passwordService.verifyEmail(email, token);
-            return BasedResponse.success("Verify email successful", email);
-    }
 
     @PostMapping("/register")
     public BasedResponse<?> register(@RequestBody @Valid RegisterRequest request) {
@@ -42,44 +39,42 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public BasedResponse<?> login(@RequestBody @Valid LoginRequest request) {
+    public BasedResponse<?> login(@RequestBody @Valid LoginRequest request, HttpServletRequest servletRequest) {
         return BasedResponse.success("Login successful",
-                authenticationServiceFactory.getService().login(request));
+                authenticationServiceFactory.getService().login(request, servletRequest));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody @Valid LogoutRequest request) {
-        return authenticationServiceFactory.getService().logout(request);
+    public ResponseEntity<?> logout(@RequestBody @Valid LogoutRequest request, HttpServletRequest servletRequest) {
+        return authenticationServiceFactory.getService().logout(request, servletRequest);
     }
 
 
     @PostMapping("/refresh-token")
-    public BasedResponse<?> refreshToken(@RequestBody @Valid RefreshTokenRequest request) {
+    public BasedResponse<?> refreshToken(
+            @RequestBody @Valid RefreshTokenRequest request,
+            HttpServletRequest servletRequest) {
         return BasedResponse.success("Refresh token successful",
-                authenticationServiceFactory.getService().refreshToken(request.refreshToken()));
+                authenticationServiceFactory.getService().refreshToken(request.refreshToken(), servletRequest));
     }
 
     @PreAuthorize("hasPermission('USERS','UPDATE')")
     @PostMapping("/change-password")
     public BasedResponse<?> changePassword(
-            @RequestBody ChangePasswordRequest request) {
+            @RequestBody @Valid ChangePasswordRequest request) {
         authenticationServiceFactory.getService().changePassword(request);
         return BasedResponse.success("Change password successful", request.email());
     }
 
-    @PostMapping("/forgot-password")
-    public BasedResponse<?> forgotPassword(
-            @RequestParam @NotEmpty(message = "Missing forgot email")
-            @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email")String email) {
-            passwordService.forgotPassword(email);
-            return BasedResponse.success("If your email existed, you will receive an email", email);
-    }
-
     @GetMapping("/reset-password")
-    public BasedResponse<?> resetPassword(@RequestParam String email, @RequestParam String newPassword, @RequestParam String token) {
+    public BasedResponse<?> resetPassword(
+            @RequestParam @NotBlank @Pattern(regexp = InputUtils.EMAIL_FORMAT) String email,
+            @RequestParam @NotBlank @Pattern(regexp = InputUtils.PASSWORD_FORMAT) String newPassword,
+            @RequestParam @NotBlank String token) {
         authenticationServiceFactory.getService().resetPassword(email, newPassword, token);
         return BasedResponse.success("Reset password successful", email);
     }
+
     @GetMapping("/custom-login")
     public BasedResponse<?> redirectToKeycloakLogin() {
         return BasedResponse.builder()
@@ -89,6 +84,7 @@ public class AuthenticationController {
                 .httpStatusCode(301)
                 .build();
     }
+
     private final RSAKeyUtil rsaKeyUtil;
 
     @GetMapping("/certificate/.well-known/jwks.json")
@@ -97,8 +93,25 @@ public class AuthenticationController {
     }
 
     @GetMapping("/client-token/{clientId}/{clientSecret}")
-    public ResponseEntity<?> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret) {
+    public ResponseEntity<?> getClientToken(
+            @PathVariable UUID clientId,
+            @PathVariable @NotBlank String clientSecret) {
         return ResponseEntity.ok(authenticationServiceFactory.getService()
                 .getClientToken(clientId, clientSecret));
+    }
+    @GetMapping("/verify-email")
+    public BasedResponse<?> verifyEmail(
+            @RequestParam @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email,
+            @RequestParam @NotBlank(message = "Missing email verification token") String token) {
+        passwordService.verifyEmail(email, token);
+        return BasedResponse.success("Verify email successful", email);
+    }
+
+    @PostMapping("/forgot-password")
+    public BasedResponse<?> forgotPassword(
+            @RequestParam @NotEmpty(message = "Missing forgot email")
+            @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid verify email") String email) {
+        passwordService.forgotPassword(email);
+        return BasedResponse.success("If your email existed, you will receive an email", email);
     }
 }

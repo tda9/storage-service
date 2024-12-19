@@ -1,16 +1,19 @@
 package org.example.dastorage.service.impl;
 
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dastorage.dto.request.FilterFileRequest;
 import org.example.dastorage.entity.FileEntity;
+import org.example.dastorage.entity.FileHistory;
 import org.example.dastorage.exception.FileNotFoundException;
+import org.example.dastorage.repo.FileHistoryRepo;
 import org.example.dastorage.repo.FileRepo;
 import org.example.dastorage.repo.impl.FileRepoImpl;
 import org.example.dastorage.utils.FileUtils;
 import org.example.model.dto.response.BasedResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -19,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -43,7 +47,7 @@ public class PublicFileServiceImpl {
 
     @Value("${spring.application.upload-folder.public}")
     private String uploadDir;
-
+    @Transactional
     public void uploadPublicFiles(MultipartFile[] files) {
         try {
             Path mainUploadDir = Paths.get(System.getProperty("user.dir"), uploadDir);
@@ -68,6 +72,7 @@ public class PublicFileServiceImpl {
                 // Copy the file to user path
                 Files.copy(f.getInputStream(), destinationFilePath);
                 log.info("File uploaded successfully to: {}", destinationFilePath);
+                saveFileHistory(originalFileName,null,"upload",fileEntity.getFileId());
             }
         } catch (IOException ex) {
             log.error("File upload failed: {}", ex.getMessage(), ex);
@@ -86,19 +91,24 @@ public void deletePublicFileByFileId(String fileId) {
             log.info("File does not exist in upload folder: " + filePath);
         }
         //fileRepo.deleteById(UUID.fromString(fileUtils.removeFileExtension(fileId)));
-        UUID id = UUID.fromString(fileId);
+        UUID id = UUID.fromString(fileUtils.removeFileExtension(fileId));
         if (fileRepo.existsById(id)) {
             FileEntity fileEntity = fileRepo.findById(id).get();
+            saveFileHistory(fileEntity.getFileName(),null,"delete",fileEntity.getFileId());
             fileEntity.setDeleted(true);
             fileRepo.save(fileEntity);
         }
+
+
     } catch (IOException e) {
         log.error("Failed to delete file: " + filePath + ". Error: " + e.getMessage());
     }
-}
 
+}
+@Transactional
     public ResponseEntity<Resource> downloadPublicFile(String fileId) {
         FileEntity fileEntity = validatePublicFile(fileId);
+        saveFileHistory(fileEntity.getFileName(),null,"download",fileEntity.getFileId());
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
@@ -135,7 +145,7 @@ public void deletePublicFileByFileId(String fileId) {
         }
         return fileEntity;
     }
-    public ResponseEntity<?> getPublicFileByFileId(String fileId, int width, int height) {
+    public ResponseEntity<byte[]> getPublicFileByFileId(String fileId, int width, int height) {
         try {
             Path filePath = Paths.get(System.getProperty("user.dir"), uploadDir, fileId);
             Resource resource = new UrlResource(filePath.toUri());
@@ -155,7 +165,7 @@ public void deletePublicFileByFileId(String fileId) {
                     if (width == 0 || height == 0) {
                         return ResponseEntity.ok()
                                 .contentType(MediaType.valueOf(contentType))
-                                .body(resource);
+                                .body(resource.getContentAsByteArray());
                     }
                     BufferedImage resizedImage = fileUtils.resizeImage(originalImage, width, height);
                     resizedImage = fileUtils.resizeImage(originalImage, width, height);
@@ -172,7 +182,7 @@ public void deletePublicFileByFileId(String fileId) {
                 }
             } else {
                 log.warn("File existed in database but not in folder upload");
-                return ResponseEntity.ok(BasedResponse.success("File existed in database but not in folder upload", fileEntity));
+                return null;
             }
         } catch (IOException e) {
             log.error("Error while reading file: {}", e.getMessage(), e);
@@ -203,5 +213,19 @@ public void deletePublicFileByFileId(String fileId) {
         return fileRepoImpl.getTotalSizeForFilter(keyword,"public");
     }
 
+    @Autowired
+    private FileHistoryRepo fileHistoryRepo;
+    public FileHistory saveFileHistory(String fileName, UUID userId, String action,UUID fileId) {
+        // Create FileHistory entity
+        FileHistory fileHistory = FileHistory.builder()
+                .fileName(fileName)
+                .userId(userId)
+                .fileId(fileId)
+                .action(action)
+                .build();
+
+        // Save to the database
+        return fileHistoryRepo.save(fileHistory);
+    }
 
 }

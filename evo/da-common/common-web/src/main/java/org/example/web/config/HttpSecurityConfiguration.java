@@ -31,6 +31,8 @@ public class HttpSecurityConfiguration {
     private final CustomAuthenticationFilter customAuthenticationFilter;
     private final ForbiddenTokenFilter forbiddenTokenFilter;
     private final JwtProperties jwtProperties;
+    private final ActionLogFilter actionLogFilter;
+
 
 
     @Bean
@@ -42,12 +44,8 @@ public class HttpSecurityConfiguration {
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers("/auth/**").permitAll()
-//                                .requestMatchers("/login", "/refresh-token", "/forgot-password").permitAll()
-//                                .requestMatchers("/api/logout", "/reset-password").permitAll()
                                 .requestMatchers("/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs/*").permitAll()
-//                                .requestMatchers("/auth/certificate/.well-known/jwks.json").permitAll()
-//                                .requestMatchers("/auth/client-token/**").permitAll()
-                                .requestMatchers("/files/public/*").permitAll()
+                                .requestMatchers("/files/public/**").permitAll()
                                 .requestMatchers("/users/export", "/users/import").permitAll()
                                 .anyRequest().authenticated()
                 )
@@ -55,6 +53,8 @@ public class HttpSecurityConfiguration {
                         .authenticationManagerResolver(this.jwkResolver(this.jwtProperties)));
         http.addFilterAfter(this.forbiddenTokenFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.customAuthenticationFilter, BearerTokenAuthenticationFilter.class);
+        http.addFilterAfter(this.actionLogFilter, BearerTokenAuthenticationFilter.class);
+
         return http.build();
     }
 

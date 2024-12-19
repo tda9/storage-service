@@ -1,13 +1,16 @@
 package org.example.daiam.service.impl;
 
 
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.entity.Role;
 import org.example.daiam.entity.RolePermissions;
+import org.example.daiam.entity.ServiceClient;
 import org.example.daiam.entity.User;
 import org.example.daiam.repo.RolePermissionRepo;
 import org.example.daiam.repo.RoleRepo;
+import org.example.daiam.repo.ServiceClientRepo;
 import org.example.daiam.repo.UserRepo;
 import org.example.model.UserAuthority;
 import org.example.web.security.AuthorityService;
@@ -31,16 +34,12 @@ public class AuthorityServiceImpl implements AuthorityService {
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
     private final RolePermissionRepo rolePermissionRepo;
-    @Override
-    public UserAuthority getUserAuthority(UUID userId) {
-        //log.info(userId.toString());
-        return null;
-    }
+    private final ServiceClientRepo serviceClientRepo;
 
     @Override
-    public UserAuthority getUserAuthority(String username) {
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(()->new IllegalArgumentException("Username not found during getUserAuthority() "));
+    public UserAuthority getUserAuthority(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(()->new NotFoundException("Username not found during getUserAuthority() "));
         Set<Role> roles = roleRepo.findRolesByUserId(user.getUserId());
         List<RolePermissions> rolePermissions = rolePermissionRepo.findAllByRoleIdIn(roles.stream().map(Role::getRoleId).collect(Collectors.toSet()));
         log.info("---USER GRANT---" + mapRolesToAuthorities(roles, rolePermissions).toString());
@@ -58,7 +57,12 @@ public class AuthorityServiceImpl implements AuthorityService {
 
     @Override
     public UserAuthority getClientAuthority(UUID clientId) {
-        return null;
+        ServiceClient client = serviceClientRepo.findById(clientId).orElseThrow(()->new NotFoundException("Service client not found"));
+        return UserAuthority.builder()
+                .userId(client.getClientId())
+                .isRoot(true)
+                .password(client.getClientSecret())
+                .build();
     }
 
 
@@ -66,7 +70,6 @@ public class AuthorityServiceImpl implements AuthorityService {
         // Map roles to authorities
         Stream<String> roleAuthorities = roles.stream()
                 .map(role -> "ROLE_" + role.getName());
-
         // Flatten the nested List<Permission> in the Set and map them to authorities
         Stream<String> permissionAuthorities = permissions.stream()
                 .map(permission -> (permission.getResourceCode() + "." + permission.getScope()));

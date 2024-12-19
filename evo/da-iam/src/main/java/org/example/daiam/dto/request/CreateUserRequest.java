@@ -12,9 +12,6 @@ public record CreateUserRequest(
         @NotBlank(message = "Register email cannot be empty")
         @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
-        @NotBlank(message = "Register password cannot be empty")
-        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid password format")
-        String password,
         @NotBlank(message = "Username cannot be empty")
         String username,
         Boolean isRoot,

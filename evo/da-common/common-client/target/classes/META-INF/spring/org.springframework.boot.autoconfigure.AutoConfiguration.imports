@@ -1,0 +1,3 @@
+
+org.example.config.FeignClientInterceptor
+org.example.config.FeignClientConfiguration

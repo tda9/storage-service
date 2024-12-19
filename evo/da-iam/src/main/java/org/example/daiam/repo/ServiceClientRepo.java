@@ -8,9 +8,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface ServiceClientRepo extends JpaRepository<ServiceClient,String> {
+public interface ServiceClientRepo extends JpaRepository<ServiceClient, UUID> {
     @Query("SELECT sc FROM ServiceClient sc WHERE sc.clientId = :clientId AND sc.clientSecret = :clientSecret")
-    Optional<ServiceClient> findByClientIdAndClientSecret(@Param("clientId") String clientId, @Param("clientSecret") String clientSecret);
+    Optional<ServiceClient> findByClientIdAndClientSecret(@Param("clientId") UUID clientId, @Param("clientSecret") String clientSecret);
 }

@@ -37,9 +37,9 @@ public class JwkAuthenticationManagerResolver implements
     private String toIssuerId(HttpServletRequest request) {
         String token = this.resolver.resolve(request);
         try {
-            if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("user_id"))) {//token user
+            if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("preferred_email"))) {//token iam
                 return "internal";
-            } else if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("preferred_username"))) {//token client
+            } else if (StringUtils.hasText((String) JWTParser.parse(token).getJWTClaimsSet().getClaim("preferred_username"))) {//token keycloak
                 return "sso";
             } else {
                 throw new RuntimeException("INVALID_INPUT");

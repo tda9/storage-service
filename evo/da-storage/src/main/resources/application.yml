@@ -8,8 +8,8 @@ spring:
       #If you are running your Spring Boot application as a packaged JAR, using a path relative to src/main/resources is not recommended for file uploads because it is not writable. Use a path outside of resources or a path defined by a system property.
   application:
     name: da-storage
-    client-id: da-storage
-    client-secret: 123
+    client-id:  2b7f4d5e-8c12-4f8d-b321-6e1d9e9b5f72
+    client-secret: Ieoaqb0FtguXpuQUXjESE7PUsVxCkXtq
     upload-folder:
       public: upload/public
       private: upload/private

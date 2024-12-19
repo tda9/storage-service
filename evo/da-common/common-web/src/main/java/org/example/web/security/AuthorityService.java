@@ -6,7 +6,7 @@ import org.example.model.UserAuthority;
 import java.util.UUID;
 
 public interface AuthorityService {
-    UserAuthority getUserAuthority(UUID userId);
+
 
     UserAuthority getUserAuthority(String username);
 

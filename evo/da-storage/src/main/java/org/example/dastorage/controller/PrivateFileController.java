@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/files/private")
 public class PrivateFileController {
@@ -22,42 +23,64 @@ public class PrivateFileController {
     public PrivateFileController(PrivateFileServiceImpl privateFileServiceImpl) {
         this.fileServiceImpl = privateFileServiceImpl;
     }
+
     @PreAuthorize("hasPermission('FILES','UPDATE')")
     @GetMapping("/image-resize/{userId}/{fileId}")
     public ResponseEntity<?> getImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId,
-            @RequestParam(required = false,defaultValue = "0") int width,
-            @RequestParam(required = false,defaultValue = "0") int height
+            @RequestParam(required = false, defaultValue = "0") int width,
+            @RequestParam(required = false, defaultValue = "0") int height
     ) {
-        return fileServiceImpl.getPrivateFileByFileId(fileId,userId,width,height);
+        return fileServiceImpl.getPrivateFileByFileId(fileId, userId, width, height);
     }
+
     @PreAuthorize("hasPermission('FILES','CREATE')")
     @PostMapping("/upload")
-    public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files,@RequestParam String userId) {
-        fileServiceImpl.uploadPrivateFiles(files,userId);
-        return BasedResponse.success("Upload successful",null);
+    public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+        fileServiceImpl.uploadPrivateFiles(files, userId);
+        return BasedResponse.success("Upload successful", null);
     }
+    @PreAuthorize("hasPermission('FILES','CREATE')")
+    @PostMapping("/import-excel-history")
+    public BasedResponse<?> saveHistory(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+        fileServiceImpl.importHistory(files, userId);
+        return BasedResponse.success("Save import history successful", null);
+    }
+
     @PreAuthorize("hasPermission('FILES','READ')")
     @GetMapping("/download/{fileId}/{userId}")
     public ResponseEntity<Resource> downloadFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
                                                      @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
-        if (fileId == null || fileId.isEmpty()){
+        if (fileId == null || fileId.isEmpty()) {
             throw new IllegalArgumentException("Illegal input");
         }
-        return fileServiceImpl.downloadPublicFile(fileId,userId);
+        return fileServiceImpl.downloadPublicFile(fileId, userId);
     }
+
     @PreAuthorize("hasPermission('FILES','DELETE')")
     @DeleteMapping("/{fileId}/{userId}")
-    public BasedResponse<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                       @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+    public BasedResponse<?> deleteById(
+            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
-        fileServiceImpl.deletePrivateFileByFileId(fileId,userId);
-        return BasedResponse.success("Delete file successful",null);
+        fileServiceImpl.deletePrivateFileByFileId(fileId, userId);
+        return BasedResponse.success("Delete file successful", null);
     }
+
+    @PreAuthorize("hasPermission('FILES','DELETE')")
+    @GetMapping("/{fileId}/{userId}")
+    public BasedResponse<?> getById(
+            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+    ) {
+        ResponseEntity<?> response =fileServiceImpl.getPrivateFileByFileId(fileId, userId,0,0);
+        return BasedResponse.success("Get file successful", response.getBody());
+    }
+
     @PreAuthorize("hasPermission('FILES','READ')")
-    @GetMapping
+    @GetMapping("/search")
     public BasedResponse<?> searchFiles(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
@@ -68,15 +91,16 @@ public class PrivateFileController {
         List<FileEntity> files = fileServiceImpl.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
         Long totalSize = fileServiceImpl.getTotalSize(keyword);
         int totalPage;
-        if (currentSize >= totalSize&& totalSize!=0) {
+        if (currentSize >= totalSize && totalSize != 0) {
             currentSize = Math.toIntExact(totalSize);
             totalPage = ((int) (totalSize / currentSize));
-        }else{
+        } else {
             totalPage = 0;
             currentSize = 0;
         }
         return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, files);
     }
+
     @PreAuthorize("hasPermission('FILES','READ')")
     @GetMapping("/filter")
     public BasedResponse<?> filterFiles(
@@ -88,10 +112,10 @@ public class PrivateFileController {
         List<FileEntity> files = fileServiceImpl.filterByField(filterFileRequest, sortBy, sort, currentSize, currentPage);
         Long totalSize = fileServiceImpl.getTotalSizeByFilter(filterFileRequest);
         int totalPage;
-        if (currentSize >= totalSize&& totalSize!=0) {
+        if (currentSize >= totalSize && totalSize != 0) {
             currentSize = Math.toIntExact(totalSize);
             totalPage = ((int) (totalSize / currentSize));
-        }else{
+        } else {
             totalPage = 0;
             currentSize = 0;
         }

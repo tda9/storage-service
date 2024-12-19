@@ -3,6 +3,7 @@ package org.example.daiam.controller;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+import org.example.client.storage.StorageClient;
 import org.example.daiam.controller.factory.UserServiceFactory;
 import org.example.daiam.dto.request.CreateUserRequest;
 import org.example.daiam.dto.request.FilterUsersRequest;
@@ -30,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class UserManagementController {
     private final ExcelService excelService;
     private final AuthorityServiceImpl authorityServiceImpl;
     private final UserRepoImpl userRepoImpl;
+    private final StorageClient storageClient;
 
     @PreAuthorize("hasPermission('USERS','CREATE')")
     @PostMapping("/create")
@@ -53,7 +57,7 @@ public class UserManagementController {
     public BasedResponse<?> updateById(
             @PathVariable @NotBlank String id,
             @RequestBody @Valid UpdateUserRequest request) {
-        return BasedResponse.success("Update successful", userServiceFactory.getUserService().updateById(request,id));
+        return BasedResponse.success("Update successful", userServiceFactory.getUserService().updateById(request, id));
     }
 
     @PreAuthorize("hasPermission('USERS','READ')")
@@ -68,15 +72,16 @@ public class UserManagementController {
         List<User> users = userService.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
         Long totalSize = userService.getTotalSize(keyword);
         int totalPage;
-        if (currentSize >= totalSize&& totalSize!=0) {
+        if (currentSize >= totalSize && totalSize != 0) {
             currentSize = Math.toIntExact(totalSize);
             totalPage = ((int) (totalSize / currentSize));
-        }else{
+        } else {
             totalPage = 0;
             currentSize = 0;
         }
         return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, users);
     }
+
     @PreAuthorize("hasPermission('USERS','READ')")
     @GetMapping("/filter")
     public BasedResponse<?> filter(
@@ -89,10 +94,10 @@ public class UserManagementController {
         List<User> users = userService.filter(request, sortBy, sort, currentSize, currentPage);
         Long totalSize = userService.getTotalFilterSize(request);
         int totalPage;
-        if (currentSize >= totalSize&& totalSize!=0) {
+        if (currentSize >= totalSize && totalSize != 0) {
             currentSize = Math.toIntExact(totalSize);
             totalPage = ((int) (totalSize / currentSize));
-        }else{
+        } else {
             totalPage = 0;
             currentSize = 0;
         }
@@ -117,10 +122,9 @@ public class UserManagementController {
             @RequestParam(required = false, defaultValue = "email") String sortBy,
             @RequestParam(required = false, defaultValue = "ASC") String sort) {
         try {
-            List<User> users = userRepoImpl.filterByField(request,sortBy,sort,currentSize,currentPage);
+            List<User> users = userRepoImpl.filterByField(request, sortBy, sort, currentSize, currentPage);
             // Generate Excel file as byte array
             byte[] excelFile = excelService.writeUsersToExcel(users);
-
             // Set HTTP headers for file download
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Disposition", "attachment; filename=users.xlsx");
@@ -133,22 +137,29 @@ public class UserManagementController {
         }
     }
 
-    @PostMapping("/import")
-    public ResponseEntity<?> importUsers(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/import/{userId}")
+    public ResponseEntity<?> importUsers(
+            @RequestParam("file") MultipartFile file,
+            @PathVariable String userId) {
         String msg = excelService.importExcelData(file);
-        return ResponseEntity.ok(msg);
+        storageClient.saveImportExcelHistory(new MultipartFile[]{file}, userId);
+        if (msg == null || msg.isEmpty()) {
+            return ResponseEntity.ok(BasedResponse.success("Import successful", null));
+        } else {
+            return ResponseEntity.badRequest().body(BasedResponse.badRequest(msg, null));
+        }
     }
+
     @GetMapping("/{username}/authorities-by-username")
-    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username) {
+    BasedResponse<UserAuthority> getUserAuthority(
+            @PathVariable String username) {
         return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
     }
-//    @GetMapping("/api/users/{userId}/authorities")
-//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable UUID userId) {
-//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(userId));
-//    }
-//
-//    @GetMapping("/api/users/{username}/authorities-by-username")
-//    ResponseEntity<UserAuthority> getUserAuthority(@PathVariable String username) {
-//        return ResponseEntity.ok(authorityServiceImpl.getUserAuthority(username));
-//    }
+
+    @GetMapping("/{clientId}/authorities-by-clientId")
+    BasedResponse<UserAuthority> getClientAuthority(
+            @PathVariable UUID clientId) {
+        return BasedResponse.success("Get authorities successful for " + clientId,
+                authorityServiceImpl.getClientAuthority(clientId));//TODO: use factory pattern to get keycloak authoriry
+    }
 }

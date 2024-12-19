@@ -4,20 +4,13 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/evo-common/pom.xml" />
-        <option value="$PROJECT_DIR$/storage/pom.xml" />
-        <option value="$PROJECT_DIR$/iam-service2/pom.xml" />
-        <option value="$PROJECT_DIR$/product/pom.xml" />
-        <option value="$PROJECT_DIR$/evo-common/demo/pom.xml" />
-        <option value="$PROJECT_DIR$/da-common/pom.xml" />
-        <option value="$PROJECT_DIR$/da-common/common-model/pom.xml" />
-        <option value="$PROJECT_DIR$/da-common/common-web/pom.xml" />
-        <option value="$PROJECT_DIR$/da-iam/pom.xml" />
         <option value="$PROJECT_DIR$/da-storage/pom.xml" />
+        <option value="$PROJECT_DIR$/da-iam/pom.xml" />
+        <option value="$PROJECT_DIR$/da-common/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="21" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="21" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

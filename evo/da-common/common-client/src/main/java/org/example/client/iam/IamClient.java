@@ -19,15 +19,22 @@ import java.util.UUID;
         //,fallbackFactory = IamClientFallback.class
 )
 public interface IamClient {
-    @GetMapping("/api/users/{userId}/authorities")
-    @LoadBalanced
-    BasedResponse<UserAuthority> getUserAuthority(@PathVariable UUID userId);
 
-    @GetMapping("/api/users/{username}/authorities-by-username")
+    @GetMapping("/users/{username}/authorities-by-username")
     @LoadBalanced
     BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username);
+
+    @GetMapping("/users/{clientId}/authorities-by-clientId")
+    @LoadBalanced
+    BasedResponse<UserAuthority> getClientAuthority(@PathVariable UUID clientId);
 
     @GetMapping("/auth/client-token/{clientId}/{clientSecret}")
     @LoadBalanced
     BasedResponse<String> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret);
+
+    @GetMapping("/auth/blacklist/{token}")
+    @LoadBalanced
+    BasedResponse<Boolean> isBlacklisted(@PathVariable String token);
+
+
 }

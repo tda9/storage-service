@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,7 +69,6 @@ public class PasswordService {
     public String generateToken() {
         return UUID.randomUUID().toString();
     }
-
     public void resetPassword(String email, String newPassword, String token) {
         //TODO: check format password here
         User user = userRepo.findByEmail(email).orElseThrow();
@@ -88,7 +88,7 @@ public class PasswordService {
         User user = userRepo.findByEmail(email).orElseThrow(() -> new NotFoundException("Email to verify not found"));
         BlackListToken requestToken = blackListTokenRepo.findByToken(token)
                 .orElseThrow(()->new NotFoundException("Email verification token not found"));
-        if (requestToken.getExpirationDate().isBefore(LocalDateTime.now()) || !Objects.equals(user.getUserId(), requestToken.getUserId())) {
+        if (requestToken.getExpirationDate().before(new Date()) || !Objects.equals(user.getUserId(), requestToken.getUserId())) {
             throw new BadRequestException("Invalid or expired token");
         }
         user.setVerified(true);

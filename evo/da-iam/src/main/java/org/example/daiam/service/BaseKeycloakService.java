@@ -9,6 +9,7 @@ import org.example.daiam.repo.BlackListTokenRepo;
 import org.example.daiam.repo.RoleRepo;
 import org.example.daiam.repo.UserRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.example.web.support.RedisService;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -44,10 +45,10 @@ public class BaseKeycloakService extends BaseService {
     public BaseKeycloakService(Keycloak keycloak,
                                UserRepo userRepo,
                                RoleRepo roleRepo,
-                               BlackListTokenRepo blackListTokenRepo,
-                               JWTService jwtService
+                               JWTService jwtService,
+                               RedisService redisService
     ) {
-        super(userRepo, roleRepo, blackListTokenRepo, jwtService);
+        super(userRepo, roleRepo, jwtService,redisService);
         this.keycloak = keycloak;
     }
 

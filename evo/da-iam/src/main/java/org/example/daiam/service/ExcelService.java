@@ -139,7 +139,7 @@ public class ExcelService {
                     }
                     break;
                 case "DOB":
-                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.DOB_FORMAT)) {
+                    if (value != null && !value.isBlank() && value.matches(InputUtils.DOB_FORMAT)) {
                         try {
                             userBuilder.dob(LocalDate.parse(value));
                         } catch (DateTimeParseException e) {

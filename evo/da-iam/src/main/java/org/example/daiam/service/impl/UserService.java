@@ -4,7 +4,7 @@ import org.example.daiam.dto.mapper.UserRequestMapper;
 import org.example.daiam.dto.request.CreateUserRequest;
 import org.example.daiam.dto.request.FilterUsersRequest;
 import org.example.daiam.dto.request.UpdateUserRequest;
-import org.example.daiam.dto.response.DefaultTokenResponse;
+import org.example.daiam.dto.response.DefaultAccessTokenResponse;
 
 import org.example.daiam.entity.User;
 import org.example.daiam.exception.ErrorResponseException;
@@ -17,6 +17,7 @@ import org.example.daiam.repo.impl.UserRepoImpl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.service.*;
+import org.example.web.support.RedisService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +44,10 @@ public class UserService extends BaseService implements BaseUserService {
                        UserRoleRepo userRoleRepo,
                        PasswordService passwordService,
                        UserRepoImpl userRepoImpl,
-                       BlackListTokenRepo blackListTokenRepo,
-                       JWTService jwtService, UserRequestMapper userRequestMapper) {
-        super(userRepo, roleRepo, blackListTokenRepo, jwtService);
+                       JWTService jwtService,
+                       UserRequestMapper userRequestMapper,
+                       RedisService  redisService) {
+        super(userRepo, roleRepo,jwtService,redisService);
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.userRoleRepo = userRoleRepo;
@@ -59,12 +61,15 @@ public class UserService extends BaseService implements BaseUserService {
         try {
             checkExistedEmail(request.email());
             Set<String> requestRoles = request.roles();
-            List<UUID> rolesId = (requestRoles == null || requestRoles.isEmpty()) ? null : getRoles(requestRoles);           String generatedPassword = passwordService.generateToken();
+            List<UUID> rolesId = (requestRoles == null || requestRoles.isEmpty()) ? null : getRoles(requestRoles);
+            String generatedPassword = passwordService.generateToken();
             User newUser = userRequestMapper.toEntity(request);
             newUser.setPassword(passwordEncoder.encode(generatedPassword));
             User user = userRepo.save(newUser);
-            rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));
-            DefaultTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
+            if (rolesId != null) {
+                rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));
+            }
+            DefaultAccessTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
             //emailService.sendEmail(request.email(), "Your IAM Service Password", generatedPassword);//gui mat khau cho user
             return user;
         } catch (Exception e) {
@@ -84,16 +89,6 @@ public class UserService extends BaseService implements BaseUserService {
         }
         try {
             userRequestMapper.updateUserFromRequest(request,user);
-//            user.setDob(request.dob());
-//            user.setEmail(request.email());
-//            user.setPhone(request.phone());
-//            user.setLock(request.isLock());
-//            user.setImage(null);
-//            user.setDeleted(request.deleted());
-//            user.setVerified(request.isVerified());
-//            user.setUsername(request.username());
-//            user.setFirstName(request.firstName());
-//            user.setLastName(request.lastName());
             userRepo.save(user);
             if (rolesId != null) {
                 rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));

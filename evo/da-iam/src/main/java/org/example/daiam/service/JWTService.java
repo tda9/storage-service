@@ -21,17 +21,18 @@ import org.springframework.stereotype.Service;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 public class JWTService {
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+//    @Value("${application.security.jwt.expiration}")
+//    private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
     private final BlackListTokenRepo blackListTokenRepo;
-    UserRepo userRepo;
+    private final  UserRepo userRepo;
 
     public String generateRefreshToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
@@ -42,10 +43,12 @@ public class JWTService {
                 .compact();
     }
 
-    public String generateClientToken(String client_id, String clientHost) {
+    public String generateClientToken(String client_id, String clientHost,long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
-                .claim("user_id", clientHost)
+                .setId(UUID.randomUUID().toString())
+                .claim("preferred_username", clientHost)
+                .claim("clientAddress", clientHost)
                 .claim("client_id", client_id)
                 .claim("clientHost", clientHost)
                 .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
@@ -53,11 +56,12 @@ public class JWTService {
                 .compact();
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String email,long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
-                .setSubject(username)
-                .claim("user_id", username)
+                .setId(UUID.randomUUID().toString())
+                .setSubject(email)
+                .claim("preferred_username", email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -70,7 +74,7 @@ public class JWTService {
         return extractClaim(jwt, Claims::getSubject);
     }
 
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -94,7 +98,9 @@ public class JWTService {
         }
         return !isTokenExpired(token);
     }
-
+    public String extractId(String jwt) {
+        return extractClaim(jwt, Claims::getId);
+    }
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
         Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);

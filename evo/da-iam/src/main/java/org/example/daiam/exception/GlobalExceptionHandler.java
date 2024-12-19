@@ -1,8 +1,6 @@
 package org.example.daiam.exception;
 
 
-
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.UnexpectedTypeException;
@@ -29,16 +27,20 @@ public class GlobalExceptionHandler {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.badRequest(ex.getMessage(), null));
     }
+
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<BasedResponse<?>> handleInternalException(InternalServerErrorException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(500).body(BasedResponse.fail(ex.getMessage(), null));
     }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<BasedResponse<?>> handleBadRequestException(BadRequestException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.badRequest(ex.getMessage(), null));
-    }@ExceptionHandler(NotFoundException.class)
+    }
+
+    @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<BasedResponse<?>> handleNotfoundException(NotFoundException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(404).body(BasedResponse.badRequest(ex.getMessage(), null));
@@ -47,13 +49,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<BasedResponse<?>> handleUserNotFound(UserNotFoundException ex) {
         log.error(ex.getMessage());
-        return ResponseEntity.status(404).body(BasedResponse.badRequest(ex.getMessage(),ex));
+        return ResponseEntity.status(404).body(BasedResponse.badRequest(ex.getMessage(), ex));
     }
+
     @ExceptionHandler(ErrorResponseException.class)
     public ResponseEntity<?> handleErrorResponseException(ErrorResponseException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         StringBuilder errorMessages = new StringBuilder();
@@ -61,8 +65,9 @@ public class GlobalExceptionHandler {
             errorMessages.append("At field ").append(error.getField()).append(": ").append(error.getDefaultMessage()).append(System.lineSeparator());
         }
         log.error(ex.getMessage());
-        return ResponseEntity.status(400).body(BasedResponse.badRequest(errorMessages.toString(),null));
+        return ResponseEntity.status(400).body(BasedResponse.badRequest(errorMessages.toString(), null));
     }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<?> handleConstraintViolationExceptions(ConstraintViolationException ex) {
         StringBuilder errorMessages = new StringBuilder();
@@ -72,16 +77,19 @@ public class GlobalExceptionHandler {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.fail(errorMessages.toString(), null));
     }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<?> handleErrorResponseException(HttpMessageNotReadableException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), null));
     }
+
     @ExceptionHandler(UnexpectedTypeException.class)
     public ResponseEntity<?> handleWrongTypeException(UnexpectedTypeException ex) {
         log.error(ex.getMessage());
         return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
     }
+
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<?> handleNullException(NullPointerException ex) {
         log.error(ex.getMessage());

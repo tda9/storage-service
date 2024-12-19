@@ -5,8 +5,8 @@ spring:
       max-request-size: 2MB
   application:
     name: da-iam
-    client-id: da-iam
-    client-secret: 123
+    client-id: 2c7f4d5e-8c12-4f8d-b321-6e1d9e9b5f72
+    client-secret: EhHKwFVOfHlMuj3CgqOBH9vAgC3xPdLH
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -44,7 +44,7 @@ spring:
         jwt:
           issuer-uri: ${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}
           jwk-set-uris:
-            sso: ${JWK_SSO_URL:${application.security.keycloak.serverUrl}/realms/master/protocol/openid-connect/certs}
+            sso: ${JWK_SSO_URL:${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}/protocol/openid-connect/certs}
             internal: ${JWK_INTERNAL_URL:http://localhost:${server.port}/auth/certificate/.well-known/jwks.json}
           jws-algorithms: RS256
         opaquetoken:
@@ -70,7 +70,7 @@ confirmation:
 application:
   file:
     upload-dir: D:\\da\\images
-  authProvider: DEFAULT #KEYCLOAK DEFAULT
+  authProvider: KEYCLOAK #KEYCLOAK DEFAULT
   security:
     jwt:
       expiration: 86400000 # 1day
@@ -112,4 +112,5 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true
+
 

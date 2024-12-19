@@ -13,7 +13,7 @@ public interface TokenCacheService {
 
     default boolean isInvalidToken(String token) {
         return isExisted(INVALID_TOKEN_CACHE, token);
-        // token-quan: token-id
+        // token-quan: token-id,
     }
 
     default boolean isInvalidRefreshToken(String refreshToken) {

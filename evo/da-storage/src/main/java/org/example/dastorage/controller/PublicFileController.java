@@ -5,15 +5,19 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dastorage.dto.request.FilterFileRequest;
 import org.example.dastorage.entity.FileEntity;
+import org.example.dastorage.entity.FileHistory;
+import org.example.dastorage.repo.FileHistoryRepo;
 import org.example.dastorage.service.impl.PublicFileServiceImpl;
 import org.example.model.dto.response.BasedResponse;
 import org.example.model.dto.response.PageResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -26,7 +30,7 @@ PublicFileController {
 
     }
     @GetMapping("/image-resize/{fileId}")
-    public ResponseEntity<?> getImage(
+    public ResponseEntity<byte[]> getImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @RequestParam(required = false,defaultValue = "0") int width,
             @RequestParam(required = false,defaultValue = "0") int height

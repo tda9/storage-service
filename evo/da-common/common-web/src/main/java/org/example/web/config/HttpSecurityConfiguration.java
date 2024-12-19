@@ -31,6 +31,8 @@ public class HttpSecurityConfiguration {
     private final CustomAuthenticationFilter customAuthenticationFilter;
     private final ForbiddenTokenFilter forbiddenTokenFilter;
     private final JwtProperties jwtProperties;
+    private final ActionLogFilter actionLogFilter;
+
 
 
     @Bean
@@ -51,6 +53,8 @@ public class HttpSecurityConfiguration {
                         .authenticationManagerResolver(this.jwkResolver(this.jwtProperties)));
         http.addFilterAfter(this.forbiddenTokenFilter, BearerTokenAuthenticationFilter.class);
         http.addFilterAfter(this.customAuthenticationFilter, BearerTokenAuthenticationFilter.class);
+        http.addFilterAfter(this.actionLogFilter, BearerTokenAuthenticationFilter.class);
+
         return http.build();
     }
 

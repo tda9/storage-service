@@ -45,8 +45,6 @@ public class ForbiddenTokenFilter extends OncePerRequestFilter {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
         }
         httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-//      httpServletResponse.setContentType("application/json");
-//      httpServletResponse.getWriter().write("{\"message\": \"Forbidden: Invalid token\"}");
         //ben iam co bang lich su file import va luu ca trong storage
     }
 

@@ -94,7 +94,9 @@ public class UserRepoImpl implements UserRepoCustom {
         for (String fieldName : fieldNames) {
             try {
                 // Get the method associated with the field (getter)
-                String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                //String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                String methodName = fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1);
+
                 Object value = request.getClass().getMethod(methodName).invoke(request);
                 // If the value is not null, put it in the map
                 if (value != null) {

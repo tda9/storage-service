@@ -25,11 +25,13 @@ public interface StorageClient {
     ResponseEntity<?> getPrivateImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId,
-            @RequestParam(required = false,defaultValue = "0") int width,
-            @RequestParam(required = false,defaultValue = "0") int height);
+            @RequestParam(required = false, defaultValue = "0") int width,
+            @RequestParam(required = false, defaultValue = "0") int height);
 
     @PostMapping(value = "/files/private/upload", consumes = "multipart/form-data")
     BasedResponse<?> uploadPrivateFiles(@RequestPart("files") MultipartFile[] files, @RequestParam("userId") String userId);
+    @PostMapping(value = "/files/private/import-excel-history", consumes = "multipart/form-data")
+    BasedResponse<?> saveImportExcelHistory(@RequestPart("files") MultipartFile[] files, @RequestParam("userId") String userId);
 
     @GetMapping("/files/private/download/{fileId}/{userId}")
     @LoadBalanced
@@ -38,12 +40,19 @@ public interface StorageClient {
 
     @DeleteMapping("/files/private/{fileId}/{userId}")
     @LoadBalanced
-    BasedResponse<?> deletePrivateById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                       @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+    BasedResponse<?> deletePrivateFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+                                           @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+    );
+
+    @GetMapping("/files/private/{fileId}/{userId}")
+    @LoadBalanced
+    BasedResponse<?> getPrivateFileById(
+            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     );
 
     @GetMapping("/files/private/search")
-     BasedResponse<?> searchPrivateFiles(
+    BasedResponse<?> searchPrivateFiles(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,
@@ -59,12 +68,13 @@ public interface StorageClient {
             @RequestParam(required = false, defaultValue = "ASC") String sort);
 
     //------------------------- public -------------------------
+    //HttpMessageConverter
     @GetMapping("/files/public/image-resize/{fileId}")
     @LoadBalanced
-    ResponseEntity<?> getPublicImage(
+    ResponseEntity<byte[]> getPublicImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-            @RequestParam(required = false,defaultValue = "0") int width,
-            @RequestParam(required = false,defaultValue = "0") int height);
+            @RequestParam(required = false, defaultValue = "0") int width,
+            @RequestParam(required = false, defaultValue = "0") int height);
 
     @PostMapping(value = "/files/public/upload", consumes = "multipart/form-data")
     BasedResponse<?> uploadPublicFiles(@RequestPart("files") MultipartFile[] files);

@@ -70,10 +70,13 @@ public abstract class BaseService {
         }
     }
     protected void saveBlackRefreshToken(HttpServletRequest servletRequest,String refreshToken) {
+        if(redisService.isEntryExist(refreshToken)){
+            throw new BadRequestException("Forbidden refresh token");
+        }
         if (servletRequest != null && servletRequest.getHeader("Authorization") != null) {
             String accessToken = servletRequest.getHeader("Authorization").substring(7);
-            redisService.save(refreshToken);
             redisService.save(accessToken);
         }
+        redisService.save(refreshToken);
     }
 }

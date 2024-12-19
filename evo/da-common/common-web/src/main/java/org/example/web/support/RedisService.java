@@ -6,6 +6,8 @@
 package org.example.web.support;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,6 +27,7 @@ public class RedisService {
 
     public void save(String token) {
         this.hashOperations.put(HASH_KEY,token,null);
+        redisTemplate.expire(HASH_KEY, 7, TimeUnit.DAYS);
     }
 
     public Map<String, String> findAll() {

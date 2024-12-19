@@ -77,19 +77,6 @@ public class ApplicationConfig {
                 .build();
     }
 
-//    @Bean
-//    public PermissionEvaluator permissionEvaluator() {
-//        return new CustomPermissionEvaluator();
-//    }
-
-//    @Bean
-//    public MethodSecurityExpressionHandler expressionHandler(PermissionEvaluator permissionEvaluator) {
-//        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-//        expressionHandler.setPermissionEvaluator(permissionEvaluator);
-//        return expressionHandler;
-//    }
-
-
     @Bean
     public EntityManager entityManager(EntityManagerFactory entityManagerFactory) {
         return entityManagerFactory.createEntityManager();

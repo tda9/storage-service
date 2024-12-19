@@ -102,7 +102,7 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
             String email = jwtService.extractEmail(refreshToken);
             User user = getUser(email,"User not found in refresh token");
             checkExistedEmail(user.getEmail());
-            saveBlackAccessToken(servletRequest);
+            saveBlackRefreshToken(servletRequest,refreshToken);
             return generateDefaultToken(user.getEmail(), user.getUserId());
         }
         throw new BadRequestException("Invalid refresh token");

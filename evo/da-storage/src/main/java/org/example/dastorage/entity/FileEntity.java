@@ -34,4 +34,5 @@ public class FileEntity extends BaseEntity {
     private Boolean isPublic;
     @Column(name = "user_id")
     private UUID userId;
+    private String extension;
 }

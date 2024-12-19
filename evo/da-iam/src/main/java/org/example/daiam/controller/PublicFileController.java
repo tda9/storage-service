@@ -20,7 +20,7 @@ public class PublicFileController {
     }
 
     @GetMapping("/image-resize/{fileId}")
-    public ResponseEntity<?> getImage(
+    public ResponseEntity<byte[]> getImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @RequestParam(required = false,defaultValue = "0") int width,
             @RequestParam(required = false,defaultValue = "0") int height

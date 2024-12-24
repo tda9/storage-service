@@ -25,6 +25,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -32,10 +34,11 @@ import java.util.*;
 public class AuthenticationService extends BaseService implements BaseAuthenticationService {
     private final RegisterRequestMapper registerRequestMapper;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
     private final UserRoleRepo userRoleRepo;
     private final PasswordService passwordService;
     private final ServiceClientRepo serviceClientRepo;
+    private final BlackListTokenRepo blackListTokenRepo;
+    private final EmailService emailService;
     public AuthenticationService(UserRepo userRepo,
                                  RoleRepo roleRepo, RegisterRequestMapper registerRequestMapper,
                                  PasswordEncoder passwordEncoder,
@@ -45,7 +48,7 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
                                  JWTService jwtService,
                                  PasswordService passwordService,
                                  ServiceClientRepo serviceClientRepo,
-                                 RedisService redisService
+                                 RedisService redisService, BlackListTokenRepo blackListTokenRepo
     ) {
         super(userRepo, roleRepo,jwtService, redisService);
         this.registerRequestMapper = registerRequestMapper;
@@ -54,6 +57,7 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
         this.userRoleRepo = userRoleRepo;
         this.passwordService = passwordService;
         this.serviceClientRepo = serviceClientRepo;
+        this.blackListTokenRepo = blackListTokenRepo;
     }
 
     @Override
@@ -64,14 +68,20 @@ public class AuthenticationService extends BaseService implements BaseAuthentica
         List<UUID> rolesId = (requestRoles == null || requestRoles.isEmpty()) ? null : getRoles(requestRoles);
         User newUser = registerRequestMapper.toEntity(request);
         newUser.setPassword(passwordEncoder.encode(request.password()));
-        newUser.setVerified(true);
         newUser.setRoot(true);
         User user = userRepo.save(newUser);
         if (rolesId != null) {
             rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));
         }
         DefaultAccessTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
-        //emailService.verifyEmail(request.email(), tokenResponse.getAccessToken());
+        LocalDateTime localDateTime = LocalDateTime.now().plusDays(1);
+        Date expirationDate = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        blackListTokenRepo.save(BlackListToken.builder()
+                        .token(tokenResponse.getAccessToken())
+                        .userId(user.getUserId())
+                        .expirationDate(expirationDate)
+                .build());
+        emailService.verifyEmail(request.email(), tokenResponse.getAccessToken());//TODO:separate and use @Async for this line
         return user;
     }
 

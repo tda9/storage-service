@@ -15,6 +15,10 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 10
+        order_updates: 10
+        order_inserts: 10
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -66,11 +70,11 @@ spring:
 
 confirmation:
   registration:
-    url: http://localhost:${server.port}/confirmation-registration
+    url: http://localhost:${server.port}/auth/verify-email
 application:
   file:
     upload-dir: D:\\da\\images
-  authProvider: KEYCLOAK #KEYCLOAK DEFAULT
+  authProvider: DEFAULT #KEYCLOAK DEFAULT
   security:
     jwt:
       expiration: 86400000 # 1day
@@ -112,5 +116,11 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
 
 

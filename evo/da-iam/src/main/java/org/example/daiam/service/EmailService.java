@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -49,12 +51,15 @@ public class EmailService {
         }
     }
 
+    @Async
     public void verifyEmail(String to, String token) {
         sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service", verifyEmailTemplateName, verifyEmailUrl + "?email=" + to + "&token=" + token);
     }
+
     public void sendForgotPasswordEmail(String to, String token) {
         sendEmailWithHtmlTemplate(to, "Confirm Registration IAM Service", verifyEmailTemplateName, verifyEmailUrl + "email=" + to + "&token=" + token);
     }
+
     public void sendEmailWithHtmlTemplate(String to, String subject, String templateName, String link) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
@@ -71,6 +76,7 @@ public class EmailService {
             throw new InternalServerErrorException(e.getMessage());
         }
     }
+
     public void sendResetPassword(String to, String subject, String templateName, String content) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");

@@ -47,7 +47,7 @@ public class JWTService {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
-                .claim("preferred_username", clientHost)
+                .claim("preferred_email", clientHost)
                 .claim("clientAddress", clientHost)
                 .claim("client_id", client_id)
                 .claim("clientHost", clientHost)
@@ -61,7 +61,7 @@ public class JWTService {
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
                 .setSubject(email)
-                .claim("preferred_username", email)
+                .claim("preferred_email", email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)

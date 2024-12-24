@@ -1,0 +1,47 @@
+server:
+  port: 8762
+
+spring:
+  application:
+    name: da-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Enables dynamic routing based on service discovery
+      routes:
+        - id: da-iam
+          uri: http://localhost:8080
+          predicates:
+            - Path=/auth/**,/v3/api-docs/da-iam
+
+        - id: da-storage
+          uri: http://localhost:8083
+          predicates:
+            - Path=/files/public/**,/v3/api-docs/da-storage
+
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**,/v3/api-docs, /swagger-ui.html,/v3/api-docs/**,/v3/api-docs, /swagger-ui.html
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+springdoc:
+  api-docs:
+    enabled: true
+    #group: da-gateway
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+#      - name: API Gateway Service
+#        url: /v3/api-docs/da-gateway
+      - name: IAM Service
+        url: /v3/api-docs/da-iam
+      - name: Storage Service
+        url: /v3/api-docs/da-storage

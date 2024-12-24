@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <option name="PARALLEL_COMPILATION_OPTION" value="Disabled" />
     <annotationProcessing>
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="da-storage" />
+        <module name="da-gateway" />
         <module name="common-web" />
         <module name="da-iam" />
         <module name="common-client" />
         <module name="common-model" />
+      </profile>
+      <profile name="Annotation profile for da-register" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
+        <module name="da-register" />
       </profile>
     </annotationProcessing>
   </component>
@@ -19,7 +30,9 @@
       <module name="common-client" options="-parameters" />
       <module name="common-model" options="-parameters" />
       <module name="common-web" options="-parameters" />
+      <module name="da-gateway" options="-parameters" />
       <module name="da-iam" options="-parameters" />
+      <module name="da-register" options="-parameters" />
       <module name="da-storage" options="-parameters" />
     </option>
   </component>

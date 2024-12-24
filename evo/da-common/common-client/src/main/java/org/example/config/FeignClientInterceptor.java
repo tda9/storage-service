@@ -5,13 +5,19 @@ import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.example.model.dto.response.BaseTokenResponse;
 import org.example.model.dto.response.ClientTokenResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -22,29 +28,74 @@ public class FeignClientInterceptor implements RequestInterceptor {
     @Value("${spring.application.client-secret}")
     private String client_secret;
 
+
+    //    @Override
+//    public void apply(RequestTemplate requestTemplate) {
+//        String token = getClientToken();
+//        if (token != null && !token.isEmpty()) {
+//            requestTemplate.header("Authorization", "Bearer " + token);
+//        }
+//    }
+//
+//    private String getClientToken() {
+//        String tokenUrl = "http://localhost:8080/auth/client-token/"+client_id+"/"+client_secret;
+//        RestTemplate restTemplate = new RestTemplate();
+//        try {
+//            ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
+//                    tokenUrl,
+//                    ClientTokenResponse.class);
+//            if (response.getStatusCode().is2xxSuccessful()) {
+//                return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the token is the plain response body
+//            } else {
+//                throw new RuntimeException("Failed to retrieve token. Status: " + response.getStatusCode());
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error while fetching client token: " + e.getMessage(), e);
+//        }
+//    }
     @Override
     public void apply(RequestTemplate requestTemplate) {
-        String token = getClientToken();
-        if (token != null && !token.isEmpty()) {
-            requestTemplate.header("Authorization", "Bearer " + token);
+        try {
+            // Blocking call to wait for the token to be fetched
+            String token = getClientToken().get();  // This will block until the token is retrieved
+            if (token != null && !token.isEmpty()) {
+                // Apply the token to the request
+                requestTemplate.header("Authorization", "Bearer " + token);
+            } else {
+                throw new RuntimeException("Token is null or empty.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to apply token: " + e.getMessage(), e);
         }
     }
 
-    private String getClientToken() {
-        String tokenUrl = "http://localhost:8080/auth/client-token/"+client_id+"/"+client_secret;
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
-                    tokenUrl,
-                    ClientTokenResponse.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the token is the plain response body
-            } else {
-                throw new RuntimeException("Failed to retrieve token. Status: " + response.getStatusCode());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error while fetching client token: " + e.getMessage(), e);
-        }
+    @Autowired
+    private TaskExecutor customTaskExecutor;
+    //distributed , jobLauncher
+    private CompletableFuture<String> getClientToken() {
+        return CompletableFuture.supplyAsync(() -> {
+                            String tokenUrl = "http://localhost:8080/auth/client-token/" + client_id + "/" + client_secret;
+                            RestTemplate restTemplate = new RestTemplate();
+                            try {
+                                ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
+                                        tokenUrl,
+                                        ClientTokenResponse.class
+                                );
+                                if (response.getStatusCode().is2xxSuccessful()) {
+                                    return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the response has a `getToken` method
+                                } else {
+                                    throw new RuntimeException("Failed to retrieve token. Status: " + response.getStatusCode());
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException("Error while fetching client token: " + e.getMessage(), e);
+                            }
+                        }
+                        , customTaskExecutor
+                )
+                .orTimeout(60, TimeUnit.SECONDS)
+                .exceptionally(e -> {
+                    throw new RuntimeException("Token request timed out: " + e.getMessage(), e);
+                });
     }
 
 }

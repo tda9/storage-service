@@ -7,6 +7,8 @@
         <option value="$PROJECT_DIR$/da-storage/pom.xml" />
         <option value="$PROJECT_DIR$/da-iam/pom.xml" />
         <option value="$PROJECT_DIR$/da-common/pom.xml" />
+        <option value="$PROJECT_DIR$/da-register/pom.xml" />
+        <option value="$PROJECT_DIR$/da-gateway/pom.xml" />
       </list>
     </option>
   </component>

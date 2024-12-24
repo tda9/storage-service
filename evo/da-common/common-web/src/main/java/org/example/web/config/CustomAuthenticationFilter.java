@@ -61,11 +61,13 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             claim = "client_id";
             username = token.getClaim("client_id");
             isClient = Boolean.TRUE;
-        } else if (StringUtils.hasText(token.getClaimAsString("preferred_username"))) {//TH2: user iam token
-            claim = "preferred_username";
-            username = token.getClaim("preferred_username");
+        } else if (StringUtils.hasText(token.getClaimAsString("preferred_username"))||
+                StringUtils.hasText(token.getClaimAsString("preferred_email"))) {//TH2: user iam token
+            claim = "sub";
+            username = token.getClaim("sub");
         }
         userAuthority = enrichAuthority(token, claim).orElseThrow();
+        //TODO: check valid User here: isRoot, isVerified ....
         if(userAuthority.getGrantedPermissions()==null || userAuthority.getGrantedPermissions().isEmpty()){
 
         }else{
@@ -88,9 +90,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
         String username = token.getClaimAsString(claim);
         return switch (claim) {
-
             case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
-            case "preferred_username" -> Optional.ofNullable(authorityService.getUserAuthority(username));
+            case "sub" -> Optional.ofNullable(authorityService.getUserAuthority(username));
             default -> Optional.empty();
         };
     }

@@ -72,7 +72,7 @@ public class HttpSecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("*"); // Adjust as needed for production
+        configuration.addAllowedOrigin("http://localhost:8762"); // Adjust as needed for production
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);

@@ -12,14 +12,14 @@ spring:
           enabled: true # Enables dynamic routing based on service discovery
       routes:
         - id: da-iam
-          uri: http://localhost:8080
+          uri: lb://da-iam
           predicates:
-            - Path=/auth/**,/v3/api-docs/da-iam
+            - Path=/auth/**,/v3/api-docs/da-iam,/da-iam
 
         - id: da-storage
           uri: http://localhost:8083
           predicates:
-            - Path=/files/public/**,/v3/api-docs/da-storage
+            - Path=/files/public/**,/v3/api-docs/da-storage,/da-storage
 
         - id: openapi
           uri: http://localhost:${server.port}

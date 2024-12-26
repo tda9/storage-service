@@ -6,27 +6,54 @@ spring:
     name: da-gateway
 
   cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: true
     gateway:
       discovery:
         locator:
           enabled: true # Enables dynamic routing based on service discovery
       routes:
+        #spring.cloud.gateway.routes[1] indicate that route start from index 0
+        # uri must be same in eureka application column
+        # chú ý không duoc dung '_' tren eureka
+        #request url start from Path -> uri -> eureka match uri to Application column -> that service
         - id: da-iam
-          uri: lb://da-iam
+          uri: lb://DA-IAM
           predicates:
-            - Path=/auth/**,/v3/api-docs/da-iam,/da-iam
-
+            - Path=/iam/**
+          filters:
+            - StripPrefix=1
         - id: da-storage
-          uri: http://localhost:8083
+          uri: lb://DA-STORAGE
           predicates:
-            - Path=/files/public/**,/v3/api-docs/da-storage,/da-storage
-
-        - id: openapi
-          uri: http://localhost:${server.port}
+            - Path=/storage/**
+          filters:
+            - name: Retry #This is prebuilt GatewayFilterFactory(https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-retry-gatewayfilter-factory)
+              args:
+                retries: 5
+                statuses: SERVICE_UNAVAILABLE, REQUEST_TIMEOUT #, METHOD_NOT_ALLOWED
+                methods: GET,POST,DELETE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 3
+                  basedOnPreviousValue: false
+            - name: CircuitBreaker
+              args:
+                name: myCircuitBreaker
+                fallBackUri: forward:/fallback  #forward doesnt need eureka instance
+            - StripPrefix=1
+        - id: da-gateway
+          uri: lb://DA-GATEWAY
           predicates:
-            - Path=/v3/api-docs/**,/v3/api-docs, /swagger-ui.html,/v3/api-docs/**,/v3/api-docs, /swagger-ui.html
+            - Path=/gateway/**,/**
+          filters:
+            - StripPrefix=1
 
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
@@ -34,14 +61,42 @@ eureka:
 springdoc:
   api-docs:
     enabled: true
-    #group: da-gateway
+    group: Gateway Service
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
     urls:
-#      - name: API Gateway Service
-#        url: /v3/api-docs/da-gateway
-      - name: IAM Service
-        url: /v3/api-docs/da-iam
+      - name: Iam Service
+        url: iam/v3/api-docs/da-iam
       - name: Storage Service
-        url: /v3/api-docs/da-storage
+        url: storage/v3/api-docs/da-storage
+      - name: Storage Service
+        url: gateway/v3/api-docs/da-gateway
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      myCircuitBreaker:
+        register-health-indicator: true
+        failure-rate-threshold: 50 # Circuit breaker is triggered after 50% failures
+        slow-call-rate-threshold: 100
+        wait-duration-in-open-state: 20s # Thời gian duy trì open
+        permitted-number-of-calls-in-half-open-state: 3 #cho phép gọi 3 request call sang service 1 lần nữa thử nghiệm khi đang half open
+        sliding-window-size: 3 #theo dõi 3 request để đánh giá
+        sliding-window-type: COUNT_BASED
+        minimum-number-of-calls: 3 #cần ít nhất 10 request để đánh giá
+        automatic-transition-from-open-to-half-open-enabled: true
+  timelimiter:
+    instances:
+      myCircuitBreaker:
+        timeoutDuration: 10s #specifies how long the TimeLimiter will wait for a response before timing out. In this case, if a request takes more than 10 seconds to complete, it will be canceled or failed with a timeout exception.
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: DEBUG
+    io.github.resilience4j: DEBUG

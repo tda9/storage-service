@@ -108,6 +108,8 @@ logging:
 
 server:
   port: 8080
+#  servlet:
+#    context-path: /iam
 permission:
   scopes: "READ|WRITE|DELETE|UPDATE"
 springdoc:
@@ -118,6 +120,8 @@ springdoc:
   show-actuator: true
 
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka

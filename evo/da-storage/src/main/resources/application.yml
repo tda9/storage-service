@@ -1,5 +1,7 @@
 server:
   port: 8083
+#  servlet:
+#    context-path: /storage
 spring:
   servlet:
     multipart:
@@ -34,7 +36,46 @@ spring:
           jwk-set-uris:
             sso: ${JWK_SSO_URL:http://localhost:8082/realms/master/protocol/openid-connect/certs}
             internal: ${JWK_INTERNAL_URL:http://localhost:8080/auth/certificate/.well-known/jwks.json}
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        group:
+          enabled: true
+#resilience4j:
+#  circuitbreaker:
+#    instances:
+#      IamClient:
+#        minimumNumberOfCalls: 69
+#  timelimiter:
+#    instances:
+#      IamClient:
+#        timeoutDuration: 10s
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+    instances:
+      HttpBinClient_getBinWithDelayInSeconds_int:
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 20s
+
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
@@ -44,3 +85,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   show-actuator: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: DEBUG
+    org.springframework.cloud.gateway.filter: DEBUG
+    io.github.resilience4j: DEBUG

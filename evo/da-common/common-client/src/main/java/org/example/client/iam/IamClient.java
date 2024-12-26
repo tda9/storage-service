@@ -16,7 +16,7 @@ import java.util.UUID;
         name = "iam",
         contextId = "da-iam",
         configuration = FeignClientConfiguration.class
-        //,fallbackFactory = IamClientFallback.class
+        ,fallbackFactory = IamClientFallback.class
 )
 public interface IamClient {
 
@@ -31,10 +31,5 @@ public interface IamClient {
     @GetMapping("/auth/client-token/{clientId}/{clientSecret}")
     @LoadBalanced
     BasedResponse<String> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret);
-
-    @GetMapping("/auth/blacklist/{token}")
-    @LoadBalanced
-    BasedResponse<Boolean> isBlacklisted(@PathVariable String token);
-
 
 }

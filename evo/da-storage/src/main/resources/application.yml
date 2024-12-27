@@ -42,6 +42,7 @@ spring:
       circuitbreaker:
         group:
           enabled: true
+        enabled: true
 #resilience4j:
 #  circuitbreaker:
 #    instances:
@@ -58,6 +59,8 @@ management:
   health:
     circuitbreakers:
       enabled: true
+    ratelimiters:
+      enabled: true
 
 resilience4j:
   circuitbreaker:
@@ -65,13 +68,29 @@ resilience4j:
       default:
         registerHealthIndicator: true
     instances:
-      HttpBinClient_getBinWithDelayInSeconds_int:
-        minimumNumberOfCalls: 10
+      userAuthorityService:
+        minimumNumberOfCalls: 2
         failureRateThreshold: 50
   timelimiter:
-    configs:
-      default:
-        timeoutDuration: 20s
+    instances:
+      userAuthorityService:
+        timeout-duration: 2s
+  retry:
+    instances:
+      userAuthorityService:
+        max-attempts: 3
+        wait-duration: 5s
+  bulkhead:
+    instances:
+      userAuthorityService:
+        max-concurrent-calls: 3
+        max-wait-duration: 3s
+  ratelimiter:
+    instances:
+      userAuthorityService:
+        limit-for-period: 3
+        limit-refresh-period: 3s
+        timeout-duration: 3s
 
 eureka:
   instance:
@@ -88,6 +107,4 @@ springdoc:
 
 logging:
   level:
-    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: DEBUG
-    org.springframework.cloud.gateway.filter: DEBUG
-    io.github.resilience4j: DEBUG
+    io.github.resilience4j: TRACE

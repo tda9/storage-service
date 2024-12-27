@@ -35,7 +35,6 @@ public class IamClientFallback implements FallbackFactory<IamClient> {
         public BasedResponse<UserAuthority> getClientAuthority(UUID clientId) {
             return BasedResponse.fail("Cannot get Client Authority",(RuntimeException) cause);
         }
-
         @Override
         public BasedResponse<String> getClientToken(String clientId, String clientSecret) {
             return BasedResponse.fail("Cannot get client Token",(RuntimeException) cause);

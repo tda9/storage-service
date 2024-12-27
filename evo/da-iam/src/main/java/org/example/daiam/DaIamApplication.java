@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableFeignClients
-@EnableJpaRepositories(basePackages = "org.example.daiam.repo")//tai sao khong co cai nay trong micro thi project khong quet duoc repo folder
+@EnableJpaRepositories(basePackages = {"org.example.daiam.infrastruture.persistence.repository","org.example.daiam.repo"})//tai sao khong co cai nay trong micro thi project khong quet duoc repo folder
 @EnableAspectJAutoProxy
 @SpringBootApplication
 @EnableAsync

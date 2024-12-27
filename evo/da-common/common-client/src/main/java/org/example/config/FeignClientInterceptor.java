@@ -2,6 +2,11 @@ package org.example.config;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.model.dto.response.BaseTokenResponse;
 import org.example.model.dto.response.ClientTokenResponse;
@@ -54,6 +59,11 @@ public class FeignClientInterceptor implements RequestInterceptor {
 //        }
 //    }
     @Override
+    @CircuitBreaker(name = "userAuthorityService")
+    @Retry(name = "userAuthorityService")
+    @TimeLimiter(name = "userAuthorityService")
+    @Bulkhead(name = "userAuthorityService")
+    @RateLimiter(name = "userAuthorityService")
     public void apply(RequestTemplate requestTemplate) {
         try {
             // Blocking call to wait for the token to be fetched
@@ -92,7 +102,6 @@ public class FeignClientInterceptor implements RequestInterceptor {
                         }
                         , customTaskExecutor
                 )
-                .orTimeout(60, TimeUnit.SECONDS)
                 .exceptionally(e -> {
                     throw new RuntimeException("Token request timed out: " + e.getMessage(), e);
                 });

@@ -1,6 +1,5 @@
 package org.example.daiam.repo;
 
-import org.example.daiam.dto.response.DefaultClientTokenResponse;
 import org.example.daiam.entity.ServiceClient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

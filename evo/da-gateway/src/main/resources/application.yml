@@ -29,19 +29,27 @@ spring:
           predicates:
             - Path=/storage/**
           filters:
-            - name: Retry #This is prebuilt GatewayFilterFactory(https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-retry-gatewayfilter-factory)
-              args:
-                retries: 5
-                statuses: SERVICE_UNAVAILABLE, REQUEST_TIMEOUT #, METHOD_NOT_ALLOWED
-                methods: GET,POST,DELETE
-                backoff:
-                  firstBackoff: 50ms
-                  maxBackoff: 500ms
-                  factor: 3
-                  basedOnPreviousValue: false
+#            - Retry=5
+#            - name: Retry #This is prebuilt GatewayFilterFactory(https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-retry-gatewayfilter-factory)
+#              args:
+#                retries: 0
+#                statuses: INTERNAL_SERVER_ERROR,BAD_GATEWAY,SERVICE_UNAVAILABLE, REQUEST_TIMEOUT #, METHOD_NOT_ALLOWED
+#                methods: GET,POST,DELETE
+#                exceptions:
+#                  - java.io.IOException
+#                  - org.springframework.cloud.gateway.support.TimeoutException
+#                  - java.lang.UnsupportedOperationException
+#                backoff:
+#                  firstBackoff: 3s
+#                  maxBackoff: 10s
+#                  factor: 3
+#                  basedOnPreviousValue: false
             - name: CircuitBreaker
               args:
                 name: myCircuitBreaker
+                propagate-exceptions: true
+                #The fallback mechanism forwards the request exactly as it was originally received (method, headers, body, etc.), except for the target URI.
+                #Since gateway only support GetMapping /fallback, the request to /fallback will be Post method that why it cause 405
                 fallBackUri: forward:/fallback  #forward doesnt need eureka instance
             - StripPrefix=1
         - id: da-gateway
@@ -86,10 +94,10 @@ resilience4j:
         sliding-window-type: COUNT_BASED
         minimum-number-of-calls: 3 #cần ít nhất 10 request để đánh giá
         automatic-transition-from-open-to-half-open-enabled: true
-  timelimiter:
-    instances:
-      myCircuitBreaker:
-        timeoutDuration: 10s #specifies how long the TimeLimiter will wait for a response before timing out. In this case, if a request takes more than 10 seconds to complete, it will be canceled or failed with a timeout exception.
+#  timelimiter:
+#    instances:
+#      myCircuitBreaker:
+#        timeoutDuration: 10s #specifies how long the TimeLimiter will wait for a response before timing out. In this case, if a request takes more than 10 seconds to complete, it will be canceled or failed with a timeout exception.
 
 management:
   endpoint:
@@ -98,5 +106,7 @@ management:
 
 logging:
   level:
-    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: DEBUG
+    org.springframework.cloud.gateway.filter.factory.RetryGatewayFilterFactory: TRACE
     io.github.resilience4j: DEBUG
+    org.springframework.cloud.gateway.filter.factory: TRACE
+    org.springframework.web.server: DEBUG

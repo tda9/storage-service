@@ -3,7 +3,7 @@ package org.example.daiam.annotation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.example.daiam.entity.Scope;
+import org.example.daiam.infrastruture.support.Scope;
 
 
 public class ScopeValidator implements ConstraintValidator<ValidScope, Scope> {

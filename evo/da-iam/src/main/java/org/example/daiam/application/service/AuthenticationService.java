@@ -1,25 +1,27 @@
-package org.example.daiam.service;
+package org.example.daiam.application.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.daiam.dto.request.ChangePasswordRequest;
-import org.example.daiam.dto.request.LoginRequest;
-import org.example.daiam.dto.request.LogoutRequest;
-import org.example.daiam.dto.request.RegisterRequest;
+import org.example.daiam.application.dto.request.ChangePasswordRequest;
+import org.example.daiam.application.dto.request.LoginRequest;
+import org.example.daiam.application.dto.request.LogoutRequest;
+import org.example.daiam.application.dto.request.RegisterRequest;
+import org.example.daiam.domain.User;
+
 import org.example.model.dto.response.BaseTokenResponse;
-import org.example.daiam.entity.User;
+
 import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
 
-public interface  BaseAuthenticationService {
+public interface AuthenticationService {
     User register(RegisterRequest request);
 
     BaseTokenResponse login(LoginRequest loginRequest, HttpServletRequest servletRequest);
 
     BaseTokenResponse refreshToken(String refreshToken, HttpServletRequest servletRequest);
 
-    ResponseEntity<?> logout(LogoutRequest request,HttpServletRequest servletRequest);
+    ResponseEntity<?> logout(LogoutRequest request, HttpServletRequest servletRequest);
 
     void resetPassword(String email, String newPassword, String token);
 

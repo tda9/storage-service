@@ -8,7 +8,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.model.UserAuthentication;
 import org.example.model.UserAuthority;
+import org.example.web.exception.NotFoundException;
 import org.example.web.security.AuthorityService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,6 +25,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -47,7 +53,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         JwtAuthenticationToken authentication = (JwtAuthenticationToken) securityContext.getAuthentication();
         Jwt token = authentication.getToken();
 
-        UserAuthority userAuthority;
+        UserAuthority userAuthority = null;
         String claim = "";
         Boolean isRoot;
         Boolean isClient = Boolean.FALSE;
@@ -61,16 +67,24 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             claim = "client_id";
             username = token.getClaim("client_id");
             isClient = Boolean.TRUE;
-        } else if (StringUtils.hasText(token.getClaimAsString("preferred_username"))||
-                StringUtils.hasText(token.getClaimAsString("preferred_email"))) {//TH2: user iam token
-            claim = "sub";
-            username = token.getClaim("sub");
-        }
-        userAuthority = enrichAuthority(token, claim).orElseThrow();
-        //TODO: check valid User here: isRoot, isVerified ....
-        if(userAuthority.getGrantedPermissions()==null || userAuthority.getGrantedPermissions().isEmpty()){
-
+        } else if (StringUtils.hasText(token.getClaimAsString("preferred_email"))) {//TH2: user iam token
+            claim = "preferred_email";
+            username = token.getClaim("preferred_email");
         }else{
+            claim = "preferred_username";
+            username = token.getClaim("preferred_username");
+        }
+        try {
+            userAuthority = enrichAuthority(token, claim).orElseThrow();
+        } catch (Exception ex) {
+            exceptionResolver.resolveException(request, response, null, ex);
+            return;
+        }
+
+        //TODO: check valid User here: isRoot, isVerified ....
+        if (userAuthority.getGrantedPermissions() == null || userAuthority.getGrantedPermissions().isEmpty()) {
+
+        } else {
             grantedPermissions = userAuthority.getGrantedPermissions().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
         }
         isRoot = userAuthority.getIsRoot();
@@ -87,12 +101,28 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         return !(authentication instanceof JwtAuthenticationToken);
     }
 
+//    private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
+//        String username = token.getClaimAsString(claim);
+//        return switch (claim) {
+//            case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
+//            case "sub" -> Optional.ofNullable(authorityService.getUserAuthority(username));
+//            default -> Optional.empty();
+//        };
+//    }
+
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver exceptionResolver;
+
     private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
         String username = token.getClaimAsString(claim);
-        return switch (claim) {
-            case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
-            case "sub" -> Optional.ofNullable(authorityService.getUserAuthority(username));
-            default -> Optional.empty();
-        };
+
+            return switch (claim) {
+                case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
+                case "preferred_email","preferred_username" -> Optional.ofNullable(authorityService.getUserAuthority(username));
+                default -> Optional.empty();
+            };
+
     }
+
 }

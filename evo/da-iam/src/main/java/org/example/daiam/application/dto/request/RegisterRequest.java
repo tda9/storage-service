@@ -18,7 +18,7 @@ public record RegisterRequest(
         @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
         @NotBlank(message = "Register password cannot be empty")
-        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid password format")
+        @Pattern(regexp = InputUtils.PASSWORD_PATTERN, message = "Invalid password format")
         String password,
         @NotBlank(message = "Username cannot be empty")
         String username,
@@ -30,11 +30,11 @@ public record RegisterRequest(
         @DateTimeFormat(pattern = "yyyy-MM-dd")//TODO: handle case -2023-02-02
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_FORMAT, message = "Invalid register phone number format")
+        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid register phone number format")
         String phone,
         String street,
         String ward,
         String province,
         String district,
-        Set<String> roles) {// does spring set hash same string request?
+        Set<String> roleNames) {// does spring set hash same string request?
 }

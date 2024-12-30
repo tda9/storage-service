@@ -1,4 +1,4 @@
 
 org.example.config.FeignClientInterceptor
 org.example.config.FeignClientConfiguration
-org.example.config.TaskConfig
+#org.example.config.TaskConfig

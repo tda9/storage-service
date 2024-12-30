@@ -54,19 +54,19 @@ spring:
         opaquetoken:
           client-secret: ${application.security.keycloak.clientSecret}
           client-id: ${application.security.keycloak.clientId}
-
-      client:
-        registration:
-          keycloak:
-            client-id: iam-service-client-master
-            client-secret: K9UPqjKPhmAPg3FGaKCDVvANc4Jh5dC2
-            scope: openid,profile,email
-            authorization-grant-type: authorization_code
-            redirect-uri: ${application.security.keycloak.serverUrl}
-            provider: keycloak
-        provider:
-          keycloak:
-            issuer-uri: ${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}
+#
+#      client:
+#        registration:
+#          keycloak:
+#            client-id: iam-service2-client #iam-service-client-master
+#            client-secret: igR8GP5MTycqAXuXbdg3wyVWW1SuygPr
+#            scope: openid,profile,email
+#            authorization-grant-type: authorization_code
+#            redirect-uri: ${application.security.keycloak.serverUrl}
+#            provider: keycloak
+#        provider:
+#          keycloak:
+#            issuer-uri: ${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}
 
 confirmation:
   registration:
@@ -82,9 +82,9 @@ application:
         expiration: 604800000 # 7days
     keycloak:
       serverUrl: http://localhost:8082
-      realm: master
-      clientId: iam-service-client-master
-      clientSecret: K9UPqjKPhmAPg3FGaKCDVvANc4Jh5dC2
+      realm: master #iam-service2-realm #master
+      clientId: iam-service-client-master #iam-service2-client
+      clientSecret: K9UPqjKPhmAPg3FGaKCDVvANc4Jh5dC2 #igR8GP5MTycqAXuXbdg3wyVWW1SuygPr
       grantType: password
       username: admin
       password: admin
@@ -107,9 +107,7 @@ logging:
 
 
 server:
-  port: 8080
-#  servlet:
-#    context-path: /iam
+  port: 8081
 permission:
   scopes: "READ|WRITE|DELETE|UPDATE"
 springdoc:
@@ -125,6 +123,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+
 
 
 

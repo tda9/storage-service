@@ -7,5 +7,5 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface UserCommandAndDomainMapper {
-    void toUpdateCommand(UpdateUserCommand cmd, @MappingTarget User user);
+    void toDomain(UpdateUserCommand cmd, @MappingTarget User user);
 }

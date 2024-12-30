@@ -21,5 +21,7 @@ public interface PermissionEntityRepository extends JpaRepository<PermissionEnti
             " FROM PermissionEntity r WHERE r.resourceName =  :name")
     Optional<PermissionDto> findPermissionIdAndDeletedByResourceName(String name);
 
-
+    @Modifying
+    @Query("UPDATE PermissionEntity r set r.deleted = true where r.permissionId = :permissionId")
+    int deleteByPermissionId(UUID permissionId);
 }

@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableJpaRepositories(basePackages = {"org.example.daiam.infrastruture.persistence.repository","org.example.daiam.repo"})//tai sao khong co cai nay trong micro thi project khong quet duoc repo folder
 @EnableAspectJAutoProxy
 @SpringBootApplication
+//@ComponentScan(basePackages = {"org.example.web.exception"})
 @EnableAsync
 @EnableDiscoveryClient
 //@OpenAPIDefinition(info = @Info(title = "Iam API", version = "1.0", description = "Documentation Iam API v1.0"))

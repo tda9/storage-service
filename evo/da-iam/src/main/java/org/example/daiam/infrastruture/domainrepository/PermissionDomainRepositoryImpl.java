@@ -8,13 +8,14 @@ import org.example.daiam.infrastruture.persistence.entity.PermissionEntity;
 import org.example.daiam.infrastruture.persistence.repository.PermissionEntityRepository;
 import org.example.daiam.infrastruture.support.dto.PermissionDto;
 import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-@Repository
+@Service
 @RequiredArgsConstructor
 public class PermissionDomainRepositoryImpl {
     private final PermissionEntityRepository permissionEntityRepository;
@@ -44,5 +45,11 @@ public class PermissionDomainRepositoryImpl {
                     return permissionDto.permissionId();
                 })
                 .toList();
+    }
+
+    public Permission getById(UUID permissionId) {
+        PermissionEntity permissionEntity = permissionEntityRepository.findById(permissionId)
+                .orElseThrow(() -> new NotFoundException("Permission not found"));
+        return permissionDomainAndEntityMapper.toDomain(permissionEntity);
     }
 }

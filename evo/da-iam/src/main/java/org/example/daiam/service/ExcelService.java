@@ -6,9 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.example.daiam.entity.User;
-import org.example.daiam.repo.UserRepo;
+import org.example.daiam.infrastruture.persistence.entity.UserEntity;
+import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
 import org.example.daiam.utils.InputUtils;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +25,7 @@ import java.util.stream.IntStream;
 @Service
 @RequiredArgsConstructor
 public class ExcelService {
-    private final UserRepo userRepo;
+    private final UserEntityRepository userEntityRepository;
 
     @Transactional
     public String importExcelData(MultipartFile file) {
@@ -36,14 +37,14 @@ public class ExcelService {
             for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) { // Skip the header row (index 0)
                 Row row = sheet.getRow(i);
                 StringBuilder errorMessage = new StringBuilder();
-                User user = validateAndSetUserFromRow(row, errorMessage);
+                UserEntity UserEntity = validateAndSetUserEntityFromRow(row, errorMessage);
                 if (!errorMessage.isEmpty()) {
                     log.error("Validation failed: " + errorMessage);
                     mainErrorMessage.append(errorMessage);
                 } else {
-                    log.info("User validated successfully.");
-                    user.setPassword("123");
-                    userRepo.save(user);
+                    log.info("UserEntity validated successfully.");
+                    UserEntity.setPassword("123");
+                    userEntityRepository.save(UserEntity);
                 }
             }
         } catch (IOException e) {
@@ -65,16 +66,16 @@ public class ExcelService {
         };
     }
 
-    private User validateAndSetUserFromRow(Row row, StringBuilder errorMessage) {
-        User.UserBuilder userBuilder = User.builder();
+    private UserEntity validateAndSetUserEntityFromRow(Row row, StringBuilder errorMessage) {
+        UserEntity.UserEntityBuilder entity = UserEntity.builder();
         final int rowIndex = row.getRowNum();
         int columnIndex = 0;
         for (String header : EXPECTED_HEADERS) {
             String value = getCellValue(row, columnIndex);
             switch (header) {
                 case "Email":
-                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.EMAIL_FORMAT) && !userRepo.existsByEmail(value)) {
-                        userBuilder.email(value);
+                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.EMAIL_FORMAT) && !userEntityRepository.existsByEmail(value)) {
+                        entity.email(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Email; ")
                                 .append(System.lineSeparator());
@@ -82,15 +83,15 @@ public class ExcelService {
                     break;
                 case "Username":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.username(value);
+                        entity.username(value);
                     } else {
-                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Username; ")
+                        errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid UserEntityname; ")
                                 .append(System.lineSeparator());
                     }
                     break;
                 case "First Name":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.firstName(value);
+                        entity.firstName(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid First Name; ")
                                 .append(System.lineSeparator());
@@ -98,7 +99,7 @@ public class ExcelService {
                     break;
                 case "Last Name":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.lastName(value);
+                        entity.lastName(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Last Name; ")
                                 .append(System.lineSeparator());
@@ -111,15 +112,15 @@ public class ExcelService {
                             if (value.matches("\\d+\\.\\d+E\\d+")) {
                                 // Convert scientific notation to a plain number
                                 BigDecimal phoneNumber = new BigDecimal(value);
-                                userBuilder.phone(phoneNumber.toPlainString());
+                                entity.phone(phoneNumber.toPlainString());
                             }
                             // Handle purely numeric phone numbers
                             else if (value.matches("\\d+")) {
-                                userBuilder.phone(value.trim());
+                                entity.phone(value.trim());
                             }
                             // Validate the phone number against the regex
-                            else if (value.matches(InputUtils.PHONE_FORMAT)) {
-                                userBuilder.phone(value.trim());
+                            else if (value.matches(InputUtils.PHONE_PATTERN)) {
+                                entity.phone(value.trim());
                             } else {
                                 errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex)
                                         .append(": Invalid Phone format '").append(value).append("'; ")
@@ -139,23 +140,23 @@ public class ExcelService {
                     }
                     break;
                 case "DOB":
-                    if (value != null && !value.isBlank() && value.matches(InputUtils.DOB_FORMAT)) {
+                    if (value != null && !value.isBlank() && value.matches(InputUtils.DOB_PATTERN)) {
                         try {
-                            userBuilder.dob(LocalDate.parse(value));
+                            entity.dob(LocalDate.parse(value));
                         } catch (DateTimeParseException e) {
-                            userBuilder.dob(null); // Set to a default value if invalid
+                            entity.dob(null); // Set to a default value if invalid
                             errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid DOB format; ")
                                     .append(System.lineSeparator());
                         }
                     } else {
-                        userBuilder.dob(null); // Set to a default value if empty
+                        entity.dob(null); // Set to a default value if empty
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid DOB; ")
                                 .append(System.lineSeparator());
                     }
                     break;
                 case "Street":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.street(value);
+                        entity.street(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Street; ")
                                 .append(System.lineSeparator());
@@ -163,7 +164,7 @@ public class ExcelService {
                     break;
                 case "Ward":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.ward(value);
+                        entity.ward(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Ward; ")
                                 .append(System.lineSeparator());
@@ -171,7 +172,7 @@ public class ExcelService {
                     break;
                 case "Province":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.province(value);
+                        entity.province(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Province; ")
                                 .append(System.lineSeparator());
@@ -179,7 +180,7 @@ public class ExcelService {
                     break;
                 case "District":
                     if (value != null && !value.trim().isEmpty()) {
-                        userBuilder.district(value);
+                        entity.district(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid District; ")
                                 .append(System.lineSeparator());
@@ -188,13 +189,13 @@ public class ExcelService {
                 case "Experience":
                     try {
                         if (value != null && !value.trim().isEmpty() && Double.parseDouble(value.trim()) >= 0) {
-                            userBuilder.experience((int) Double.parseDouble(value.trim()));
+                            entity.experience((int) Double.parseDouble(value.trim()));
                         } else {
-                            userBuilder.experience(0); // Set to default value if empty
+                            entity.experience(0); // Set to default value if empty
                             errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Experience; ");
                         }
                     } catch (NumberFormatException e) {
-                        userBuilder.experience(0); // Set to default value if invalid
+                        entity.experience(0); // Set to default value if invalid
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Experience; ")
                                 .append(System.lineSeparator());
                     }
@@ -202,13 +203,13 @@ public class ExcelService {
                 case "STT":
                     try {
                         if (value != null && !value.trim().isEmpty() && Double.parseDouble(value.trim()) >= 0) {
-                            userBuilder.experience((int) Double.parseDouble(value.trim()));
+                            entity.experience((int) Double.parseDouble(value.trim()));
                         } else {
-                            userBuilder.experience(0); // Set to default value if empty
+                            entity.experience(0); // Set to default value if empty
                             errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid STT; ");
                         }
                     } catch (NumberFormatException e) {
-                        userBuilder.experience(0); // Set to default value if invalid
+                        entity.experience(0); // Set to default value if invalid
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid STT; ")
                                 .append(System.lineSeparator());
                     }
@@ -216,11 +217,11 @@ public class ExcelService {
             }
             columnIndex++;
         }
-        return userBuilder.build();
+        return entity.build();
     }
 
     private static final List<String> EXPECTED_HEADERS = List.of(
-            "STT", "Email", "Username", "First Name", "Last Name", "Phone",
+            "STT", "Email", "UserEntityname", "First Name", "Last Name", "Phone",
             "DOB", "Street", "Ward", "Province", "District", "Experience"
     );
 
@@ -285,17 +286,17 @@ public class ExcelService {
     }
 
     // Main method to generate the Excel file
-    public byte[] writeUsersToExcel(List<User> users) throws IOException {
+    public byte[] writeUserEntitysToExcel(List<UserEntity> UserEntitys) throws IOException {
         // Create a workbook and a sheet
 
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("User Data");
+        Sheet sheet = workbook.createSheet("UserEntity Data");
         sheet.setDefaultColumnWidth(20);
         sheet.setDefaultRowHeightInPoints(15);
         // Create and set the header row
         createHeaderRow(sheet);
         // Create and set the data rows
-        createDataRow(sheet, users);
+        createDataRow(sheet, UserEntitys);
         // Write the workbook to a ByteArrayOutputStream
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         workbook.write(byteArrayOutputStream);
@@ -322,8 +323,8 @@ public class ExcelService {
                 .forEach(i -> createCell(headerRow, i, EXPECTED_HEADERS.get(i), headerCellStyle));
     }
 
-    // Method to create data rows for each user
-    private void createDataRow(Sheet sheet, List<User> users) {
+    // Method to create data rows for each UserEntity
+    private void createDataRow(Sheet sheet, List<UserEntity> UserEntitys) {
         // Create a font for Times New Roman
         Font timesNewRomanFont = sheet.getWorkbook().createFont();
         timesNewRomanFont.setFontName("Times New Roman");
@@ -331,24 +332,24 @@ public class ExcelService {
         // Create a cell style for Times New Roman font
         CellStyle defaultCellStyle = sheet.getWorkbook().createCellStyle();
         defaultCellStyle.setFont(timesNewRomanFont);
-        // Iterate over the list of users and create data rows
+        // Iterate over the list of UserEntitys and create data rows
         int index = 0;
         int rowNum = 1;
-        for (User user : users) {
-            //if(userRepo.existsById(users.get(index).getUserId())){
+        for (UserEntity UserEntity : UserEntitys) {
+            //if(UserEntityRepo.existsById(UserEntitys.get(index).getUserEntityId())){
             Row row = sheet.createRow(rowNum++);
-            row.createCell(index++).setCellValue(Math.min(user.getStt(), 0));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getEmail()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getUsername()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getFirstName()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getLastName()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getPhone()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getDob()).map(LocalDate::toString).orElse("null"));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getStreet()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getWard()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getProvince()).orElse(""));
-            row.createCell(index++).setCellValue(Optional.ofNullable(user.getDistrict()).orElse(""));
-            row.createCell(index++).setCellValue(Math.min(user.getExperience(), 0));
+            row.createCell(index++).setCellValue(Math.min(UserEntity.getStt(), 0));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getEmail()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getUsername()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getFirstName()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getLastName()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getPhone()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getDob()).map(LocalDate::toString).orElse("null"));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getStreet()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getWard()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getProvince()).orElse(""));
+            row.createCell(index++).setCellValue(Optional.ofNullable(UserEntity.getDistrict()).orElse(""));
+            row.createCell(index++).setCellValue(Math.min(UserEntity.getExperience(), 0));
             //}
         }
     }

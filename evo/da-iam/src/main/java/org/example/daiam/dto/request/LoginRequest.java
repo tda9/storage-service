@@ -12,6 +12,6 @@ public record LoginRequest(
         @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid login email format")
         String email,
         @NotEmpty
-        @Pattern(regexp = InputUtils.PASSWORD_FORMAT, message = "Invalid login password format")
+        @Pattern(regexp = InputUtils.PASSWORD_PATTERN, message = "Invalid login password format")
         String password) {
 }

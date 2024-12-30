@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 
 
 public interface DomainAndEntityMapper<D,E> {
+
     D toDomain(E entity);
     E toEntity(D domain);
 }

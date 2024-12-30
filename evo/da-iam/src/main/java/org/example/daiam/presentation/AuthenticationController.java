@@ -4,8 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import org.example.daiam.application.dto.request.*;
 import org.example.daiam.presentation.factory.AuthenticationServiceFactory;
-import org.example.daiam.dto.request.*;
+
 
 import org.example.daiam.service.PasswordService;
 import jakarta.validation.Valid;
@@ -63,7 +64,7 @@ public class AuthenticationController {
     @GetMapping("/reset-password")
     public BasedResponse<?> resetPassword(
             @RequestParam @NotBlank @Pattern(regexp = InputUtils.EMAIL_FORMAT) String email,
-            @RequestParam @NotBlank @Pattern(regexp = InputUtils.PASSWORD_FORMAT) String newPassword,
+            @RequestParam @NotBlank @Pattern(regexp = InputUtils.PASSWORD_PATTERN) String newPassword,
             @RequestParam @NotBlank String token) {
         authenticationServiceFactory.getService().resetPassword(email, newPassword, token);
         return BasedResponse.success("Reset password successful", email);

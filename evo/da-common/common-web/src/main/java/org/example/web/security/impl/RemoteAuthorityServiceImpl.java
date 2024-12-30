@@ -4,7 +4,6 @@ package org.example.web.security.impl;
 import org.example.client.iam.IamClient;
 import org.example.model.UserAuthority;
 import org.example.web.security.AuthorityService;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 public class ExceptionHandlerAspect {
-    @Pointcut("execution(* org.example.daiam.service.impl.AuthenticationService.*(..)) || " +
-            "execution(* org.example.daiam.service.impl.KeycloakAuthenticationService.*(..)) ||" +
+    @Pointcut("execution(* org.example.daiam.application.service.impl.DefaultAuthenticationServiceImpl.*(..)) || " +
+            "execution(* org.example.daiam.application.service.impl.KeycloakAuthenticationServiceImpl.*(..)) ||" +
             "execution(* org.example.daiam.service.impl.KeycloakUserService.*(..)) " )
     public void authenticationHandler() {}
 

@@ -1,6 +1,5 @@
 package org.example.daiam.dto.request;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import org.example.daiam.utils.InputUtils;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,29 +12,33 @@ public record CreateUserRequest(
         @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
         @NotBlank(message = "Username cannot be empty")
+        // @Pattern(regexp = InputUtils.USERNAME_FORMAT, message = "Invalid register username format")
         String username,
+
+        //Default: false
         Boolean isRoot,
         Boolean isLock,
         Boolean isVerified,
-        @Min(value = 0, message = "stt must equal greater than 0")
+
+        @Min(value = 0, message = "Stt must equal greater than 0")
         Integer stt,
-        @Min(value = 0, message = "experience must equal greater than 0")
+        @Min(value = 0, message = "Experience must equal greater than 0")
         Integer experience,
+
         String firstName,
         String lastName,
+
+        //TODO: Check case -2021-09-29
         @DateTimeFormat(pattern = "yyyy-MM-dd")
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_FORMAT, message = "Invalid create phone number format")
+
+        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid create phone number format")
         String phone,
         String street,
         String ward,
         String province,
         String district,
-        Set<String> roles){
 
-    //Default:
-    //deleted: false, isVerified: false, isLock: false
-
-
+        Set<String> roles) {
 }

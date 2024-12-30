@@ -21,8 +21,9 @@ public class Role {
         this.roleId = UUID.randomUUID();
         this.name = cmd.getName();
         this.deleted = false;
-
+        this.createRolePermission(cmd.getPermissionsIds());
     }
+
 
     public void createRolePermission(List<UUID> permissionIds){
         if(permissionIds!=null &&!permissionIds.isEmpty()){
@@ -30,7 +31,9 @@ public class Role {
                     .map(permissionId -> rolePermissions.add(new RolePermission(this.roleId,permissionId)));
         }
     }
-
+    //xoa het 1 luot cai cu
+    //3,7
+    //4
     public void updateRolePermissions(List<UUID> newPermissionIds) {
         if (newPermissionIds != null && !newPermissionIds.isEmpty()) {
             // Extract the role IDs from the existing RolePermission list

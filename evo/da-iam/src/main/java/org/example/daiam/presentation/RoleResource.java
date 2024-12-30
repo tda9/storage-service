@@ -1,10 +1,11 @@
 package org.example.daiam.presentation;
 
-import org.example.daiam.dto.request.CreateRoleRequest;
-import org.example.daiam.dto.request.DeleteRoleRequest;
-import org.example.daiam.dto.request.UpdateRoleRequest;
-
-import org.example.daiam.service.RoleService;
+import jakarta.validation.constraints.NotBlank;
+import org.example.daiam.application.dto.request.CreateRoleRequest;
+import org.example.daiam.application.dto.request.DeleteRoleRequest;
+import org.example.daiam.application.dto.request.UpdateRoleRequest;
+import org.example.daiam.application.service.RoleCommandService;
+import org.example.daiam.application.service.RoleQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.model.dto.response.BasedResponse;
@@ -12,34 +13,38 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/roles")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class RoleResource {
 
-    private final RoleService roleService;
-    @PreAuthorize("hasPermission('ROLES','CREATE')")
-    @PostMapping("/create")
+    private final RoleCommandService roleCommandService;
+    private final RoleQueryService roleQueryService;
+
+    @PreAuthorize("hasPermission(null,'roles.create')")
+    @PostMapping("/roles/create")
     public BasedResponse<?> create(@RequestBody @Valid CreateRoleRequest createRoleRequest) {
-        return roleService.create(createRoleRequest);
-    }
-    @PreAuthorize("hasPermission('ROLES','UPDATE')")
-    @PutMapping("/update")
-    public BasedResponse<?> updateById(@RequestBody @Valid UpdateRoleRequest request){
-        return roleService.updateById(request);
-    }
-    @PreAuthorize("hasPermission('ROLES','DELETE')")
-    @DeleteMapping("/delete")
-    public BasedResponse<?> deleteById(@RequestBody @Valid DeleteRoleRequest request){
-        return roleService.deleteById(request);
-    }
-    @PreAuthorize("hasPermission('ROLES','READ')")
-    @GetMapping("/{id}")
-    public BasedResponse<?> findById(@PathVariable @Valid String id){
-        return roleService.findById(id);
+        return BasedResponse.success("Create successful", roleCommandService.create(createRoleRequest));
     }
 
-    @GetMapping("/{name}")
-    public BasedResponse<?> findByName(@PathVariable @Valid String name){
-        return roleService.findByName(name);
+    @PreAuthorize("hasPermission(null,'roles.update')")
+    @PutMapping("/roles/{id}/update")
+    public BasedResponse<?> updateById(@RequestBody @Valid UpdateRoleRequest request,
+                                       @PathVariable @NotBlank String id) {
+        return BasedResponse.success("Update successful", roleCommandService.updateById(request, id));
     }
+
+    @PreAuthorize("hasPermission(null,'roles.delete')")
+    @DeleteMapping("/roles/{id}/delete")
+    public BasedResponse<?> deleteById(
+            @PathVariable @NotBlank String id,
+            @RequestBody @Valid DeleteRoleRequest request) {
+        return BasedResponse.success("Delete successful", roleCommandService.deleteById(request, id));
+    }
+
+    @PreAuthorize("hasPermission(null,'roles.read')")
+    @GetMapping("/roles/{id}")
+    public BasedResponse<?> getById(@PathVariable @NotBlank String id) {
+        return BasedResponse.success("Found", roleQueryService.getById(id));
+    }
+
 }

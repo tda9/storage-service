@@ -2,9 +2,9 @@ package org.example.daiam.presentation.factory;
 
 
 
-import org.example.daiam.service.impl.AuthenticationService;
-import org.example.daiam.service.BaseAuthenticationService;
-import org.example.daiam.service.impl.KeycloakAuthenticationService;
+import org.example.daiam.application.service.impl.DefaultAuthenticationServiceImpl;
+import org.example.daiam.application.service.AuthenticationService;
+import org.example.daiam.application.service.impl.KeycloakAuthenticationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
 public class AuthenticationServiceFactory {
     @Value("${application.authProvider}")
     String authProvider ;
-    private final AuthenticationService authenticationService;
-    private final KeycloakAuthenticationService keycloakAuthenticationService;
-    public BaseAuthenticationService getService() {
+    private final DefaultAuthenticationServiceImpl authenticationService;
+    private final KeycloakAuthenticationServiceImpl keycloakAuthenticationService;
+    public AuthenticationService getService() {
         return switch (authProvider) {
             case "DEFAULT" -> authenticationService;
             case "KEYCLOAK" -> keycloakAuthenticationService;

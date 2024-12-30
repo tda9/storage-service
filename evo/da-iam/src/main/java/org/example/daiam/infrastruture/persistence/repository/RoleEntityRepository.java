@@ -18,7 +18,17 @@ import java.util.UUID;
 @Repository
 public interface RoleEntityRepository extends JpaRepository<RoleEntity, UUID>, RoleEntityRepositoryCustom {
 
+    @Override
     @Query("SELECT new org.example.daiam.infrastruture.support.dto.RoleDto(r.roleId, r.deleted)" +
             " FROM RoleEntity r WHERE LOWER(r.name) = LOWER(:name)")
     Optional<RoleDto> getRoleIdAndDeletedByName(String name);
+
+    @Modifying
+    @Query("UPDATE RoleEntity r set r.deleted = true where r.roleId = :roleId")
+    int deleteByRoleId(UUID roleId);
+
+        @Query(value = "SELECT r FROM RoleEntity r " +
+            "JOIN UserRoleEntity ur ON r.roleId = ur.roleId " +
+            "WHERE ur.userId = :userId")
+    Set<RoleEntity> findRolesByUserId(@Param("userId") UUID userId);
 }

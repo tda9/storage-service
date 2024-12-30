@@ -1,6 +1,7 @@
 package org.example.model;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.util.CollectionUtils;
@@ -15,6 +16,7 @@ public class UserAuthentication extends UsernamePasswordAuthenticationToken {
 
     private final boolean isRoot;
     private final boolean isClient;
+    @Getter
     private final Set<String> grantedPermissions;
 
     public UserAuthentication(Object principal,
@@ -40,7 +42,4 @@ public class UserAuthentication extends UsernamePasswordAuthenticationToken {
         return isClient;
     }
 
-    public Set<String> getGrantedPermissions() {
-        return this.grantedPermissions;
-    }
 }

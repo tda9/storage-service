@@ -24,7 +24,7 @@ public class PrivateFileController {
         this.fileServiceImpl = privateFileServiceImpl;
     }
 
-    @PreAuthorize("hasPermission('FILES','UPDATE')")
+    @PreAuthorize("hasPermission(null,'files.update')")
     @GetMapping("/image-resize/{userId}/{fileId}")
     public ResponseEntity<?> getImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
@@ -35,20 +35,20 @@ public class PrivateFileController {
         return fileServiceImpl.getPrivateFileByFileId(fileId, userId, width, height);
     }
 
-    @PreAuthorize("hasPermission('FILES','CREATE')")
+    @PreAuthorize("hasPermission(null,'files.create')")
     @PostMapping("/upload")
     public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         fileServiceImpl.uploadPrivateFiles(files, userId);
         return BasedResponse.success("Upload successful", null);
     }
-    @PreAuthorize("hasPermission('FILES','CREATE')")
+    @PreAuthorize("hasPermission(null,'files.create')")
     @PostMapping("/import-excel-history")
     public BasedResponse<?> saveHistory(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         fileServiceImpl.importHistory(files, userId);
         return BasedResponse.success("Save import history successful", null);
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
+    @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/download/{fileId}/{userId}")
     public ResponseEntity<Resource> downloadFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
                                                      @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
@@ -59,7 +59,7 @@ public class PrivateFileController {
         return fileServiceImpl.downloadPublicFile(fileId, userId);
     }
 
-    @PreAuthorize("hasPermission('FILES','DELETE')")
+    @PreAuthorize("hasPermission(null,'files.delete')")
     @DeleteMapping("/{fileId}/{userId}")
     public BasedResponse<?> deleteById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
@@ -69,7 +69,7 @@ public class PrivateFileController {
         return BasedResponse.success("Delete file successful", null);
     }
 
-    @PreAuthorize("hasPermission('FILES','DELETE')")
+    @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/{fileId}/{userId}")
     public BasedResponse<?> getById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
@@ -79,29 +79,15 @@ public class PrivateFileController {
         return BasedResponse.success("Get file successful", response.getBody());
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
+    @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/search")
-    public BasedResponse<?> searchFiles(
-            @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-
-        List<FileEntity> files = fileServiceImpl.searchByKeyword(keyword, sortBy, sort, currentSize, currentPage);
+    public BasedResponse<?> searchFiles(@ModelAttribute @Valid SearchKeywordFileRequest request) {
+        List<FileEntity> files = fileServiceImpl.searchKeyword(request);
         Long totalSize = fileServiceImpl.getTotalSize(keyword);
-        int totalPage;
-        if (currentSize >= totalSize && totalSize != 0) {
-            currentSize = Math.toIntExact(totalSize);
-            totalPage = ((int) (totalSize / currentSize));
-        } else {
-            totalPage = 0;
-            currentSize = 0;
-        }
-        return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, files);
+        return new PageResponse<>(request,files, totalSize);
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
+    @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/filter")
     public BasedResponse<?> filterFiles(
             @ModelAttribute FilterFileRequest filterFileRequest,

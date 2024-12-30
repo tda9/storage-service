@@ -24,6 +24,7 @@ public class Permission {
         this.permissionId = UUID.randomUUID();
         this.resourceName = cmd.getResourceName();
         this.resourceCode = cmd.getResourceCode();
+        this.scope = cmd.getScope();
     }
 
 }

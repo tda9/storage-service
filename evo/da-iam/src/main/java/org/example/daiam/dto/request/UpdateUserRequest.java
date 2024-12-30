@@ -16,10 +16,10 @@ public record UpdateUserRequest(
         String username,
         String firstName,
         String lastName,
-        @DateTimeFormat(pattern = InputUtils.DOB_FORMAT)
+        @DateTimeFormat(pattern = InputUtils.DOB_PATTERN)
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_FORMAT, message = "Invalid update phone number format")
+        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid update phone number format")
         String phone,
         @Min(value = 0, message = "stt must equal greater than 0")
         Integer stt,

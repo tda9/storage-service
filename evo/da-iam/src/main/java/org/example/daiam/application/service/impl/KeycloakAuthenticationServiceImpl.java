@@ -1,25 +1,21 @@
-package org.example.daiam.service.impl;
+package org.example.daiam.application.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
-import org.example.daiam.dto.request.ChangePasswordRequest;
-import org.example.daiam.dto.request.LoginRequest;
-import org.example.daiam.dto.request.LogoutRequest;
-import org.example.daiam.dto.request.RegisterRequest;
-import org.example.model.dto.response.BaseTokenResponse;
-
+import org.example.daiam.application.dto.request.ChangePasswordRequest;
+import org.example.daiam.application.dto.request.LoginRequest;
+import org.example.daiam.application.dto.request.LogoutRequest;
+import org.example.daiam.application.dto.request.RegisterRequest;
+import org.example.daiam.application.service.KeycloakAbstractService;
+import org.example.daiam.domain.User;
 import org.example.daiam.dto.response.KeycloakAccessTokenResponse;
-
-
-import org.example.daiam.entity.User;
-
 import lombok.extern.slf4j.Slf4j;
-import org.example.daiam.repo.RoleRepo;
-import org.example.daiam.repo.UserRepo;
-import org.example.daiam.service.*;
+import org.example.daiam.application.service.AuthenticationService;
+import org.example.daiam.application.service.CommonService;
+import org.example.daiam.service.PasswordService;
+import org.example.model.dto.response.BaseTokenResponse;
 import org.example.model.dto.response.ClientTokenResponse;
-import org.example.web.support.RedisService;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -40,9 +36,12 @@ import java.util.*;
 
 @Service
 @Slf4j
-public class KeycloakAuthenticationService extends BaseKeycloakService implements BaseAuthenticationService {
+public class KeycloakAuthenticationServiceImpl
+        extends KeycloakAbstractService
+        implements AuthenticationService {
     private final PasswordService passwordService;
-    private final AuthenticationService authenticationService;
+    private final DefaultAuthenticationServiceImpl authenticationService;
+    private final CommonService commonService;
     //private final KeycloakClient keycloakClient;
     @Value("${application.security.keycloak.realm}")
     private String realm;
@@ -57,25 +56,12 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
     @Value("${application.security.keycloak.newAccessTokenUrl}")
     private String newAccessTokenUrl;
 
-    public KeycloakAuthenticationService(UserRepo userRepo,
-                                         RoleRepo roleRepo,
-                                         Keycloak keycloak,
-                                         PasswordService passwordService,
-                                         AuthenticationService authenticationService,
-                                         JWTService jwtService,
-                                         //KeycloakClient keycloakClient,
-                                         RedisService redisService
-    ) {
-        super(keycloak, userRepo, roleRepo, jwtService, redisService);
+    public KeycloakAuthenticationServiceImpl(Keycloak keycloak, PasswordService passwordService, DefaultAuthenticationServiceImpl authenticationService, CommonService commonService) {
+        super(keycloak);
         this.passwordService = passwordService;
         this.authenticationService = authenticationService;
-        //this.keycloakClient = keycloakClient;
+        this.commonService = commonService;
     }
-
-//    private void initBodyRequest(MultiValueMap<String, Object> body) {
-//        body.add("client_id", clientId);
-//        body.add("client_secret", clientSecret);
-//    }
 
     @Override
     public User register(RegisterRequest request) {
@@ -90,7 +76,7 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
         return getKeycloakUserToken(request.email(), request.password());
     }
 
-//    @Override
+    //    @Override
 //    public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
 //        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 //        body.add("client_id", clientId);
@@ -98,24 +84,25 @@ public class KeycloakAuthenticationService extends BaseKeycloakService implement
 //        body.add("grant_type", "client_credentials");
 //        return keycloakClient.getKeycloakClientToken(body).getBody();
 //    }
-public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
-    RestTemplate restTemplate = new RestTemplate();
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("client_id", clientId.toString()); // Ensure clientId is converted to a String
-    body.add("client_secret", clientSecret);
-    body.add("grant_type", "client_credentials");
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Content-Type", "application/x-www-form-urlencoded");
-    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);;
-    ResponseEntity<ClientTokenResponse> response = restTemplate.exchange(
-            serverUrl+newAccessTokenUrl,
-            HttpMethod.POST,
-            requestEntity,
-            ClientTokenResponse.class
-    );
-    // Return the token response body
-    return response.getBody();
-}
+    public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
+        RestTemplate restTemplate = new RestTemplate();
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId.toString()); // Ensure clientId is converted to a String
+        body.add("client_secret", clientSecret);
+        body.add("grant_type", "client_credentials");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/x-www-form-urlencoded");
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        ;
+        ResponseEntity<ClientTokenResponse> response = restTemplate.exchange(
+                serverUrl + newAccessTokenUrl,
+                HttpMethod.POST,
+                requestEntity,
+                ClientTokenResponse.class
+        );
+        // Return the token response body
+        return response.getBody();
+    }
 
 
     @Override
@@ -125,7 +112,7 @@ public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
 //        body.add("refresh_token", request.refreshToken());
 //        saveBlackAccessToken(servletRequest);
 //        return keycloakClient.logout(body);
-        saveBlackRefreshToken(servletRequest, request.refreshToken());
+        commonService.saveBlackRefreshToken(servletRequest, request.refreshToken());
         String refreshToken = request.refreshToken();
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -136,7 +123,7 @@ public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
         body.add("refresh_token", refreshToken);
         HttpEntity<MultiValueMap<String, String>> requestKeycloak = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.exchange(
-                serverUrl+logoutUrl,
+                serverUrl + logoutUrl,
                 HttpMethod.POST,
                 requestKeycloak,
                 String.class
@@ -157,7 +144,7 @@ public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
 //        initBodyRequest(body);
 //        body.add("refresh_token", refreshToken);
 //        body.add("grant_type", "refresh_token");
-        saveBlackRefreshToken(servletRequest, refreshToken);
+        commonService.saveBlackRefreshToken(servletRequest, refreshToken);
 //        return keycloakClient.refreshToken(body).getBody();
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -169,7 +156,7 @@ public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
         body.add("grant_type", "refresh_token");
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<KeycloakAccessTokenResponse> response = restTemplate
-                .exchange(serverUrl+newAccessTokenUrl,
+                .exchange(serverUrl + newAccessTokenUrl,
                         HttpMethod.POST, request, KeycloakAccessTokenResponse.class);
         if (response.getStatusCode().is2xxSuccessful()) {
             System.out.println("Logout successful!");
@@ -188,19 +175,19 @@ public BaseTokenResponse getClientToken(UUID clientId, String clientSecret) {
 //        body.add("password", password);
 //        return keycloakClient.getKeycloakUserToken(body).getBody();
 
-            String tokenUrl = serverUrl + newAccessTokenUrl;
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("grant_type", "password");
-            body.add("client_id", clientId);
+        String tokenUrl = serverUrl + newAccessTokenUrl;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
         body.add("username", username);
-            body.add("password", password);
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<KeycloakAccessTokenResponse> response = restTemplate.exchange(tokenUrl, HttpMethod.POST, request, KeycloakAccessTokenResponse.class);
-            return response.getBody();
+        body.add("password", password);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        ResponseEntity<KeycloakAccessTokenResponse> response = restTemplate.exchange(tokenUrl, HttpMethod.POST, request, KeycloakAccessTokenResponse.class);
+        return response.getBody();
 
     }
 

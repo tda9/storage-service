@@ -16,10 +16,10 @@ public class CreateUserCommand{
     private String username;
     private List<UUID> roleIds;
     private String password;
-    private boolean isRoot;
-    private boolean isLock;
-    private boolean isVerified;
-    private boolean deleted;
+    private Boolean isRoot;
+    private Boolean isLock;
+    private Boolean isVerified;
+    private Boolean deleted;
     private Integer stt;
     private Integer experience;
     private String firstName;

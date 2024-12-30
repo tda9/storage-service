@@ -1,11 +1,15 @@
 package org.example.daiam.infrastruture.persistence.repository.custom;
 
 
-import org.example.daiam.domain.User;
+import org.example.daiam.application.dto.request.SearchExactUserRequest;
+import org.example.daiam.application.dto.request.SearchKeywordUserRequest;
+import org.example.daiam.infrastruture.persistence.entity.UserEntity;
 
 import java.util.List;
 
 public interface UserEntityRepositoryCustom{
-    List<User> searchByKeyword(String keyword, String sortBy, String sort, int currentSize, int currentPage);
-
+    List<UserEntity> searchKeyword(SearchKeywordUserRequest request);
+    List<UserEntity> searchExact(SearchExactUserRequest request);
+    Long getTotalSize(SearchKeywordUserRequest request);
+    Long getTotalSize(SearchExactUserRequest request);
 }

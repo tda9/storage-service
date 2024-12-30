@@ -1,8 +1,10 @@
 package org.example.daiam.application.service.impl;
 
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.application.dto.request.CreatePermissionRequest;
+import org.example.daiam.application.dto.request.DeleteRoleRequest;
 import org.example.daiam.application.dto.request.UpdatePermissionRequest;
 import org.example.daiam.application.request_command_mapper.PermissionRequestAndCommandMapper;
 import org.example.daiam.application.service.PermissionCommandService;
@@ -28,7 +30,7 @@ public class PermissionCommandServiceImpl implements PermissionCommandService {
     private final PermissionEntityRepository permissionEntityRepository;
     private final PermissionDomainAndEntityMapper permissionDomainAndEntityMapper;
 
-
+    @Override
     public Permission create(CreatePermissionRequest createRequest) {
         //req to cmd
         CreatePermissionCommand createPermissionCommand = permissionRequestAndCommandMapper.toCreateCommand(createRequest);
@@ -37,15 +39,30 @@ public class PermissionCommandServiceImpl implements PermissionCommandService {
         return permissionDomainRepositoryImpl.save(domain);
     }
 
+    @Override
     @Transactional
-    public Permission updateById(UpdatePermissionRequest updateRequest, String PermissionId) {
+    public Permission updateById(String PermissionId, UpdatePermissionRequest updateRequest) {
         //req to cmd
         UpdatePermissionCommand updatePermissionCommand = permissionRequestAndCommandMapper.toUpdateCommand(updateRequest);
 
-        PermissionEntity entity = permissionEntityRepository.findById(UUID.fromString(PermissionId)).orElseThrow(()-> new NotFoundException("Permission not found"));//TODO: check string PermissionId before parse to UUID
+        PermissionEntity entity = permissionEntityRepository.findById(UUID.fromString(PermissionId)).orElseThrow(() -> new NotFoundException("Permission not found"));//TODO: check string PermissionId before parse to UUID
         Permission domain = permissionDomainAndEntityMapper.toDomain(entity);
         //cmd to domain
         permissionCommandAndDomainMapper.toUpdateCommand(updatePermissionCommand, domain);
         return permissionDomainRepositoryImpl.save(domain);
+    }
+
+    @Override
+    public boolean deleteById(String id) {
+        UUID permissionId = isValidUUID(id);
+        return permissionEntityRepository.deleteByPermissionId(permissionId) > 0;
+    }
+
+    private UUID isValidUUID(String uuid) {
+        try {
+            return UUID.fromString(uuid);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid UUID");
+        }
     }
 }

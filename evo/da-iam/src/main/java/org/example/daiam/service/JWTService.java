@@ -2,12 +2,9 @@ package org.example.daiam.service;
 
 
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
-import org.example.daiam.entity.User;
-import org.example.daiam.exception.UserNotFoundException;
+import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
 import org.example.daiam.repo.BlackListTokenRepo;
-import org.example.daiam.repo.UserRepo;
 import org.example.daiam.utils.RSAKeyUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -32,7 +29,7 @@ public class JWTService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
     private final BlackListTokenRepo blackListTokenRepo;
-    private final  UserRepo userRepo;
+    private final UserEntityRepository userEntityRepository;
 
     public String generateRefreshToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
@@ -82,18 +79,9 @@ public class JWTService {
         return extractExpiration(token).before(new Date());
     }
 
-//    public boolean isTokenValid(String token, UserDetails userDetails) throws Exception {
-//        User u = userRepo.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UserNotFoundException("User not found"));
-//        if (!blackListTokenRepo.findTopByUserIdOrderByCreatedDateDesc(u.getUserId()).get().getToken().equals(token)) {
-//            return false;
-//        }
-//        final String email = extractEmail(token);
-//        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
-//    }
-
     public boolean isRefreshTokenValid(String token) {
         String email = extractEmail(token);
-        if (!userRepo.existsByEmail(email)) {
+        if (!userEntityRepository.existsByEmail(email)) {
             throw new NotFoundException("Invalid email in refresh token");
         }
         return !isTokenExpired(token);

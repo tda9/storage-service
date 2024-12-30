@@ -16,5 +16,9 @@ import java.util.UUID;
 @Repository
 public interface RolePermissionEntityRepository extends JpaRepository<RolePermissionEntity,UUID> {
 
-    Optional<List<RolePermissionEntity>> findAllByRoleId(UUID roleId);
+    Optional<List<RolePermissionEntity>> findAllByRoleIdIn(Set<UUID> roleIds);
+    Optional<List<RolePermissionEntity>> findAllByRoleId(UUID roleIds);
+    @Modifying
+    @Query("UPDATE RolePermissionEntity rp set rp.deleted = true where rp.permissionId = :permissionId and rp.roleId = :roleId")
+    int deleteByRoleIdAndPermissionId(UUID roleId, UUID permissionId);
 }

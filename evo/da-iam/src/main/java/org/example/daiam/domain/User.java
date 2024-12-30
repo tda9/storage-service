@@ -1,28 +1,30 @@
 package org.example.daiam.domain;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.example.daiam.domain.command.CreateUserCommand;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-
     private UUID userId;
-    private String externalId;
     private String email;
     private String username;
     private String password;
-    private boolean isRoot;
-    private boolean isLock;
-    private boolean isVerified;
-    private boolean deleted;
+    private Boolean isRoot;
+    private Boolean isLock;
+    private Boolean isVerified;
+    private Boolean deleted;
     private Integer stt;
     private Integer experience;
     private String firstName;
@@ -40,10 +42,10 @@ public class User {
         this.email = cmd.getEmail();
         this.username = cmd.getUsername();
         this.password = cmd.getPassword();
-        this.isRoot = cmd.isRoot();
-        this.isLock = cmd.isLock();
-        this.isVerified = cmd.isVerified();
-        this.deleted = cmd.isDeleted();
+        this.isRoot = cmd.getIsRoot();
+        this.isLock = cmd.getIsLock();
+        this.isVerified = cmd.getIsVerified();
+        this.deleted = cmd.getDeleted();
         this.experience = cmd.getExperience();
         this.stt = cmd.getStt();
         this.street = cmd.getStreet();
@@ -54,34 +56,26 @@ public class User {
     }
 
     public void createUserRoles(List<UUID> roleIds) {
-        if (roleIds != null && !roleIds.isEmpty()) {
-            this.userRoles = roleIds.stream()
-                    .map(roleId -> new UserRole(this.userId,roleId))
-                    .toList();
-        }
+        if (CollectionUtils.isEmpty(roleIds)) return;
+        this.userRoles = roleIds.stream()
+                .map(roleId -> new UserRole(this.userId, roleId))
+                .toList();
     }
 
-    //new : 123
-    // old:
-    //case1: khong trung -> xoa het
-    //case2: co trung case1: thua
-    //       co trung case2: ko thua
+    //assume newRoleIds is not null or empty
     public void updateUserRoles(List<UUID> newRoleIds) {
-        if (newRoleIds != null && !newRoleIds.isEmpty()) {
-            // Extract the role IDs from the existing UserRole list
-            List<UUID> oldRoleIds = this.userRoles.stream()
-                    .map(UserRole::getRoleId)
-                    .toList();
+        if (CollectionUtils.isEmpty(newRoleIds)) return;
 
-            // Filter newRoleIds to exclude ones that are already in existingRoleIds
-            List<UserRole> newUserRoles = newRoleIds.stream()
-                    .filter(roleId -> !oldRoleIds.contains(roleId))
-                    .map(roleId -> new UserRole(this.userId,roleId))
+        if (!CollectionUtils.isEmpty(this.userRoles)) {
+            newRoleIds = newRoleIds.stream()
+                    .filter(newRoleId -> userRoles.stream()
+                            .noneMatch(userRole -> userRole.getRoleId().equals(newRoleId)
+                            ))
                     .toList();
-
-            // Add the new UserRoles to this user's roles
-            this.userRoles.addAll(newUserRoles);
         }
+        userRoles.addAll(newRoleIds.stream()
+                .map(roleId -> new UserRole(this.userId, roleId))
+                .toList());
     }
 
 }

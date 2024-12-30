@@ -5,7 +5,8 @@ import org.example.daiam.annotation.ValidScope;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import org.example.daiam.entity.Scope;
+import org.example.daiam.infrastruture.support.Scope;
+
 
 public record CreatePermissionRequest(
         @NotBlank(message = "Resource code can not be blank")

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.daiam.audit.entity.AuditEntity;
 import org.example.daiam.infrastruture.support.Scope;
 
 import java.util.UUID;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Table(name = "role_permissions")
 @Entity
-public class RolePermissionEntity {
+public class RolePermissionEntity extends AuditEntity {
     @Id
     @Column(name = "id")
     private UUID id;

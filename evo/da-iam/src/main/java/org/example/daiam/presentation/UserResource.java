@@ -1,25 +1,31 @@
 package org.example.daiam.presentation;
 
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.example.client.storage.StorageClient;
 import org.example.daiam.application.dto.request.CreateUserRequest;
 import org.example.daiam.application.dto.request.SearchExactUserRequest;
 import org.example.daiam.application.dto.request.SearchKeywordUserRequest;
 import org.example.daiam.application.dto.request.UpdateUserRequest;
 import org.example.daiam.application.dto.response.UserDto;
-import org.example.daiam.application.service.UserCommandService;
 import org.example.daiam.application.service.UserQueryService;
-import org.example.daiam.service.ExcelService;
-import org.example.daiam.service.impl.AuthorityServiceImpl;
+import org.example.daiam.application.service.others.ExcelService;
+import org.example.daiam.application.service.impl.AuthorityServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.daiam.utils.InputUtils;
+import org.example.daiam.presentation.factory.UserServiceFactory;
+import org.example.web.support.MessageUtils;
 import org.example.model.UserAuthority;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.example.model.dto.response.PageResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,31 +38,32 @@ public class UserResource {
     private final ExcelService excelService;
     private final AuthorityServiceImpl authorityServiceImpl;
     private final StorageClient storageClient;
-    private final UserCommandService userCommandService;
+    private final UserServiceFactory userCommandService;
     private final UserQueryService userQueryService;
 
+    @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/{id}")
-    public BasedResponse<?> getById(@PathVariable String id) {
-        return BasedResponse.success(InputUtils.USER_FOUND_BY_ID_MESSAGE, userQueryService.getById(id));
+    public Response<?> get(@PathVariable String id) {
+        return Response.success(MessageUtils.USER_FOUND_BY_ID_MESSAGE, userQueryService.getById(id));
     }
 
     @PreAuthorize("hasPermission(null,'user.create')")
     @PostMapping("/users/create")
-    public BasedResponse<?> create(@RequestBody @Valid CreateUserRequest request) {
-        return BasedResponse.created(InputUtils.CREATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.create(request));
+    public Response<?> create(@RequestBody @Valid CreateUserRequest request) {
+        return Response.created(MessageUtils.CREATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.getUserService().create(request));
     }
 
     @PreAuthorize("hasPermission(null,'user.update')")
     @PutMapping("/users/{id}/update")
-    public BasedResponse<?> updateById(
+    public Response<?> update(
             @PathVariable String id,
             @RequestBody @Valid UpdateUserRequest request) {
-        return BasedResponse.success(InputUtils.UPDATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.updateById(request, id));
+        return Response.success(MessageUtils.UPDATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.getUserService().update(request, id));
     }
 
     @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/search-keyword")
-    public BasedResponse<?> searchByKeyword(@ModelAttribute @Valid SearchKeywordUserRequest request) {
+    public Response<?> searchKeyword(@ModelAttribute @Valid SearchKeywordUserRequest request) {
         List<UserDto> users = userQueryService.searchKeyword(request);
         Long totalSize = userQueryService.getTotalSize(request);
         return PageResponse.of(request, users, totalSize);
@@ -64,58 +71,50 @@ public class UserResource {
 
     @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/search-exact")
-    public BasedResponse<?> searchExact(@ModelAttribute SearchExactUserRequest request) {
+    public Response<?> searchExact(@ModelAttribute SearchExactUserRequest request) {
         List<UserDto> users = userQueryService.searchExact(request);
         Long totalSize = userQueryService.getTotalSize(request);
         return PageResponse.of(request, users, totalSize);
     }
 
-//    @GetMapping("/users/export")
-//    public ResponseEntity<byte[]> export(
-//            @ModelAttribute SearchExactUserRequest request,
-//            @RequestParam(required = false, defaultValue = "1") int currentPage,
-//            @RequestParam(required = false, defaultValue = "1") int currentSize,
-//            @RequestParam(required = false, defaultValue = "email") String sortBy,
-//            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-//        try {
-//            List<User> users = userRepoImpl.filterByField(request);
-//            // Generate Excel file as byte array
-//            byte[] excelFile = excelService.writeUsersToExcel(users);
-//            // Set HTTP headers for file download
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.add("Content-Disposition", "attachment; filename=users.xlsx");
-//            headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-//
-//            return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
-//        } catch (IOException e) {
-//            log.error(e.getMessage());
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-//
-//    @PostMapping("/users/import/{userId}")
-//    public ResponseEntity<?> import(
-//            @RequestParam("file") MultipartFile file,
-//            @PathVariable String userId) {
-//        String msg = excelService.importExcelData(file);
-//        storageClient.saveImportExcelHistory(new MultipartFile[]{file}, userId);
-//        if (msg == null || msg.isEmpty()) {
-//            return ResponseEntity.ok(BasedResponse.success("Import successful", null));
-//        } else {
-//            return ResponseEntity.badRequest().body(BasedResponse.badRequest(msg, null));
-//        }
-//    }
+    @GetMapping("/users/export")
+    public ResponseEntity<byte[]> export(@ModelAttribute @Valid SearchExactUserRequest request) {
+        // Generate Excel file as byte array
+        byte[] excelFile = excelService.writeUserEntitysToExcel(request);
+        // Set HTTP headers for file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=users.xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/users/import/{userId}")
+    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file, @PathVariable String userId) {
+        String msg = excelService.importExcelData(file);
+        storageClient.saveImportExcelHistory(new MultipartFile[]{file}, userId);
+        if (StringUtils.isNotBlank(msg)) {
+            return ResponseEntity.ok(Response.success("Import successful", null));}
+        return ResponseEntity.badRequest().body(Response.badRequest(msg, null));
+    }
 
     @GetMapping("/{username}/authorities-by-username")
-    BasedResponse<UserAuthority> getUserAuthority(
+    Response<UserAuthority> getUserAuthority(
             @PathVariable String username) {
-        return BasedResponse.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
+        return Response.success("Get authorities successful for " + username, authorityServiceImpl.getUserAuthority(username));
     }
 
     @GetMapping("/{clientId}/authorities-by-clientId")
-    BasedResponse<UserAuthority> getClientAuthority(
+    Response<UserAuthority> getClientAuthority(
             @PathVariable UUID clientId) {
-        return BasedResponse.success("Get authorities successful for " + clientId,
+        return Response.success("Get authorities successful for " + clientId,
                 authorityServiceImpl.getClientAuthority(clientId));//TODO: use factory pattern to get keycloak authoriry
+    }
+
+    @GetMapping("/users/{userId}/impersonate/{otherId}")
+    Response<Boolean> impersonate(
+            @PathVariable @NotBlank String userId,
+            @PathVariable @NotBlank String otherId
+    ) {
+        return Response.success("Get authorities successful for " + userId, authorityServiceImpl.impersonate(userId, otherId));
     }
 }

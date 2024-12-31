@@ -27,8 +27,8 @@ public interface RoleEntityRepository extends JpaRepository<RoleEntity, UUID>, R
     @Query("UPDATE RoleEntity r set r.deleted = true where r.roleId = :roleId")
     int deleteByRoleId(UUID roleId);
 
-        @Query(value = "SELECT r FROM RoleEntity r " +
+        @Query("SELECT r FROM RoleEntity r " +
             "JOIN UserRoleEntity ur ON r.roleId = ur.roleId " +
-            "WHERE ur.userId = :userId")
-    Set<RoleEntity> findRolesByUserId(@Param("userId") UUID userId);
+            "WHERE ur.userId = :userId AND r.deleted = false")
+    Optional<Set<RoleEntity>> findRolesByUserId(@Param("userId") UUID userId);
 }

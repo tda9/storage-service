@@ -8,7 +8,7 @@
 //import jakarta.ws.rs.InternalServerErrorException;
 //import jakarta.ws.rs.NotFoundException;
 //import lombok.extern.slf4j.Slf4j;
-//import org.example.model.dto.response.BasedResponse;
+//import org.example.model.dto.response.Response;
 //import org.springframework.http.HttpStatus;
 //import org.springframework.http.ResponseEntity;
 //import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -23,39 +23,39 @@
 //
 //    //AuthorizationDeniedException bo sung them
 //    @ExceptionHandler(IllegalArgumentException.class)
-//    public ResponseEntity<BasedResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+//    public ResponseEntity<Response<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.badRequest(ex.getMessage(), null));
+//        return ResponseEntity.status(400).body(Response.badRequest(ex.getMessage(), null));
 //    }
 //
 //    @ExceptionHandler(InternalServerErrorException.class)
-//    public ResponseEntity<BasedResponse<?>> handleInternalException(InternalServerErrorException ex) {
+//    public ResponseEntity<Response<?>> handleInternalException(InternalServerErrorException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(500).body(BasedResponse.fail(ex.getMessage(), null));
+//        return ResponseEntity.status(500).body(Response.fail(ex.getMessage(), null));
 //    }
 //
 //    @ExceptionHandler(BadRequestException.class)
-//    public ResponseEntity<BasedResponse<?>> handleBadRequestException(BadRequestException ex) {
+//    public ResponseEntity<Response<?>> handleBadRequestException(BadRequestException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.badRequest(ex.getMessage(), null));
+//        return ResponseEntity.status(400).body(Response.badRequest(ex.getMessage(), null));
 //    }
 //
 //    @ExceptionHandler(NotFoundException.class)
-//    public ResponseEntity<BasedResponse<?>> handleNotfoundException(NotFoundException ex) {
+//    public ResponseEntity<Response<?>> handleNotfoundException(NotFoundException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(404).body(BasedResponse.notFound(ex.getMessage(), null));
+//        return ResponseEntity.status(404).body(Response.notFound(ex.getMessage(), null));
 //    }
 //
 //    @ExceptionHandler(UserNotFoundException.class)
-//    public ResponseEntity<BasedResponse<?>> handleUserNotFound(UserNotFoundException ex) {
+//    public ResponseEntity<Response<?>> handleUserNotFound(UserNotFoundException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(404).body(BasedResponse.badRequest(ex.getMessage(), ex));
+//        return ResponseEntity.status(404).body(Response.badRequest(ex.getMessage(), ex));
 //    }
 //
 //    @ExceptionHandler(ErrorResponseException.class)
 //    public ResponseEntity<?> handleErrorResponseException(ErrorResponseException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
+//        return ResponseEntity.status(400).body(Response.fail(ex.getMessage(), ex));
 //    }
 //
 //    @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -65,7 +65,7 @@
 //            errorMessages.append("At field ").append(error.getField()).append(": ").append(error.getDefaultMessage()).append(System.lineSeparator());
 //        }
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.badRequest(errorMessages.toString(), null));
+//        return ResponseEntity.status(400).body(Response.badRequest(errorMessages.toString(), null));
 //    }
 //
 //    @ExceptionHandler(ConstraintViolationException.class)
@@ -75,25 +75,25 @@
 //            errorMessages.append(violation.getPropertyPath()).append(": ").append(violation.getMessage()).append(System.lineSeparator());
 //        }
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.fail(errorMessages.toString(), null));
+//        return ResponseEntity.status(400).body(Response.fail(errorMessages.toString(), null));
 //    }
 //
 //    @ExceptionHandler(HttpMessageNotReadableException.class)
 //    public ResponseEntity<?> handleErrorResponseException(HttpMessageNotReadableException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), null));
+//        return ResponseEntity.status(400).body(Response.fail(ex.getMessage(), null));
 //    }
 //
 //    @ExceptionHandler(UnexpectedTypeException.class)
 //    public ResponseEntity<?> handleWrongTypeException(UnexpectedTypeException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
+//        return ResponseEntity.status(400).body(Response.fail(ex.getMessage(), ex));
 //    }
 //
 //    @ExceptionHandler(NullPointerException.class)
 //    public ResponseEntity<?> handleNullException(NullPointerException ex) {
 //        log.error(ex.getMessage());
-//        return ResponseEntity.status(400).body(BasedResponse.fail(ex.getMessage(), ex));
+//        return ResponseEntity.status(400).body(Response.fail(ex.getMessage(), ex));
 //    }
 //
 //}

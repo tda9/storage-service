@@ -3,14 +3,15 @@ package org.example.daiam.application.service;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
-import org.example.daiam.dto.Credentials;
-import org.example.daiam.dto.request.UpdateUserRequest;
+import org.example.daiam.application.dto.KeycloakCredentials;
+import org.example.daiam.application.dto.request.UpdateUserRequest;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,10 +60,11 @@ public abstract class KeycloakAbstractService {
         getUsersResource().get(userRepresentation.getId()).update(userRepresentation);
     }
 
+    @Async
     protected void createKeycloakUser(String email, String password) {
         try {
             // Create password credential
-            CredentialRepresentation credential = Credentials.createPasswordCredentials(password);
+            CredentialRepresentation credential = KeycloakCredentials.createPasswordCredentials(password);
             // Create user representation
             UserRepresentation user = new UserRepresentation();
             user.setUsername(email);

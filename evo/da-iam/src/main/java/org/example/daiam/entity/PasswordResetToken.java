@@ -1,6 +1,6 @@
 package org.example.daiam.entity;
 
-import org.example.daiam.audit.entity.BaseEntity;
+import org.example.daiam.audit.entity.AuditEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "password_reset_token")
 @NoArgsConstructor
-public class PasswordResetToken extends BaseEntity {
+public class PasswordResetToken extends AuditEntity {
 
     @Id
     @Column(name = "token_id")

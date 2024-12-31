@@ -1,11 +1,10 @@
 package org.example.daiam.application.service.impl;
 
-import jakarta.ws.rs.BadRequestException;
 import org.example.daiam.application.dto.mapper.UserDtoMapper;
 import org.example.daiam.application.dto.request.SearchExactUserRequest;
 import org.example.daiam.application.dto.request.SearchKeywordUserRequest;
 import org.example.daiam.application.dto.response.UserDto;
-import org.example.daiam.application.service.UserAbstractService;
+import org.example.daiam.application.service.others.CommonService;
 import org.example.daiam.application.service.UserQueryService;
 
 import org.example.daiam.domain.User;
@@ -19,16 +18,19 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class DefaultUserQueryServiceImpl
-    extends UserAbstractService
-        implements UserQueryService {
+public class UserQueryServiceImpl implements UserQueryService {
     private final UserDtoMapper userDtoMapper;
     private final UserDomainRepositoryImpl userDomainRepositoryImpl;
+    private final UserEntityRepository userEntityRepository;
+    private final CommonService commonService;
 
-    public DefaultUserQueryServiceImpl(UserDtoMapper userDtoMapper, UserEntityRepository userEntityRepository, UserDomainRepositoryImpl userDomainRepositoryImpl) {
-        super(userEntityRepository);
+    public UserQueryServiceImpl(UserDtoMapper userDtoMapper,
+                                UserDomainRepositoryImpl userDomainRepositoryImpl,
+                                UserEntityRepository userEntityRepository, CommonService commonService) {
         this.userDtoMapper = userDtoMapper;
         this.userDomainRepositoryImpl = userDomainRepositoryImpl;
+        this.userEntityRepository = userEntityRepository;
+        this.commonService = commonService;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class DefaultUserQueryServiceImpl
 
     @Override
     public User getById(String id) {
-        UUID uuid = isValidUUID(id);
+        UUID uuid = commonService.isValidUUID(id);
         return userDomainRepositoryImpl.getById(uuid);
     }
 }

@@ -17,17 +17,17 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
-public class BaseEntity {
+public class AuditEntity {
     @CreatedBy
     @Column(name = "created_by",length = 1000)
-    private String createdBy;
+    protected String createdBy;
     @CreatedDate
     @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    protected LocalDateTime createdDate;
     @LastModifiedBy
     @Column(name = "last_modified_by",length = 1000)
-    private String lastModifiedBy;
+    protected String lastModifiedBy;
     @LastModifiedDate
     @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
+    protected LocalDateTime lastModifiedDate;
 }

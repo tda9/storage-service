@@ -43,10 +43,10 @@ public class HttpSecurityConfiguration {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers("/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs/*").permitAll()
-                                .requestMatchers("/files/public/**").permitAll()
-                                .requestMatchers("/users/export", "/users/import").permitAll()
+                                .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/*", "/api/v3/api-docs/*").permitAll()
+                                .requestMatchers("/api/files/public/**").permitAll()
+                                .requestMatchers("/api/users/export", "/api/users/import").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -1,18 +1,21 @@
-package org.example.daiam.service;
+package org.example.daiam.application.service.others;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ForbiddenException;
+import lombok.extern.slf4j.Slf4j;
+import org.example.daiam.application.dto.AccessTokens;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
-import org.example.daiam.repo.BlackListTokenRepo;
+import org.example.web.support.MessageUtils;
 import org.example.daiam.utils.RSAKeyUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.web.support.RedisService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.stereotype.Service;
 
 import java.security.PrivateKey;
@@ -23,24 +26,26 @@ import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
-public class JWTService {
-//    @Value("${application.security.jwt.expiration}")
-//    private long jwtExpiration;
+@Slf4j
+public class JwtService {
+    @Value("${application.security.jwt.expiration}")
+    private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
-    private final BlackListTokenRepo blackListTokenRepo;
     private final UserEntityRepository userEntityRepository;
+    private final RedisService redisService;
 
     public String generateRefreshToken(String username) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
 
-    public String generateClientToken(String client_id, String clientHost,long jwtExpiration) {
+    public String generateClientToken(String client_id, String clientHost, long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
@@ -53,7 +58,7 @@ public class JWTService {
                 .compact();
     }
 
-    public String generateToken(String email,long jwtExpiration) {
+    public String generateToken(String email, long jwtExpiration) {
         PrivateKey privateKey = rsaKeyUtil.getPrivateKey();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
@@ -81,14 +86,21 @@ public class JWTService {
 
     public boolean isRefreshTokenValid(String token) {
         String email = extractEmail(token);
+        if (email == null) {
+            log.info("Email field in refresh token is missing");
+            throw new InvalidBearerTokenException(MessageUtils.INVALID_REFRESH_TOKEN_MESSAGE);
+        }
         if (!userEntityRepository.existsByEmail(email)) {
-            throw new NotFoundException("Invalid email in refresh token");
+            log.info("Email in refresh token not existed in database");
+            throw new InvalidBearerTokenException(MessageUtils.INVALID_REFRESH_TOKEN_MESSAGE);
         }
         return !isTokenExpired(token);
     }
+
     public String extractId(String jwt) {
         return extractClaim(jwt, Claims::getId);
     }
+
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
         Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
@@ -105,5 +117,32 @@ public class JWTService {
         } catch (Exception e) {
             throw new BadRequestException(e.getMessage());
         }
+    }
+
+    public AccessTokens generateAccessTokens(String email) {
+        var jwtToken = generateToken(email, jwtExpiration);
+        var jwtRefreshToken = generateRefreshToken(email);
+        return AccessTokens.builder()
+                .accessToken(jwtToken)
+                .refreshToken(jwtRefreshToken)
+                .tokenType("Bearer")
+                .idToken(extractId(jwtToken))
+                .refreshExpiresIn(refreshExpiration)
+                .build();
+    }
+
+    public void saveBlackAccessToken(HttpServletRequest servletRequest) {
+        if (servletRequest != null && servletRequest.getHeader("Authorization") != null) {
+            String token = servletRequest.getHeader("Authorization").substring(7);
+            redisService.save(token);
+        }
+    }
+
+    public void saveBlackRefreshToken(HttpServletRequest servletRequest, String refreshToken) {
+        if (redisService.isEntryExist(refreshToken)) {
+            throw new ForbiddenException(MessageUtils.FORBIDDEN_REFRESH_TOKEN_MESSAGE);
+        }
+        saveBlackAccessToken(servletRequest);
+        redisService.save(refreshToken);
     }
 }

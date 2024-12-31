@@ -8,5 +8,5 @@ import org.example.daiam.domain.Role;
 public interface RoleCommandService {
     Role create(CreateRoleRequest request);
     Role updateById(UpdateRoleRequest request,String id);
-    boolean deleteById(DeleteRoleRequest request, String id);
+    Role deleteById(DeleteRoleRequest request, String id);
 }

@@ -1,9 +1,15 @@
 package org.example.daiam.domain;
 
 import lombok.*;
+import org.apache.commons.lang.StringUtils;
+import org.example.daiam.audit.entity.AuditDomain;
+import org.example.daiam.audit.entity.AuditEntity;
 import org.example.daiam.domain.command.CreateRoleCommand;
+import org.example.daiam.domain.command.UpdateRoleCommand;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 
 @Setter
@@ -11,44 +17,73 @@ import java.util.*;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class Role {
+public class Role extends AuditDomain {
     private UUID roleId;
     private String name;
     private boolean deleted;
     List<RolePermission> rolePermissions = new ArrayList<>();
 
-    public Role(CreateRoleCommand cmd){
+    public Role(CreateRoleCommand cmd) {
         this.roleId = UUID.randomUUID();
         this.name = cmd.getName();
         this.deleted = false;
         this.createRolePermission(cmd.getPermissionsIds());
     }
-
-
-    public void createRolePermission(List<UUID> permissionIds){
-        if(permissionIds!=null &&!permissionIds.isEmpty()){
-            permissionIds.stream()
-                    .map(permissionId -> rolePermissions.add(new RolePermission(this.roleId,permissionId)));
+    public void update(UpdateRoleCommand cmd) {
+        if (StringUtils.isNotBlank(cmd.getName())) {
+            this.name = cmd.getName();
+        }
+        if (cmd.getDeleted() != null) {
+            this.deleted = cmd.getDeleted();
+        }
+        if (!CollectionUtils.isEmpty(cmd.getPermissionIds())) {
+            this.updateRolePermissions(cmd.getPermissionIds());
         }
     }
-    //xoa het 1 luot cai cu
-    //3,7
-    //4
+
+    public void createRolePermission(List<UUID> permissionIds) {
+        if (CollectionUtils.isEmpty(permissionIds)) return;
+        permissionIds.forEach(
+                permissionId -> rolePermissions.add(new RolePermission(this.roleId, permissionId)));
+
+    }
+
     public void updateRolePermissions(List<UUID> newPermissionIds) {
-        if (newPermissionIds != null && !newPermissionIds.isEmpty()) {
-            // Extract the role IDs from the existing RolePermission list
-            List<UUID> oldPermissionIds = this.rolePermissions.stream()
-                    .map(RolePermission::getRoleId)
+        if (CollectionUtils.isEmpty(newPermissionIds)) return;
+
+        if (!CollectionUtils.isEmpty(this.rolePermissions)) {
+            // Mark existing permissions as deleted if not in newPermissionIds
+            this.rolePermissions = this.rolePermissions.stream()
+                    .peek(rolePermission -> rolePermission.setDeleted(!newPermissionIds.contains(rolePermission.getPermissionId())))
                     .toList();
 
-            // Filter newRoleIds to exclude ones that are already in existingRoleIds
-            List<RolePermission> newRolePermissions = newPermissionIds.stream()
-                    .filter(permissionId -> !oldPermissionIds.contains(permissionId))
-                    .map(permissionId -> new RolePermission(this.roleId,permissionId))
+            // Filter newPermissionIds to include only those not already in rolePermissions
+            List<UUID> toAdd = newPermissionIds.stream()
+                    .filter(newPermissionId -> this.rolePermissions.stream()
+                            .noneMatch(rolePermission -> rolePermission.getPermissionId().equals(newPermissionId)))
                     .toList();
 
-            // Add the new RolePermissions to this user's roles
-            this.rolePermissions.addAll(newRolePermissions);
+            // Add new permissions to rolePermissions
+            this.rolePermissions = Stream.concat(
+                            this.rolePermissions.stream(),
+                            toAdd.stream().map(permissionId -> new RolePermission(this.roleId, permissionId)))
+                    .toList();
+        } else {
+            // Add all newPermissionIds if rolePermissions is empty
+            this.rolePermissions = newPermissionIds.stream()
+                    .map(permissionId -> new RolePermission(this.roleId, permissionId))
+                    .toList();
+        }
+    }
+
+    public void delete() {
+        this.setDeleted(true);
+        this.deleteRolePermission();
+    }
+
+    public void deleteRolePermission() {
+        if (!CollectionUtils.isEmpty(this.rolePermissions)) {
+            this.rolePermissions.forEach(rolePermission -> rolePermission.setDeleted(true));
         }
     }
 }

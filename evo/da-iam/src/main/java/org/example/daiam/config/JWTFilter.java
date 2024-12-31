@@ -1,6 +1,6 @@
 //package org.example.daiam.config;
 //
-//import org.example.daiam.service.JWTService;
+//import org.example.daiam.application.service.others.JwtService;
 //import jakarta.servlet.FilterChain;
 //import jakarta.servlet.ServletException;
 //import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@
 //@RequiredArgsConstructor
 //public class JWTFilter extends OncePerRequestFilter {
 //    private final UserDetailsService customUserDetailsService;
-//    private final JWTService jwtService;
+//    private final JwtService jwtService;
 //    @Value("${application.authProvider}")
 //    private String authProvider;
 //    @Override

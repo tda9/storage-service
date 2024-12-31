@@ -3,9 +3,8 @@ package org.example.client.iam;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.model.UserAuthority;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -27,17 +26,17 @@ public class IamClientFallback implements FallbackFactory<IamClient> {
 
 
         @Override
-        public BasedResponse<UserAuthority> getUserAuthority(String username) {
-            return BasedResponse.fail("Cannot get User Authority",(RuntimeException) cause);
+        public Response<UserAuthority> getUserAuthority(String username) {
+            return Response.fail("Cannot get User Authority",(RuntimeException) cause);
         }
 
         @Override
-        public BasedResponse<UserAuthority> getClientAuthority(UUID clientId) {
-            return BasedResponse.fail("Cannot get Client Authority",(RuntimeException) cause);
+        public Response<UserAuthority> getClientAuthority(UUID clientId) {
+            return Response.fail("Cannot get Client Authority",(RuntimeException) cause);
         }
         @Override
-        public BasedResponse<String> getClientToken(String clientId, String clientSecret) {
-            return BasedResponse.fail("Cannot get client Token",(RuntimeException) cause);
+        public Response<String> getClientToken(String clientId, String clientSecret) {
+            return Response.fail("Cannot get client Token",(RuntimeException) cause);
         }
     }
 }

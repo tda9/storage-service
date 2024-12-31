@@ -1,24 +1,24 @@
-package org.example.daiam.application.dto.response;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.example.model.dto.response.BaseTokenResponse;
-
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Data
-public class KeycloakClientTokenResponse implements BaseTokenResponse {
-    @JsonProperty("access_token")
-    private String accessToken;
-    @JsonProperty("expires_in")
-    private Integer expiresIn;
-    @JsonProperty("token_type")
-    private String tokenType;
-    @JsonProperty("not_before_policy")
-    private String notBeforePolicy;
-    private String scope;
-}
+//package org.example.daiam.application.dto.response;
+//
+//import com.fasterxml.jackson.annotation.JsonProperty;
+//import lombok.AllArgsConstructor;
+//import lombok.Builder;
+//import lombok.Data;
+//import lombok.NoArgsConstructor;
+//import org.example.model.dto.response.AbstractTokens;
+//
+//@AllArgsConstructor
+//@NoArgsConstructor
+//@Builder
+//@Data
+//public class KeycloakClientTokenResponse implements AbstractTokens {
+//    @JsonProperty("access_token")
+//    private String accessToken;
+//    @JsonProperty("expires_in")
+//    private Integer expiresIn;
+//    @JsonProperty("token_type")
+//    private String tokenType;
+//    @JsonProperty("not_before_policy")
+//    private String notBeforePolicy;
+//    private String scope;
+//}

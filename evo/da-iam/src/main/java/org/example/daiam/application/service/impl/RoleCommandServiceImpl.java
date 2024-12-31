@@ -1,11 +1,12 @@
 package org.example.daiam.application.service.impl;
 
-import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.example.daiam.application.dto.request.CreateRoleRequest;
 import org.example.daiam.application.dto.request.DeleteRoleRequest;
 import org.example.daiam.application.dto.request.UpdateRoleRequest;
 import org.example.daiam.application.request_command_mapper.RoleRequestAndCommandMapper;
+import org.example.daiam.application.service.others.CommonService;
 import org.example.daiam.application.service.RoleCommandService;
 import org.example.daiam.domain.Role;
 import org.example.daiam.domain.command.CreateRoleCommand;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -27,7 +29,9 @@ public class RoleCommandServiceImpl implements RoleCommandService {
     private final RoleRequestAndCommandMapper roleRequestAndCommandMapper;
     private final RoleDomainRepositoryImpl roleDomainRepositoryImpl;
     private final PermissionDomainRepositoryImpl permissionDomainRepositoryImpl;
-private final RolePermissionEntityRepository permissionEntityRepository;
+    private final RolePermissionEntityRepository permissionEntityRepository;
+    private final CommonService commonService;
+
     @Override
     public Role create(CreateRoleRequest createRequest) {
         //req to cmd
@@ -42,27 +46,21 @@ private final RolePermissionEntityRepository permissionEntityRepository;
     @Override
     @Transactional
     public Role updateById(UpdateRoleRequest updateRequest, String roleId) {
-        //req to cmd
-        UpdateRoleCommand updateRoleCommand = roleRequestAndCommandMapper.toUpdateCommand(updateRequest);
-        List<UUID> cmdPermissionIds = permissionDomainRepositoryImpl.getPermissionIdsByNames(updateRequest.permissionsResourceName());
-        updateRoleCommand.setPermissionIds(cmdPermissionIds);
-        Role domain = roleDomainRepositoryImpl.getById(UUID.fromString(roleId));//TODO: check string RoleId before parse to UUID
-        //cmd to domain
-        roleCommandAndDomainMapper.toUpdateCommand(updateRoleCommand, domain);
-        domain.updateRolePermissions(updateRoleCommand.getPermissionIds());
+        UUID id = commonService.isValidUUID(roleId);
+        Set<String> newPermissionNames = updateRequest.permissionsResourceName();
+        UpdateRoleCommand command = roleRequestAndCommandMapper.toUpdateCommand(updateRequest);
+        if (!CollectionUtils.isEmpty(newPermissionNames)) {
+            command.setPermissionIds(permissionDomainRepositoryImpl.getPermissionIdsByNames(newPermissionNames));
+        }
+        Role domain = roleDomainRepositoryImpl.getById(id);
+        domain.update(command);
         return roleDomainRepositoryImpl.save(domain);
     }
 
     @Override
-    public boolean deleteById(DeleteRoleRequest request, String id) {
-        UUID roleId= isValidUUID(id);
-        return roleDomainRepositoryImpl.deleteById(roleId);
-    }
-    private UUID isValidUUID(String uuid) {
-        try {
-            return UUID.fromString(uuid);
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid UUID");
-        }
+    public Role deleteById(DeleteRoleRequest request, String id) {
+        UUID roleId = commonService.isValidUUID(id);
+        Role domain = roleDomainRepositoryImpl.getById(roleId);
+        return roleDomainRepositoryImpl.save(domain);
     }
 }

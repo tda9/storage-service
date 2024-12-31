@@ -1,8 +1,8 @@
-package org.example.daiam.dto;
+package org.example.daiam.application.dto;
 
 import org.keycloak.representations.idm.CredentialRepresentation;
 
-public class Credentials {
+public class KeycloakCredentials {
     public static CredentialRepresentation createPasswordCredentials(String password) {
         CredentialRepresentation passwordCredentials = new CredentialRepresentation();
         passwordCredentials.setTemporary(false);

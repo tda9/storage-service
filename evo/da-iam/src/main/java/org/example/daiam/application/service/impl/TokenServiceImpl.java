@@ -1,16 +1,10 @@
-package org.example.daiam.service.impl;
+package org.example.daiam.application.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.daiam.entity.BlackListToken;
-import org.example.daiam.repo.BlackListTokenRepo;
-import org.example.daiam.service.JWTService;
 import org.example.web.security.TokenCacheService;
 import org.example.web.support.RedisService;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @Primary

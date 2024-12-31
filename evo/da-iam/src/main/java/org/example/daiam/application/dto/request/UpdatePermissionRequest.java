@@ -7,16 +7,9 @@ import org.example.daiam.infrastruture.support.Scope;
 
 
 public record UpdatePermissionRequest(
-        @NotEmpty(message = "PermissionEntity id can not be empty")
-        String permissionId,
-        @NotNull(message = "Resource name can not be null")
         String resourceName,
-        @NotNull(message = "Scope can not be null")
         @ValidScope
         Scope scope,
-        @NotNull(message = "Resource code can not be null")
         String resourceCode,
-        @NotNull(message = "Deleted can not be null")
-        Boolean deleted
-) {
+        Boolean deleted) {
 }

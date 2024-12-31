@@ -4,8 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import org.example.dastorage.dto.request.FilterFileRequest;
 import org.example.dastorage.entity.FileEntity;
 import org.example.dastorage.service.impl.PrivateFileServiceImpl;
-import org.example.dastorage.service.impl.PublicFileServiceImpl;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.example.model.dto.response.PageResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -37,15 +36,15 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission(null,'files.create')")
     @PostMapping("/upload")
-    public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+    public Response<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         fileServiceImpl.uploadPrivateFiles(files, userId);
-        return BasedResponse.success("Upload successful", null);
+        return Response.success("Upload successful", null);
     }
     @PreAuthorize("hasPermission(null,'files.create')")
     @PostMapping("/import-excel-history")
-    public BasedResponse<?> saveHistory(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+    public Response<?> saveHistory(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         fileServiceImpl.importHistory(files, userId);
-        return BasedResponse.success("Save import history successful", null);
+        return Response.success("Save import history successful", null);
     }
 
     @PreAuthorize("hasPermission(null,'files.read')")
@@ -61,27 +60,27 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission(null,'files.delete')")
     @DeleteMapping("/{fileId}/{userId}")
-    public BasedResponse<?> deleteById(
+    public Response<?> deleteById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
         fileServiceImpl.deletePrivateFileByFileId(fileId, userId);
-        return BasedResponse.success("Delete file successful", null);
+        return Response.success("Delete file successful", null);
     }
 
     @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/{fileId}/{userId}")
-    public BasedResponse<?> getById(
+    public Response<?> getById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
         ResponseEntity<?> response =fileServiceImpl.getPrivateFileByFileId(fileId, userId,0,0);
-        return BasedResponse.success("Get file successful", response.getBody());
+        return Response.success("Get file successful", response.getBody());
     }
 
     @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/search")
-    public BasedResponse<?> searchFiles(@ModelAttribute @Valid SearchKeywordFileRequest request) {
+    public Response<?> searchFiles(@ModelAttribute @Valid SearchKeywordFileRequest request) {
         List<FileEntity> files = fileServiceImpl.searchKeyword(request);
         Long totalSize = fileServiceImpl.getTotalSize(keyword);
         return new PageResponse<>(request,files, totalSize);
@@ -89,7 +88,7 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission(null,'files.read')")
     @GetMapping("/filter")
-    public BasedResponse<?> filterFiles(
+    public Response<?> filterFiles(
             @ModelAttribute FilterFileRequest filterFileRequest,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,

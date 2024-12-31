@@ -2,14 +2,13 @@ package org.example.model.dto.response;
 
 import jakarta.validation.constraints.Min;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.example.model.dto.request.PagingRequest;
 
 import java.util.List;
 
 @Getter
 @Setter
-//public class PageResponse<T> extends BasedResponse<List<T>> {
+//public class PageResponse<T> extends Response<List<T>> {
 //
 //    @Builder.Default
 //    protected int currentPage = 1;
@@ -60,7 +59,7 @@ import java.util.List;
 //        return (int) Math.ceil((double) totalSize / pageSize);
 //    }
 //}
-public class PageResponse<T> extends BasedResponse<List<T>> {
+public class PageResponse<T> extends Response<List<T>> {
 
     protected int currentPage;
     @Min(value = 1)
@@ -98,7 +97,7 @@ public class PageResponse<T> extends BasedResponse<List<T>> {
 //    }
 
     public PageResponse(PagingRequest request, List<T> data, long totalSize) {
-        super(data); // Initialize BasedResponse with data
+        super(data); // Initialize Response with data
         this.currentPage = request.getCurrentPage();
         this.pageSize = request.getPageSize();
         this.sortBy = request.getSortBy();

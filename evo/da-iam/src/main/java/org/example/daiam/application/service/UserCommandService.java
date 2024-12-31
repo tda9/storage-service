@@ -7,6 +7,7 @@ import org.example.daiam.domain.User;
 
 
 public interface UserCommandService {
-    User updateById(UpdateUserRequest request, String userId);
+    User update(UpdateUserRequest request, String userId);
     User create(CreateUserRequest request);
+    User delete(String id);
 }

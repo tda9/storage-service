@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.daiam.audit.entity.AuditEntity;
 
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class UserRoleEntity{
+public class UserRoleEntity extends AuditEntity {
 
     @Id
     private UUID id;

@@ -1,14 +1,10 @@
 package org.example.client.iam;
 
 
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import jakarta.validation.constraints.NotBlank;
 import org.example.config.FeignClientConfiguration;
 import org.example.model.UserAuthority;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,13 +22,14 @@ import java.util.UUID;
 public interface IamClient {
     @GetMapping("/users/{username}/authorities-by-username")
     @LoadBalanced
-    BasedResponse<UserAuthority> getUserAuthority(@PathVariable String username);
+    Response<UserAuthority> getUserAuthority(@PathVariable @NotBlank String username);
     @GetMapping("/users/{clientId}/authorities-by-clientId")
     @LoadBalanced
-    BasedResponse<UserAuthority> getClientAuthority(@PathVariable UUID clientId);
+    Response<UserAuthority> getClientAuthority(@PathVariable UUID clientId);
 
-    @GetMapping("/auth/client-token/{clientId}/{clientSecret}")
+    @GetMapping("/auth/client/token/{clientId}/{clientSecret}")
     @LoadBalanced
-    BasedResponse<String> getClientToken(@PathVariable String clientId, @PathVariable String clientSecret);
+    Response<String> getClientToken(@PathVariable @NotBlank String clientId,
+                                    @PathVariable @NotBlank String clientSecret);
 
 }

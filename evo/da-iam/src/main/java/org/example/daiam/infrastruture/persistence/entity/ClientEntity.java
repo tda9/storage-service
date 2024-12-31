@@ -4,20 +4,19 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.example.daiam.audit.entity.AuditEntity;
 
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "service_client")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientEntity {
+public class ClientEntity extends AuditEntity {
     @Id
     @Column(name = "client_id")
     private UUID clientId;

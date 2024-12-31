@@ -7,7 +7,7 @@ import org.example.daiam.application.dto.request.LogoutRequest;
 import org.example.daiam.application.dto.request.RegisterRequest;
 import org.example.daiam.domain.User;
 
-import org.example.model.dto.response.BaseTokenResponse;
+import org.example.model.dto.response.AbstractTokens;
 
 import org.springframework.http.ResponseEntity;
 
@@ -17,9 +17,9 @@ import java.util.UUID;
 public interface AuthenticationService {
     User register(RegisterRequest request);
 
-    BaseTokenResponse login(LoginRequest loginRequest, HttpServletRequest servletRequest);
+    AbstractTokens login(LoginRequest loginRequest, HttpServletRequest servletRequest);
 
-    BaseTokenResponse refreshToken(String refreshToken, HttpServletRequest servletRequest);
+    AbstractTokens refreshToken(String refreshToken, HttpServletRequest servletRequest);
 
     ResponseEntity<?> logout(LogoutRequest request, HttpServletRequest servletRequest);
 
@@ -27,5 +27,5 @@ public interface AuthenticationService {
 
     void changePassword(ChangePasswordRequest request);
 
-    BaseTokenResponse getClientToken(UUID clientId, String clientSecret);
+    AbstractTokens getClientToken(UUID clientId, String clientSecret);
 }

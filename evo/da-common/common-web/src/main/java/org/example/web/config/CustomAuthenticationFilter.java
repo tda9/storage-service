@@ -5,16 +5,19 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.model.UserAuthentication;
 import org.example.model.UserAuthority;
-import org.example.web.exception.NotFoundException;
 import org.example.web.security.AuthorityService;
+import org.example.web.support.MessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -23,9 +26,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
@@ -53,11 +56,11 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         JwtAuthenticationToken authentication = (JwtAuthenticationToken) securityContext.getAuthentication();
         Jwt token = authentication.getToken();
 
-        UserAuthority userAuthority = null;
-        String claim = "";
+        UserAuthority userAuthority;
+        String claim;
         Boolean isRoot;
         Boolean isClient = Boolean.FALSE;
-        String username = "System";
+        String username;
         Set<SimpleGrantedAuthority> grantedPermissions = new HashSet<>();
 
         //TH1: client iam token
@@ -70,22 +73,22 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         } else if (StringUtils.hasText(token.getClaimAsString("preferred_email"))) {//TH2: user iam token
             claim = "preferred_email";
             username = token.getClaim("preferred_email");
-        }else{
+        } else {
             claim = "preferred_username";
             username = token.getClaim("preferred_username");
         }
         try {
-            userAuthority = enrichAuthority(token, claim).orElseThrow();
+            userAuthority = enrichAuthority(username, claim)
+                    .orElseThrow(()-> new BadRequestException("Cannot enrich authorities"));
+            checkValidUser(userAuthority);
         } catch (Exception ex) {
             exceptionResolver.resolveException(request, response, null, ex);
             return;
         }
 
-        //TODO: check valid User here: isRoot, isVerified ....
-        if (userAuthority.getGrantedPermissions() == null || userAuthority.getGrantedPermissions().isEmpty()) {
-
-        } else {
-            grantedPermissions = userAuthority.getGrantedPermissions().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
+        if (!CollectionUtils.isEmpty(userAuthority.getGrantedPermissions())) {
+            grantedPermissions = userAuthority.getGrantedPermissions().stream()
+                    .map(SimpleGrantedAuthority::new).collect(Collectors.toSet());
         }
         isRoot = userAuthority.getIsRoot();
         User principal = new User(username, "", grantedPermissions);//tim hieu tai sau username null khong dc chap nhan o day
@@ -101,28 +104,29 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         return !(authentication instanceof JwtAuthenticationToken);
     }
 
-//    private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
-//        String username = token.getClaimAsString(claim);
-//        return switch (claim) {
-//            case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
-//            case "sub" -> Optional.ofNullable(authorityService.getUserAuthority(username));
-//            default -> Optional.empty();
-//        };
-//    }
-
     @Autowired
     @Qualifier("handlerExceptionResolver")
     private HandlerExceptionResolver exceptionResolver;
 
-    private Optional<UserAuthority> enrichAuthority(Jwt token, String claim) {
-        String username = token.getClaimAsString(claim);
+    private Optional<UserAuthority> enrichAuthority(String username,String claim) {
 
+        try {
             return switch (claim) {
                 case "client_id" -> Optional.ofNullable(authorityService.getClientAuthority(UUID.fromString(username)));
-                case "preferred_email","preferred_username" -> Optional.ofNullable(authorityService.getUserAuthority(username));
+                case "preferred_email", "preferred_username" ->
+                        Optional.ofNullable(authorityService.getUserAuthority(username));
                 default -> Optional.empty();
             };
-
+        }catch (NotFoundException ex){
+            throw new BadCredentialsException(ex.getMessage());
+        }
     }
-
+    private void checkValidUser(UserAuthority credentials) {
+        if (!credentials.isVerified()) {
+            throw new ForbiddenException(MessageUtils.EMAIL_NOT_VERIFIED_MESSAGE);
+        }
+        if (credentials.isLocked()) {
+            throw new ForbiddenException(MessageUtils.USER_IS_LOCKED_MESSAGE);
+        }
+    }
 }

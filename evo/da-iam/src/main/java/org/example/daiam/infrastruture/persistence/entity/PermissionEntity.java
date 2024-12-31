@@ -2,19 +2,20 @@ package org.example.daiam.infrastruture.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.daiam.audit.entity.AuditEntity;
 import org.example.daiam.infrastruture.support.Scope;
 
 import java.util.UUID;
 
 
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "permissions")
 @Entity
-public class PermissionEntity {
+public class PermissionEntity extends AuditEntity {
     @Id
     @Column(name = "permission_id")
     private UUID permissionId;

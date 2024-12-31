@@ -8,7 +8,7 @@ import org.example.dastorage.exception.FileNotFoundException;
 import org.example.dastorage.repo.FileRepo;
 import org.example.dastorage.repo.impl.FileRepoImpl;
 import org.example.dastorage.utils.FileUtils;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -195,7 +195,7 @@ public class PrivateFileServiceImpl {
                 }
             } else {
                 log.warn("File existed in database but not in folder upload");
-                return ResponseEntity.ok(BasedResponse.success("File existed in database but not in folder upload", fileEntity));
+                return ResponseEntity.ok(Response.success("File existed in database but not in folder upload", fileEntity));
             }
         } catch (IOException e) {
             log.error("Error while reading file: {}", e.getMessage(), e);

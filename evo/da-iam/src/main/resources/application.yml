@@ -49,7 +49,7 @@ spring:
           issuer-uri: ${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}
           jwk-set-uris:
             sso: ${JWK_SSO_URL:${application.security.keycloak.serverUrl}/realms/${application.security.keycloak.realm}/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:${server.port}/auth/certificate/.well-known/jwks.json}
+            internal: ${JWK_INTERNAL_URL:http://localhost:${server.port}/api/auth/certificate/.well-known/jwks.json}
           jws-algorithms: RS256
         opaquetoken:
           client-secret: ${application.security.keycloak.clientSecret}
@@ -70,7 +70,7 @@ spring:
 
 confirmation:
   registration:
-    url: http://localhost:${server.port}/auth/verify-email
+    url: http://localhost:${server.port}/auth/email/verify
 application:
   file:
     upload-dir: D:\\da\\images

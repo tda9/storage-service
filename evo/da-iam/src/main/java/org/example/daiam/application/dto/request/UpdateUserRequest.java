@@ -1,13 +1,7 @@
 package org.example.daiam.application.dto.request;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import org.example.daiam.utils.InputUtils;
+import jakarta.validation.constraints.*;
+import org.example.web.support.MessageUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -15,15 +9,19 @@ import java.util.Set;
 
 public record UpdateUserRequest(
         @NotBlank(message = "Update email cannot be empty")
-        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = InputUtils.INVALID_EMAIL_PATTERN_MESSAGE)
+        @Pattern(regexp = MessageUtils.EMAIL_FORMAT, message = MessageUtils.INVALID_EMAIL_PATTERN_MESSAGE)
         String email,
         @NotBlank(message = "Username cannot be empty")
         String username,
-        @Pattern(regexp = InputUtils.PASSWORD_PATTERN, message = "Invalid update password format")
+        @NotBlank(message = "Password cannot be empty")
+        @Pattern(regexp = MessageUtils.PASSWORD_PATTERN, message = "Invalid update password format")
         String password,
         Set<String> roleNames,
+        @NotNull(message = "Root status cannot be null")
         Boolean isRoot,
+        @NotNull(message = "Lock status cannot be null")
         Boolean isLock,
+        @NotNull(message = "Verify status cannot be null")
         Boolean isVerified,
         @Min(value = 0, message = "stt must equal greater than 0")
         Integer stt,
@@ -34,7 +32,7 @@ public record UpdateUserRequest(
         @DateTimeFormat(pattern = "yyyy-MM-dd")
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid update phone number format")
+        @Pattern(regexp = MessageUtils.PHONE_PATTERN, message = "Invalid update phone number format")
         String phone,
         String street,
         String ward,

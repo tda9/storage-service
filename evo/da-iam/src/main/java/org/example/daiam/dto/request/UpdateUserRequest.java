@@ -2,7 +2,7 @@ package org.example.daiam.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Builder;
-import org.example.daiam.utils.InputUtils;
+import org.example.web.support.MessageUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -10,16 +10,16 @@ import java.util.Set;
 @Builder
 public record UpdateUserRequest(
         @NotBlank(message = "Register email cannot be empty")
-        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid register email format")
+        @Pattern(regexp = MessageUtils.EMAIL_FORMAT, message = "Invalid register email format")
         String email,
         @NotBlank(message = "username cannot be null")
         String username,
         String firstName,
         String lastName,
-        @DateTimeFormat(pattern = InputUtils.DOB_PATTERN)
+        @DateTimeFormat(pattern = MessageUtils.DOB_PATTERN)
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid update phone number format")
+        @Pattern(regexp = MessageUtils.PHONE_PATTERN, message = "Invalid update phone number format")
         String phone,
         @Min(value = 0, message = "stt must equal greater than 0")
         Integer stt,

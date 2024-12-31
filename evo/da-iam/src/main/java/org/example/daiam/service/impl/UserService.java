@@ -5,7 +5,7 @@
 //import org.example.daiam.dto.request.CreateUserRequest;
 //import org.example.daiam.dto.request.FilterUsersRequest;
 //import org.example.daiam.dto.request.UpdateUserRequest;
-//import org.example.daiam.dto.response.DefaultAccessTokenResponse;
+//import org.example.daiam.dto.response.AccessTokens;
 //
 //import org.example.daiam.entity.User;
 //import org.example.daiam.exception.ErrorResponseException;
@@ -45,7 +45,7 @@
 //                       UserRoleRepo userRoleRepo,
 //                       PasswordService passwordService,
 //                       UserRepoImpl userRepoImpl,
-//                       JWTService jwtService,
+//                       JwtService jwtService,
 //                       UserRequestMapper userRequestMapper,
 //                       RedisService  redisService) {
 //        super(userRepo, roleRepo,jwtService,redisService);
@@ -70,7 +70,7 @@
 //            if (rolesId != null) {
 //                rolesId.forEach(roleId -> userRoleRepo.saveUserRole(user.getUserId(), roleId));
 //            }
-//            DefaultAccessTokenResponse tokenResponse = generateDefaultToken(request.email(), user.getUserId());
+//            AccessTokens tokenResponse = generateAccessTokens(request.email(), user.getUserId());
 //            //emailService.sendEmail(request.email(), "Your IAM Service Password", generatedPassword);//gui mat khau cho user
 //            return user;
 //        } catch (Exception e) {

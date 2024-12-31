@@ -3,7 +3,7 @@ package org.example.daiam.application.service.factory;
 
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.application.service.UserCommandService;
-import org.example.daiam.application.service.impl.DefaultUserCommandServiceImpl;
+import org.example.daiam.application.service.impl.UserCommandServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class UserCommandServiceFactory {
     @Value("${application.authProvider}")
     String authProvider ;
-    private final DefaultUserCommandServiceImpl userService;
+    private final UserCommandServiceImpl userService;
 
     public UserCommandService getUserService() {
         return switch (authProvider) {

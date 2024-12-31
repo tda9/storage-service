@@ -19,7 +19,6 @@ public class UserAuthority {
     private String email;
     private String password;
     private boolean isLocked;
-    private boolean isDeleted;
     private boolean isVerified;
     private Boolean isRoot;
     private List<String> grantedPermissions;

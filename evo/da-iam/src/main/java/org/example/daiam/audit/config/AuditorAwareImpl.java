@@ -26,11 +26,9 @@ public class AuditorAwareImpl implements AuditorAware<String> {
         Object principal = authentication.getPrincipal();
 
         // Check if the principal is an instance of Jwt
-        if (principal instanceof Jwt) {
-            Jwt jwt = (Jwt) principal;
-
+        if (principal instanceof Jwt jwt) {
             // Extract the preferred username (or another claim, e.g., email)
-            String username = jwt.getClaimAsString("preferred_username"); // Adjust claim name as needed
+            String username = jwt.getClaimAsString("preferred_email"); // Adjust claim name as needed
             log.info("Authenticated user extracted from Jwt: {}", username);
             return Optional.ofNullable(username);
         }

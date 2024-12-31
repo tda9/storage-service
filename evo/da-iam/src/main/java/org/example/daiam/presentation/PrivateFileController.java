@@ -3,7 +3,7 @@ package org.example.daiam.presentation;
 import jakarta.validation.constraints.NotEmpty;
 import org.example.client.storage.StorageClient;
 import org.example.model.dto.request.FilterFileRequest;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +32,9 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission('FILES','CREATE')")
     @PostMapping("/upload")
-    public BasedResponse<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+    public Response<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         storageClient.uploadPrivateFiles(files, userId);
-        return BasedResponse.success("Upload successful", null);
+        return Response.success("Upload successful", null);
     }
 
     @PreAuthorize("hasPermission('FILES','READ')")
@@ -50,27 +50,27 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission('FILES','DELETE')")
     @DeleteMapping("/{fileId}/{userId}")
-    public BasedResponse<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                       @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+    public Response<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+                                  @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
         storageClient.deletePrivateFileById(fileId, userId);
-        return BasedResponse.success("Delete file successful", null);
+        return Response.success("Delete file successful", null);
     }
 
     @PreAuthorize("hasPermission('FILES','READ')")
     @GetMapping("/{fileId}/{userId}")
-    public BasedResponse<?> getFileById(
+    public Response<?> getFileById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
     ) {
-        return BasedResponse.success("Get file successful",
+        return Response.success("Get file successful",
                 storageClient.getPrivateFileById(fileId, userId).getData());
     }
 
 
     @PreAuthorize("hasPermission('FILES','READ')")
     @GetMapping("/search")
-    public BasedResponse<?> searchFiles(
+    public Response<?> searchFiles(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,
@@ -81,7 +81,7 @@ public class PrivateFileController {
 
     @PreAuthorize("hasPermission('FILES','READ')")
     @GetMapping("/filter")
-    public BasedResponse<?> filterFiles(
+    public Response<?> filterFiles(
             @ModelAttribute FilterFileRequest filterFileRequest,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,

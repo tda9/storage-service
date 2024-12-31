@@ -10,5 +10,6 @@ public interface UserDomainAndEntityMapper extends DomainAndEntityMapper<User, U
     @Mapping(source = "root", target = "isRoot")//TODO: tai sao lal la root voi isRoot
     @Mapping(source = "verified", target = "isVerified")
     @Mapping(source = "lock", target = "isLock")
+    @Mapping(target = "createdBy", source = "createdBy")
     User toDomain(UserEntity entity);
 }

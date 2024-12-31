@@ -8,21 +8,17 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.model.dto.response.BaseTokenResponse;
-import org.example.model.dto.response.ClientTokenResponse;
+import org.example.model.dto.response.ClientTokens;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -46,9 +42,9 @@ public class FeignClientInterceptor implements RequestInterceptor {
 //        String tokenUrl = "http://localhost:8080/auth/client-token/"+client_id+"/"+client_secret;
 //        RestTemplate restTemplate = new RestTemplate();
 //        try {
-//            ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
+//            ResponseEntity<ClientTokens> response = restTemplate.getForEntity(
 //                    tokenUrl,
-//                    ClientTokenResponse.class);
+//                    ClientTokens.class);
 //            if (response.getStatusCode().is2xxSuccessful()) {
 //                return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the token is the plain response body
 //            } else {
@@ -87,9 +83,9 @@ public class FeignClientInterceptor implements RequestInterceptor {
                             String tokenUrl = "http://localhost:8080/auth/client-token/" + client_id + "/" + client_secret;
                             RestTemplate restTemplate = new RestTemplate();
                             try {
-                                ResponseEntity<ClientTokenResponse> response = restTemplate.getForEntity(
+                                ResponseEntity<ClientTokens> response = restTemplate.getForEntity(
                                         tokenUrl,
-                                        ClientTokenResponse.class
+                                        ClientTokens.class
                                 );
                                 if (response.getStatusCode().is2xxSuccessful()) {
                                     return Objects.requireNonNull(response.getBody()).getAccessToken(); // Assuming the response has a `getToken` method

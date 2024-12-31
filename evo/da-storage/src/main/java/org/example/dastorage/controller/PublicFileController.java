@@ -5,19 +5,15 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dastorage.dto.request.FilterFileRequest;
 import org.example.dastorage.entity.FileEntity;
-import org.example.dastorage.entity.FileHistory;
-import org.example.dastorage.repo.FileHistoryRepo;
 import org.example.dastorage.service.impl.PublicFileServiceImpl;
-import org.example.model.dto.response.BasedResponse;
+import org.example.model.dto.response.Response;
 import org.example.model.dto.response.PageResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -39,9 +35,9 @@ PublicFileController {
     }
 
     @PostMapping("/upload")
-    public BasedResponse<?> uploadFiles(@RequestParam("files") MultipartFile[] files) {
+    public Response<?> uploadFiles(@RequestParam("files") MultipartFile[] files) {
         publicFileServiceImpl.uploadPublicFiles(files);
-        return BasedResponse.success("Upload successful",null);
+        return Response.success("Upload successful",null);
     }
 
     @GetMapping("/download/{fileId}")
@@ -52,12 +48,12 @@ PublicFileController {
         return publicFileServiceImpl.downloadPublicFile(fileId);
     }
     @DeleteMapping("/{fileId}")
-    public BasedResponse<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId) {
+    public Response<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId) {
         publicFileServiceImpl.deletePublicFileByFileId(fileId);
-        return BasedResponse.success("Delete file successful",null);
+        return Response.success("Delete file successful",null);
     }
     @GetMapping("/search")
-    public BasedResponse<?> searchFiles(
+    public Response<?> searchFiles(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,
@@ -77,7 +73,7 @@ PublicFileController {
         return new PageResponse<>(currentPage, totalPage, currentSize, totalSize, sortBy, sort, files);
     }
     @GetMapping("/filter")
-    public BasedResponse<?> filterFiles(
+    public Response<?> filterFiles(
             @ModelAttribute FilterFileRequest filterFileRequest,
             @RequestParam(required = false, defaultValue = "1") int currentPage,
             @RequestParam(required = false, defaultValue = "1") int currentSize,

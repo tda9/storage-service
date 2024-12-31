@@ -1,17 +1,16 @@
-package org.example.daiam.service;
+package org.example.daiam.application.service.others;
 
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.example.daiam.application.dto.request.ChangePasswordRequest;
-import org.example.daiam.entity.BlackListToken;
 import org.example.daiam.entity.PasswordResetToken;
-import org.example.daiam.exception.TooManyRequestsException;
+import org.example.web.exception.TooManyRequestsException;
 import org.example.daiam.exception.UserNotFoundException;
 import org.example.daiam.infrastruture.persistence.entity.UserEntity;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
-import org.example.daiam.repo.BlackListTokenRepo;
+
 import org.example.daiam.repo.PasswordResetTokenRepo;
 import lombok.RequiredArgsConstructor;
 import org.example.web.support.RedisService;
@@ -33,9 +32,8 @@ public class PasswordService {
     private final EmailService emailService;
     private final PasswordResetTokenRepo passwordResetTokenRepo;
     private final PasswordEncoder passwordEncoder;
-    private final BlackListTokenRepo blackListTokenRepo;
     private final RedisService redisService;
-    private final JWTService jwtService;
+    private final JwtService jwtService;
 
     public void changePassword(ChangePasswordRequest request) {
         String email = request.email();

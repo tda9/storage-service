@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
+import org.example.daiam.audit.entity.AuditEntity;
 
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Table(name = "roles")
 @Builder
 @AllArgsConstructor
-public class RoleEntity{
+public class RoleEntity extends AuditEntity {
     @Id
     @Column(name = "role_id")
     private UUID roleId;

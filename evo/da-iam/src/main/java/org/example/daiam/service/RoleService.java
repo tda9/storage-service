@@ -12,7 +12,7 @@
 //import org.example.daiam.repo.RoleRepo;
 //import jakarta.transaction.Transactional;
 //import lombok.RequiredArgsConstructor;
-//import org.example.model.dto.response.BasedResponse;
+//import org.example.model.dto.response.Response;
 //import org.springframework.stereotype.Service;
 //
 //import java.util.HashSet;
@@ -28,7 +28,7 @@
 //    private final RolePermissionRepo rolePermissionRepo;
 //
 //    @Transactional
-//    public BasedResponse<?> create(CreateRoleRequest request) {
+//    public Response<?> create(CreateRoleRequest request) {
 //        String name = request.name();
 //        if (roleRepo.existsByName(name)) {
 //            throw new IllegalArgumentException("Role name existed");
@@ -40,14 +40,14 @@
 //            Set<RolePermissions> rolePermissions = new HashSet<>();
 //            fetchRolePermissions(rolePermissions, roleId, permissions);
 //            rolePermissionRepo.saveAll(rolePermissions);
-//            return BasedResponse.created("Create role successful",rolePermissions);
+//            return Response.created("Create role successful",rolePermissions);
 //        } catch (Exception ex) {
 //            throw new IllegalArgumentException("Create role failed");
 //        }
 //    }
 //
 //    @Transactional
-//    public BasedResponse<?> updateById(UpdateRoleRequest request) {
+//    public Response<?> updateById(UpdateRoleRequest request) {
 //        Set<Permission> permissions = getPermissions(request.permissionsResourceName());
 //        String name = request.name();
 //        UUID id = UUID.fromString(request.roleId());
@@ -63,34 +63,34 @@
 //            fetchRolePermissions(rolePermissions, id, permissions);
 //            rolePermissionRepo.deleteByRoleId(id);
 //            rolePermissionRepo.saveAll(rolePermissions);
-//            return BasedResponse.success("Update successful", rolePermissions);
+//            return Response.success("Update successful", rolePermissions);
 //        } catch (Exception ex) {
 //            throw new IllegalArgumentException("Update role failed");
 //        }
 //    }
 //
 //    @Transactional
-//    public BasedResponse<?> deleteById(DeleteRoleRequest request) {
+//    public Response<?> deleteById(DeleteRoleRequest request) {
 //        UUID id = UUID.fromString(request.roleId());
 //        if (!roleRepo.existsById(id)) {
 //            throw new IllegalArgumentException("Role id not found");
 //        }
 //        try {
 //            isOperationSuccess(roleRepo.softDeleteRoleById(id), "Delete role failed");
-//            return BasedResponse.success("Deleted successful", roleRepo.findById(id).orElseThrow());
+//            return Response.success("Deleted successful", roleRepo.findById(id).orElseThrow());
 //        } catch (Exception ex) {
 //            throw new IllegalArgumentException("Delete role failed");
 //        }
 //
 //    }
 //
-//    public BasedResponse<?> findById(String id){
+//    public Response<?> findById(String id){
 //        Role role = roleRepo.findById(UUID.fromString(id)).orElseThrow(()-> new IllegalArgumentException("Role not found"));
-//        return BasedResponse.success("Role found",role);
+//        return Response.success("Role found",role);
 //    }
-//    public BasedResponse<?> findByName(String name){
+//    public Response<?> findByName(String name){
 //        //Role role = roleRepo.findById(UUID.fromString(id)).orElseThrow(()-> new IllegalArgumentException("Role not found"));
-//        return BasedResponse.success("Role found",null);
+//        return Response.success("Role found",null);
 //    }
 //
 //    private Set<Permission> getPermissions(Set<String> rqPermission) {

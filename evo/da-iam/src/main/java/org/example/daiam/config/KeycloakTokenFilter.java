@@ -1,7 +1,7 @@
 //package org.example.daiam.config;
 //
 //import org.example.daiam.repo.UserRepo;
-//import org.example.daiam.service.JWTService;
+//import org.example.daiam.application.service.others.JwtService;
 //import jakarta.servlet.FilterChain;
 //import jakarta.servlet.ServletException;
 //import jakarta.servlet.http.HttpServletRequest;
@@ -25,7 +25,7 @@
 //@RequiredArgsConstructor
 //public class KeycloakTokenFilter extends OncePerRequestFilter {
 //    private final UserDetailsService customUserDetailsService;
-//    private final JWTService jwtService;
+//    private final JwtService jwtService;
 //
 //    private final JwtDecoder jwtDecoder;
 //    private final UserRepo userRepo;

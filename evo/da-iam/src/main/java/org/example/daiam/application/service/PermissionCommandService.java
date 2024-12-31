@@ -7,5 +7,5 @@ import org.example.daiam.domain.Permission;
 public interface PermissionCommandService {
     Permission create(CreatePermissionRequest request);
     Permission updateById(String id, UpdatePermissionRequest request);
-    boolean deleteById(String id);
+    Permission deleteById(String id);
 }

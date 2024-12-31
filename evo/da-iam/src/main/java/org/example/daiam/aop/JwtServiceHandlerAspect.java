@@ -9,7 +9,7 @@
 //@Aspect
 //@Component
 //public class JwtServiceHandlerAspect {
-//    @Pointcut("execution(* org.example.daiam.service.JWTService.*(..))")
+//    @Pointcut("execution(* org.example.daiam.application.service.others.JwtService.*(..))")
 //    public void jwtHandler() {}
 //
 //    @Around("jwtHandler()")

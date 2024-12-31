@@ -4,18 +4,18 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
-import org.example.daiam.utils.InputUtils;
+import org.example.web.support.MessageUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.Set;
 
 public record CreateUserRequest(
-        @NotBlank(message = InputUtils.BLANK_EMAIL_MESSAGE)
-        @Pattern(regexp = InputUtils.EMAIL_FORMAT,
-                message = InputUtils.INVALID_EMAIL_PATTERN_MESSAGE)
+        @NotBlank(message = MessageUtils.BLANK_EMAIL_MESSAGE)
+        @Pattern(regexp = MessageUtils.EMAIL_FORMAT,
+                message = MessageUtils.INVALID_EMAIL_PATTERN_MESSAGE)
         String email,
-        @NotBlank(message = InputUtils.BLANK_USERNAME_MESSAGE)
+        @NotBlank(message = MessageUtils.BLANK_USERNAME_MESSAGE)
         String username,
         Set<String> roleNames,
         Boolean isRoot,
@@ -30,7 +30,7 @@ public record CreateUserRequest(
         @DateTimeFormat(pattern = "yyyy-MM-dd")
         @Past(message = "Date of birth must be in the past")
         LocalDate dob,
-        @Pattern(regexp = InputUtils.PHONE_PATTERN, message = "Invalid create phone number format")
+        @Pattern(regexp = MessageUtils.PHONE_PATTERN, message = "Invalid create phone number format")
         String phone,
         String street,
         String ward,

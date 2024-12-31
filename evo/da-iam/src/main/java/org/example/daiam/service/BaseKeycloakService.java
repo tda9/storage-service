@@ -2,7 +2,7 @@
 //
 //import jakarta.ws.rs.NotFoundException;
 //import jakarta.ws.rs.core.Response;
-//import org.example.daiam.dto.Credentials;
+//import org.example.daiam.application.dto.KeycloakCredentials;
 //import org.example.daiam.dto.request.UpdateUserRequest;
 //
 //import lombok.extern.slf4j.Slf4j;
@@ -74,7 +74,7 @@
 //    protected void createKeycloakUser(String email, String password) {
 //        try {
 //            // Create password credential
-//            CredentialRepresentation credential = Credentials.createPasswordCredentials(password);
+//            CredentialRepresentation credential = KeycloakCredentials.createPasswordCredentials(password);
 //
 //            // Create user representation
 //            UserRepresentation user = new UserRepresentation();

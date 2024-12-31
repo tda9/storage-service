@@ -1,25 +1,30 @@
 package org.example.daiam.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang.StringUtils;
+import org.example.daiam.audit.entity.AuditDomain;
+import org.example.daiam.audit.entity.AuditEntity;
 import org.example.daiam.domain.command.CreateUserCommand;
+import org.example.daiam.domain.command.UpdateUserCommand;
 import org.springframework.util.CollectionUtils;
+
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
+public class User extends AuditDomain {
     private UUID userId;
     private String email;
     private String username;
+    @JsonIgnore
     private String password;
     private Boolean isRoot;
     private Boolean isLock;
@@ -55,27 +60,107 @@ public class User {
         this.createUserRoles(cmd.getRoleIds());
     }
 
-    public void createUserRoles(List<UUID> roleIds) {
+    public void update(UpdateUserCommand cmd) {
+        if (StringUtils.isNotBlank(cmd.getEmail())) {
+            this.setEmail(cmd.getEmail());
+        }
+        if (StringUtils.isNotBlank(cmd.getUsername())) {
+            this.setUsername(cmd.getUsername());
+        }
+        if (StringUtils.isNotBlank(cmd.getPassword())) {
+            this.setPassword(cmd.getPassword());
+        }
+        if (cmd.getIsRoot() != null) {
+            this.setIsRoot(cmd.getIsRoot());
+        }
+        if (cmd.getIsLock() != null) {
+            this.setIsLock(cmd.getIsLock());
+        }
+        if (cmd.getIsVerified() != null) {
+            this.setIsVerified(cmd.getIsVerified());
+        }
+        if (cmd.getDeleted() != null) {
+            this.setDeleted(cmd.getDeleted());
+        }
+        if (cmd.getStt() != null) {
+            this.setStt(cmd.getStt());
+        }
+        if (cmd.getExperience() != null) {
+            this.setExperience(cmd.getExperience());
+        }
+        if (cmd.getFirstName() != null) {
+            this.setFirstName(cmd.getFirstName());
+        }
+        if (cmd.getLastName() != null) {
+            this.setLastName(cmd.getLastName());
+        }
+        if (cmd.getDob() != null) {
+            this.setDob(cmd.getDob());
+        }
+        if (cmd.getPhone() != null) {
+            this.setPhone(cmd.getPhone());
+        }
+        if (cmd.getStreet() != null) {
+            this.setStreet(cmd.getStreet());
+        }
+        if (cmd.getWard() != null) {
+            this.setWard(cmd.getWard());
+        }
+        if (cmd.getProvince() != null) {
+            this.setProvince(cmd.getProvince());
+        }
+        if (cmd.getDistrict() != null) {
+            this.setDistrict(cmd.getDistrict());
+        }
+        if (CollectionUtils.isEmpty(cmd.getRoleIds())) {
+            this.updateUserRoles(cmd.getRoleIds());
+        }
+    }
+
+    public void delete() {
+        this.setDeleted(true);
+        this.deleteUserRoles();
+    }
+
+    private void createUserRoles(List<UUID> roleIds) {
         if (CollectionUtils.isEmpty(roleIds)) return;
         this.userRoles = roleIds.stream()
                 .map(roleId -> new UserRole(this.userId, roleId))
                 .toList();
     }
 
-    //assume newRoleIds is not null or empty
-    public void updateUserRoles(List<UUID> newRoleIds) {
+    private void updateUserRoles(List<UUID> newRoleIds) {
         if (CollectionUtils.isEmpty(newRoleIds)) return;
 
         if (!CollectionUtils.isEmpty(this.userRoles)) {
-            newRoleIds = newRoleIds.stream()
-                    .filter(newRoleId -> userRoles.stream()
-                            .noneMatch(userRole -> userRole.getRoleId().equals(newRoleId)
-                            ))
+            // Mark existing roles as deleted if not in newRoleIds
+            this.userRoles = this.userRoles.stream()
+                    .peek(userRole -> userRole.setDeleted(!newRoleIds.contains(userRole.getRoleId())))
+                    .toList();
+
+            // Filter newRoleIds to include only those not already in userRoles
+            List<UUID> toAdd = newRoleIds.stream()
+                    .filter(newRoleId -> this.userRoles.stream()
+                            .noneMatch(userRole -> userRole.getRoleId().equals(newRoleId)))
+                    .toList();
+
+            // Add new roles to userRoles
+            this.userRoles = Stream.concat(
+                            this.userRoles.stream(),
+                            toAdd.stream().map(roleId -> new UserRole(this.userId, roleId)))
+                    .toList();
+        } else {
+            // Add all newRoleIds if userRoles is empty
+            this.userRoles = newRoleIds.stream()
+                    .map(roleId -> new UserRole(this.userId, roleId))
                     .toList();
         }
-        userRoles.addAll(newRoleIds.stream()
-                .map(roleId -> new UserRole(this.userId, roleId))
-                .toList());
+    }
+
+    private void deleteUserRoles() {
+        if (!CollectionUtils.isEmpty(this.userRoles)) {
+            this.userRoles.forEach(userRole -> userRole.setDeleted(true));
+        }
     }
 
 }

@@ -23,12 +23,14 @@ spring:
           predicates:
             - Path=/iam/**
           filters:
-            - StripPrefix=1
+            #- RewritePath =1
+            - RewritePath=/iam/(?<remaining>.*), /api/${remaining}
         - id: da-storage
           uri: lb://DA-STORAGE
           predicates:
             - Path=/storage/**
           filters:
+            - RewritePath=/iam/(?<remaining>.*), /api/${remaining}
 #            - Retry=5
 #            - name: Retry #This is prebuilt GatewayFilterFactory(https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-retry-gatewayfilter-factory)
 #              args:
@@ -51,7 +53,7 @@ spring:
                 #The fallback mechanism forwards the request exactly as it was originally received (method, headers, body, etc.), except for the target URI.
                 #Since gateway only support GetMapping /fallback, the request to /fallback will be Post method that why it cause 405
                 fallBackUri: forward:/fallback  #forward doesnt need eureka instance
-            - StripPrefix=1
+            #- StripPrefix=1
         - id: da-gateway
           uri: lb://DA-GATEWAY
           predicates:

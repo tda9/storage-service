@@ -3,11 +3,11 @@ package org.example.daiam.application.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
-import org.example.daiam.utils.InputUtils;
+import org.example.web.support.MessageUtils;
 
 public record LogoutRequest(
         @NotEmpty
         String refreshToken,
-        @Pattern(regexp = InputUtils.EMAIL_FORMAT, message = "Invalid logout email format")
+        @Pattern(regexp = MessageUtils.EMAIL_FORMAT, message = "Invalid logout email format")
         String email) {
 }

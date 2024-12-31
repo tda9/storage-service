@@ -39,7 +39,7 @@
 //                               EmailService emailService,
 //                               UserRoleRepo userRoleRepo,
 //                               PasswordService passwordService,
-//                               JWTService jwtService,
+//                               JwtService jwtService,
 //                               KeycloakAuthenticationService keycloakAuthenticationService,
 //                               UserService userService, UserRequestMapper userRequestMapper, RedisService redisService) {
 //        super(keycloak, userRepo, roleRepo,jwtService,redisService);

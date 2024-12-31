@@ -1,4 +1,4 @@
-package org.example.daiam.service;
+package org.example.daiam.application.service.others;
 
 
 import jakarta.transaction.Transactional;
@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.daiam.application.dto.request.SearchExactUserRequest;
 import org.example.daiam.infrastruture.persistence.entity.UserEntity;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
-import org.example.daiam.utils.InputUtils;
-import org.springframework.security.core.userdetails.User;
+import org.example.web.support.MessageUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,7 +74,7 @@ public class ExcelService {
             String value = getCellValue(row, columnIndex);
             switch (header) {
                 case "Email":
-                    if (value != null && !value.trim().isEmpty() && value.matches(InputUtils.EMAIL_FORMAT) && !userEntityRepository.existsByEmail(value)) {
+                    if (value != null && !value.trim().isEmpty() && value.matches(MessageUtils.EMAIL_FORMAT) && !userEntityRepository.existsByEmail(value)) {
                         entity.email(value);
                     } else {
                         errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex).append(": Invalid Email; ")
@@ -119,7 +119,7 @@ public class ExcelService {
                                 entity.phone(value.trim());
                             }
                             // Validate the phone number against the regex
-                            else if (value.matches(InputUtils.PHONE_PATTERN)) {
+                            else if (value.matches(MessageUtils.PHONE_PATTERN)) {
                                 entity.phone(value.trim());
                             } else {
                                 errorMessage.append("Row ").append(rowIndex).append(", Column ").append(columnIndex)
@@ -140,7 +140,7 @@ public class ExcelService {
                     }
                     break;
                 case "DOB":
-                    if (value != null && !value.isBlank() && value.matches(InputUtils.DOB_PATTERN)) {
+                    if (value != null && !value.isBlank() && value.matches(MessageUtils.DOB_PATTERN)) {
                         try {
                             entity.dob(LocalDate.parse(value));
                         } catch (DateTimeParseException e) {
@@ -286,8 +286,9 @@ public class ExcelService {
     }
 
     // Main method to generate the Excel file
-    public byte[] writeUserEntitysToExcel(List<UserEntity> UserEntitys) throws IOException {
+    public byte[] writeUserEntitysToExcel(SearchExactUserRequest request){
         // Create a workbook and a sheet
+        List<UserEntity> users = userEntityRepository.searchExact(request);
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("UserEntity Data");
@@ -296,10 +297,14 @@ public class ExcelService {
         // Create and set the header row
         createHeaderRow(sheet);
         // Create and set the data rows
-        createDataRow(sheet, UserEntitys);
+        createDataRow(sheet, users);
         // Write the workbook to a ByteArrayOutputStream
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        workbook.write(byteArrayOutputStream);
+        try {
+            workbook.write(byteArrayOutputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         // Return the byte array of the Excel file
         return byteArrayOutputStream.toByteArray();
     }

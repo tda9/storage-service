@@ -11,8 +11,7 @@ import org.example.daiam.infrastruture.persistence.entity.UserEntity;
 import org.example.daiam.infrastruture.persistence.entity.UserRoleEntity;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
 import org.example.daiam.infrastruture.persistence.repository.UserRoleEntityRepository;
-import org.example.daiam.utils.InputUtils;
-import org.springframework.stereotype.Repository;
+import org.example.web.support.MessageUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,20 +54,16 @@ public class UserDomainRepositoryImpl {
 
     public User getById(UUID userId) {
         UserEntity userEntity = userEntityRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(InputUtils.USER_NOT_FOUND_BY_ID_MESSAGE));
+                .orElseThrow(() -> new NotFoundException(MessageUtils.USER_NOT_FOUND_BY_ID_MESSAGE));
         User user = userDomainAndEntityMapper.toDomain(userEntity);
         enrichUserRoles(user);
         return user;
     }
     public User getByEmail(String email) {
         UserEntity userEntity = userEntityRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(InputUtils.USER_NOT_FOUND_BY_ID_MESSAGE));
+                .orElseThrow(() -> new NotFoundException(MessageUtils.USER_NOT_FOUND_BY_ID_MESSAGE));
         User user = userDomainAndEntityMapper.toDomain(userEntity);
         enrichUserRoles(user);
         return user;
-    }
-
-    public boolean deleteAndCheck(UUID userId, UUID roleId) {
-        return userRoleEntityRepository.deleteByUserIdAndRoleId(userId, roleId) > 0;
     }
 }

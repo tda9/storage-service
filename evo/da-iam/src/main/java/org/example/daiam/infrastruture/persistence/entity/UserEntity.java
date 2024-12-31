@@ -3,18 +3,19 @@ package org.example.daiam.infrastruture.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.daiam.audit.entity.AuditEntity;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
 @Builder
-public class UserEntity{
+public class UserEntity extends AuditEntity {
 
     @Id
     @Column(name = "user_id")
@@ -33,8 +34,8 @@ public class UserEntity{
     private boolean isVerified;
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
-    private int stt = 0;
-    private int experience = 0;
+    private int stt;
+    private int experience;
     @Column(name = "first_name")
     private String firstName;
     @Column(name = "last_name")

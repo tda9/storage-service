@@ -13,6 +13,14 @@
         <module name="da-gateway" />
         <module name="common-web" />
         <module name="common-client" />
+      </profile>
+      <profile name="Annotation profile for da-register" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
         <module name="da-register" />
       </profile>
     </annotationProcessing>

@@ -5,9 +5,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
-import org.example.dastorage.dto.request.FilterFileRequest;
 import org.example.dastorage.entity.FileEntity;
 import org.example.dastorage.repo.custom.FileRepoCustom;
+import org.example.dastorage.service.FileHistoryService;
+import org.example.model.dto.request.SearchExactFileRequest;
+import org.example.model.dto.request.SearchKeywordFileRequest;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -17,7 +19,7 @@ import java.util.Map;
 @Repository
 @RequiredArgsConstructor
 public class FileRepoImpl implements FileRepoCustom {
-
+    private final FileHistoryService fileHistoryService;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -40,16 +42,15 @@ public class FileRepoImpl implements FileRepoCustom {
         return sql.toString();
     }
 
-    @Override
-    public List<FileEntity> searchByKeyword(String keyword, String sortBy, String sort, int currentSize, int currentPage, String fileFolder) {
+    public List<FileEntity> searchKeyword(SearchKeywordFileRequest request, String fileFolder) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select f from FileEntity f "
-                + createWhereQuery(keyword, values, fileFolder)
-                + createOrderQuery(sortBy, sort);
+                + createWhereQuery(request.getKeyword(), values, fileFolder)
+                + createOrderQuery(request.getSortBy(), request.getSort());
         Query query = entityManager.createQuery(sql, FileEntity.class);
         values.forEach(query::setParameter);
-        query.setFirstResult((currentPage - 1) * currentSize);
-        query.setMaxResults(currentSize);
+        query.setFirstResult((request.getCurrentPage() - 1) * request.getPageSize());
+        query.setMaxResults(request.getPageSize());
         return query.getResultList();
     }
 
@@ -67,9 +68,9 @@ public class FileRepoImpl implements FileRepoCustom {
         return (Long) query.getSingleResult();
     }
 
-    public Long getTotalSizeForFilter(FilterFileRequest filterFileRequest, String fileFolder) {
+    public Long getTotalSize(SearchExactFileRequest request, String fileFolder) {
         Map<String, Object> values = new HashMap<>();
-        String sql = "select count(f) from FileEntity f " + createWhereFilterQuery(filterFileRequest, values, fileFolder);
+        String sql = "select count(f) from FileEntity f " + createWhereFilterQuery(request, values, fileFolder);
         Query query = entityManager.createQuery(sql, Long.class);
         values.forEach(query::setParameter);
         return (Long) query.getSingleResult();
@@ -90,50 +91,50 @@ public class FileRepoImpl implements FileRepoCustom {
 //        return sql.toString();
 //    }
 
-    public List<FileEntity> filterFileByField(FilterFileRequest filterFileRequest, String sortBy, String sort, int currentSize, int currentPage, String fileFoldler) {
+    public List<FileEntity> searchExact(SearchExactFileRequest request, String fileFoldler) {
         Map<String, Object> values = new HashMap<>();
         String sql = "select f from FileEntity f "
-                + createWhereFilterQuery(filterFileRequest, values, fileFoldler)
-                + createOrderQuery(sortBy, sort);
+                + createWhereFilterQuery(request, values, fileFoldler)
+                + createOrderQuery(request.getSortBy(), request.getSort());
         Query query = entityManager.createQuery(sql, FileEntity.class);
         values.forEach(query::setParameter);
-        query.setFirstResult((currentPage - 1) * currentSize);
-        query.setMaxResults(currentSize);
+        query.setFirstResult((request.getCurrentPage() - 1) * request.getPageSize());
+        query.setMaxResults(request.getPageSize());
         return query.getResultList();
     }
 
-    private String createWhereFilterQuery(FilterFileRequest filterFileRequest, Map<String, Object> values, String fileFolder) {
+    private String createWhereFilterQuery(SearchExactFileRequest request, Map<String, Object> values, String fileFolder) {
         StringBuilder jpql = new StringBuilder();
         jpql.append(" WHERE 1=1");  // Using 1=1 to make appending conditions easier
 
-        if (filterFileRequest.fileName() != null && !filterFileRequest.fileName().isEmpty()) {
+        if (request.getFileName() != null && !request.getFileName().isEmpty()) {
             jpql.append(" AND f.fileName LIKE :fileName");
             // Add wildcards for partial matches
-            values.put("fileName", "%" + filterFileRequest.fileName() + "%");
+            values.put("fileName", "%" + request.getFileName() + "%");
         }
-        if (filterFileRequest.fileType() != null && !filterFileRequest.fileType().isEmpty()) {
+        if (request.getFileType() != null && !request.getFileType().isEmpty()) {
             jpql.append(" AND f.fileType LIKE :fileType");
-            values.put("fileType", "%" + filterFileRequest.fileType() + "%");
+            values.put("fileType", "%" + request.getFileType() + "%");
         }
-        if (filterFileRequest.size() != null) {
+        if (request.getSize() != null) {
             jpql.append(" AND f.size = :size");
-            values.put("size", filterFileRequest.size());
+            values.put("size", request.getSize());
         }
-        if (filterFileRequest.filePath() != null && !filterFileRequest.filePath().isEmpty()) {
+        if (request.getFilePath() != null && !request.getFilePath().isEmpty()) {
             jpql.append(" AND f.filePath LIKE :filePath");
-            values.put("filePath", "%" + filterFileRequest.filePath() + "%");
+            values.put("filePath", "%" + request.getFilePath() + "%");
         }
-        if (filterFileRequest.userId() != null && !filterFileRequest.userId().isEmpty()) {
+        if (request.getUserId() != null && !request.getUserId().isEmpty()) {
             jpql.append(" AND f.userId = :userId");
-            values.put("userId", filterFileRequest.userId());
+            values.put("userId", request.getUserId());
         }
-        if (filterFileRequest.createdDate() != null) {
+        if (request.getCreatedDate() != null) {
             jpql.append(" AND f.createDate = :createdDate");
-            values.put("createdDate", filterFileRequest.createdDate());
+            values.put("createdDate", request.getCreatedDate());
         }
-        if (filterFileRequest.lastModifiedDate() != null) {
+        if (request.getLastModifiedDate() != null) {
             jpql.append(" AND f.lastModifiedDate = :lastModifiedDate");
-            values.put("lastModifiedDate", filterFileRequest.lastModifiedDate());
+            values.put("lastModifiedDate", request.getLastModifiedDate());
         }
         jpql.append(" AND f.filePath like :fileFolder");
         values.put("fileFolder","%"+fileFolder+"%");

@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.Arrays;
+
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -34,26 +36,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<Response<?>> handleIllegalArgumentException(ForbiddenException ex) {
-        log.error("---------------------", ex.getMessage());
-        return ResponseEntity.status(403).body(Response.forbidden(ex.getMessage(), ex));
+        log.error(ex.getMessage());
+        return ResponseEntity.status(403).body(Response.forbidden(ex.getMessage(), null));
     }
 
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<Response<?>> handleTooManyRequestException(HttpClientErrorException.TooManyRequests ex) {
-        log.error("---------------------", ex.getMessage());
-        return ResponseEntity.status(429).body(Response.fail(ex.getMessage(), 429, ex));
+        log.error(ex.getMessage());
+        return ResponseEntity.status(429).body(Response.fail(ex.getMessage(), 429, null));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Response<?>> handleIllegalArgumentException(BadCredentialsException ex) {
         log.error(ex.getMessage());
-        return ResponseEntity.status(401).body(Response.unAuthorize(ex.getMessage(), ex));
+        return ResponseEntity.status(401).body(Response.unAuthorize(ex.getMessage(), null));
     }
 
     @ExceptionHandler(InvalidBearerTokenException.class)
     public ResponseEntity<Response<?>> handleInvalidTokenException(InvalidBearerTokenException ex) {
         log.error(ex.getMessage());
-        return ResponseEntity.status(401).body(Response.unAuthorize(ex.getMessage(), ex));
+        return ResponseEntity.status(401).body(Response.unAuthorize(ex.getMessage(), null));
     }
 
     @ExceptionHandler(InternalServerErrorException.class)
@@ -65,13 +67,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Response<?>> handleBadRequestException(BadRequestException ex) {
         log.error(ex.getMessage());
-        return ResponseEntity.status(400).body(Response.badRequest(ex.getMessage(), ex));
+        return ResponseEntity.status(400).body(Response.badRequest(ex.getMessage(), Arrays.stream(ex.getStackTrace()).findFirst()));
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Response<?>> handleNotfoundException(NotFoundException ex) {
         log.error(ex.getMessage());
-        return ResponseEntity.status(404).body(Response.notFound(ex.getMessage(), ex));
+        return ResponseEntity.status(404).body(Response.notFound(ex.getMessage(), Arrays.stream(ex.getStackTrace()).findFirst()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

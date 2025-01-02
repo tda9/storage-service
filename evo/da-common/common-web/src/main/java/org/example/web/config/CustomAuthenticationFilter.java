@@ -80,7 +80,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             userAuthority = enrichAuthority(username, claim)
                     .orElseThrow(()-> new BadRequestException("Cannot enrich authorities"));
-            checkValidUser(userAuthority);
         } catch (Exception ex) {
             exceptionResolver.resolveException(request, response, null, ex);
             return;

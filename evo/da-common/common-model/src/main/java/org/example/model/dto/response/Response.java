@@ -11,6 +11,8 @@ import java.time.Instant;
 @Getter
 @Setter
 @SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Response<T> implements Serializable {
     private boolean requestStatus;
     private int httpStatusCode;
@@ -36,7 +38,9 @@ public class Response<T> implements Serializable {
                 .message(message)
                 .requestStatus(false)
                 .build();
-    }public static <T> Response<T> fail(String message, int code,Exception ex) {
+    }
+
+    public static <T> Response<T> fail(String message, int code, Exception ex) {
         return Response.<T>builder()
                 .exception(ex)
                 .httpStatusCode(code)
@@ -44,6 +48,7 @@ public class Response<T> implements Serializable {
                 .requestStatus(false)
                 .build();
     }
+
     public static <T> Response<T> unAuthorize(String message, Exception ex) {
         return Response.<T>builder()
                 .exception(ex)
@@ -51,7 +56,9 @@ public class Response<T> implements Serializable {
                 .message(message)
                 .requestStatus(false)
                 .build();
-    }public static <T> Response<T> forbidden(String message, Exception ex) {
+    }
+
+    public static <T> Response<T> forbidden(String message, Exception ex) {
         return Response.<T>builder()
                 .exception(ex)
                 .httpStatusCode(403)

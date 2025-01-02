@@ -8,7 +8,7 @@ import org.example.daiam.application.service.others.CommonService;
 import org.example.daiam.application.service.UserQueryService;
 
 import org.example.daiam.domain.User;
-import org.example.daiam.infrastruture.domainrepository.UserDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.UserDomainRepositoryImpl;
 import org.example.daiam.infrastruture.persistence.entity.UserEntity;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
 import org.springframework.stereotype.Service;

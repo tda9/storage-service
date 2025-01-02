@@ -4,7 +4,7 @@ import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.application.service.PermissionQueryService;
 import org.example.daiam.domain.Permission;
-import org.example.daiam.infrastruture.domainrepository.PermissionDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.PermissionDomainRepositoryImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

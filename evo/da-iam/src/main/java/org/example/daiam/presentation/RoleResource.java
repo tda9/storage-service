@@ -8,6 +8,7 @@ import org.example.daiam.application.service.RoleCommandService;
 import org.example.daiam.application.service.RoleQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.daiam.domain.Role;
 import org.example.model.dto.response.Response;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,20 +22,20 @@ public class RoleResource {
 
     @PreAuthorize("hasPermission(null,'roles.create')")
     @PostMapping("/roles/create")
-    public Response<?> create(@RequestBody @Valid CreateRoleRequest createRoleRequest) {
+    public Response<Role> create(@RequestBody @Valid CreateRoleRequest createRoleRequest) {
         return Response.success("Create successful", roleCommandService.create(createRoleRequest));
     }
 
     @PreAuthorize("hasPermission(null,'roles.update')")
     @PutMapping("/roles/{id}/update")
-    public Response<?> updateById(@RequestBody @Valid UpdateRoleRequest request,
+    public Response<Role> updateById(@RequestBody @Valid UpdateRoleRequest request,
                                   @PathVariable @NotBlank String id) {
         return Response.success("Update successful", roleCommandService.updateById(request, id));
     }
 
     @PreAuthorize("hasPermission(null,'roles.delete')")
     @DeleteMapping("/roles/{id}/delete")
-    public Response<?> deleteById(
+    public Response<Role> deleteById(
             @PathVariable @NotBlank String id,
             @RequestBody @Valid DeleteRoleRequest request) {
         return Response.success("Delete successful", roleCommandService.deleteById(request, id));
@@ -42,7 +43,7 @@ public class RoleResource {
 
     @PreAuthorize("hasPermission(null,'roles.read')")
     @GetMapping("/roles/{id}")
-    public Response<?> getById(@PathVariable @NotBlank String id) {
+    public Response<Role> getById(@PathVariable @NotBlank String id) {
         return Response.success("Found", roleQueryService.getById(id));
     }
 

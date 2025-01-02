@@ -2,6 +2,8 @@ package org.example.dastorage.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
+
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,12 +37,12 @@ public class FileUtils {
             throw new IllegalArgumentException("Invalid file extension: " + fileExtension.toLowerCase());
         }
     }
-    public String getFileExtension(String fileName) {
+    public String getExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex == -1) {
             return ""; // No extension found
         }
-        return fileName.substring(lastDotIndex + 1).toLowerCase(); // Return extension in lowercase ex:png
+        return fileName.substring(lastDotIndex).toLowerCase(); // Return extension in lowercase ex:.png
     }
 
     public String removeFileExtension(String fileName) {
@@ -61,7 +63,8 @@ public class FileUtils {
         }
     }
     public BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
-        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
+        int imageType = originalImage.getType() == 0 ? BufferedImage.TYPE_INT_RGB : originalImage.getType();
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, imageType);
         Graphics2D graphics2D = resizedImage.createGraphics();
         graphics2D.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
         graphics2D.dispose();
@@ -79,11 +82,11 @@ public class FileUtils {
             throw new IllegalArgumentException("File is empty.");
         }
         // Check file name
-        String originalFileName = file.getOriginalFilename();
-        if (originalFileName == null || originalFileName.isEmpty()) {
-            throw new IllegalArgumentException("The file name is invalid.");
+        if (StringUtils.isBlank(file.getOriginalFilename())) {
+            throw new IllegalArgumentException("File name is invalid.");
         }
         // Validate file extension
+        String originalFileName = file.getOriginalFilename();
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.'));
         validateFileExtension(fileExtension);
     }

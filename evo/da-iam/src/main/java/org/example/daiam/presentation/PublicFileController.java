@@ -1,10 +1,16 @@
 package org.example.daiam.presentation;
 
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.client.storage.StorageClient;
+import org.example.model.dto.request.SearchExactFileRequest;
+import org.example.model.dto.request.SearchKeywordFileRequest;
 import org.example.model.dto.response.Response;
+import org.example.web.support.MessageUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,55 +19,38 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class PublicFileController {
     private final StorageClient storageClient;
-    public PublicFileController(StorageClient storageClient) {
-        this.storageClient = storageClient;
-    }
 
-    @GetMapping("/files/public/image-resize/{fileId}")
+    @GetMapping("/files/public/images/{fileId}")
     public ResponseEntity<byte[]> getImage(
-            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotEmpty(message = MessageUtils.FILE_ID_EMPTY) String fileId,
             @RequestParam(required = false,defaultValue = "0") int width,
             @RequestParam(required = false,defaultValue = "0") int height
-    ) {
-        return storageClient.getPublicImage(fileId,width,height);
-    }
+    ) {return storageClient.getPublicImage(fileId,width,height);}
+
     @PostMapping("/files/public/upload")
     public Response<?> uploadFiles(@RequestPart("files") MultipartFile[] files) {
-        storageClient.uploadPublicFiles(files);
-        return Response.success("Upload successful",null);
+        return storageClient.uploadPublicFiles(files);
     }
-    @GetMapping("/files/public/download/{fileId}")
-    public ResponseEntity<Resource> downloadFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId
-    ) {
-        if (fileId == null || fileId.isEmpty()){
-            throw new IllegalArgumentException("Illegal input");
-        }
-        return storageClient.downloadPublicFileById(fileId);
-    }
-    @DeleteMapping("/files/public/{fileId}")
+
+    @GetMapping("/files/public/{fileId}/download")
+    public ResponseEntity<Resource> downloadFileById(@PathVariable @NotBlank(message = "File id cannot be empty") String fileId
+    ) {return storageClient.downloadPublicFileById(fileId);}
+
+    @DeleteMapping("/files/public/{fileId}/delete")
     public Response<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId) {
-        storageClient.deletePublicById(fileId);
-        return Response.success("Delete file successful",null);
+        return storageClient.deletePublicById(fileId);}
+
+    @GetMapping("/files/public/search-keyword")
+    public Response<?> searchKeyword(@ModelAttribute SearchKeywordFileRequest request) {
+        return storageClient.searchKeyword(request);
     }
-    @GetMapping("/files/public/search")
-    public Response<?> searchFiles(
-            @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-        return storageClient.searchPublicFiles(keyword,currentPage, currentSize, sortBy, sort);
-    }
-    @GetMapping("/files/public/filter")
-    public Response<?> filterFiles(
-            @ModelAttribute org.example.model.dto.request.FilterFileRequest filterFileRequest,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-        return storageClient.filterPublicFiles(filterFileRequest,currentPage, currentSize, sortBy, sort);
+    @GetMapping("/files/public/search-exact")
+    public Response<?> searchExact(
+            @ModelAttribute @Valid SearchExactFileRequest request) {
+        return storageClient.searchExact(request);
     }
     //api public ko can dang nhap
     //con lai yeu cau dang nhap

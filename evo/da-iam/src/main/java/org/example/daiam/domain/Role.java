@@ -29,6 +29,7 @@ public class Role extends AuditDomain {
         this.deleted = false;
         this.createRolePermission(cmd.getPermissionsIds());
     }
+
     public void update(UpdateRoleCommand cmd) {
         if (StringUtils.isNotBlank(cmd.getName())) {
             this.name = cmd.getName();
@@ -39,6 +40,11 @@ public class Role extends AuditDomain {
         if (!CollectionUtils.isEmpty(cmd.getPermissionIds())) {
             this.updateRolePermissions(cmd.getPermissionIds());
         }
+    }
+
+    public void delete() {
+        this.setDeleted(true);
+        this.deleteRolePermission();
     }
 
     public void createRolePermission(List<UUID> permissionIds) {
@@ -74,11 +80,6 @@ public class Role extends AuditDomain {
                     .map(permissionId -> new RolePermission(this.roleId, permissionId))
                     .toList();
         }
-    }
-
-    public void delete() {
-        this.setDeleted(true);
-        this.deleteRolePermission();
     }
 
     public void deleteRolePermission() {

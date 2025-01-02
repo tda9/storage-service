@@ -1,10 +1,11 @@
-package org.example.daiam.infrastruture.domainrepository;
+package org.example.daiam.infrastruture.domainrepository.impl;
 
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.example.daiam.domain.User;
 import org.example.daiam.domain.UserRole;
+import org.example.daiam.infrastruture.domainrepository.DomainRepository;
 import org.example.daiam.infrastruture.persistence.domain_entity_mapper.UserDomainAndEntityMapper;
 import org.example.daiam.infrastruture.persistence.domain_entity_mapper.UserRoleDomainAndEntityMapper;
 import org.example.daiam.infrastruture.persistence.entity.UserEntity;
@@ -21,12 +22,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class UserDomainRepositoryImpl {
+public class UserDomainRepositoryImpl implements DomainRepository<User> {
     private final UserEntityRepository userEntityRepository;
     private final UserRoleEntityRepository userRoleEntityRepository;
     private final UserDomainAndEntityMapper userDomainAndEntityMapper;
     private final UserRoleDomainAndEntityMapper userRoleDomainAndEntityMapper;
 
+    @Override
     @Transactional
     public User save(User domain) {
         UserEntity userEntity = userDomainAndEntityMapper.toEntity(domain);
@@ -52,6 +54,7 @@ public class UserDomainRepositoryImpl {
         }
     }
 
+    @Override
     public User getById(UUID userId) {
         UserEntity userEntity = userEntityRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(MessageUtils.USER_NOT_FOUND_BY_ID_MESSAGE));
@@ -59,6 +62,7 @@ public class UserDomainRepositoryImpl {
         enrichUserRoles(user);
         return user;
     }
+
     public User getByEmail(String email) {
         UserEntity userEntity = userEntityRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(MessageUtils.USER_NOT_FOUND_BY_ID_MESSAGE));

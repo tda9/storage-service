@@ -27,4 +27,6 @@ public class MessageUtils {
     public static final String EMAIL_NOT_FOUND_MESSAGE = "Email not found";
     public static final String FORBIDDEN_REFRESH_TOKEN_MESSAGE = "Forbidden refresh token";
     public static final String NO_ROLE_PERMISSION_MESSAGE = "No role permission found";
+    public static final String FILE_ID_EMPTY = "Missing file id";
+    public static final String USER_ID_EMPTY = "Missing user id";
 }

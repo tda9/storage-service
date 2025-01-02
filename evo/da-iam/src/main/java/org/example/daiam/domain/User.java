@@ -112,7 +112,8 @@ public class User extends AuditDomain {
         if (cmd.getDistrict() != null) {
             this.setDistrict(cmd.getDistrict());
         }
-        if (CollectionUtils.isEmpty(cmd.getRoleIds())) {
+        //todo: case roles empty delete all
+        if (!CollectionUtils.isEmpty(cmd.getRoleIds())) {
             this.updateUserRoles(cmd.getRoleIds());
         }
     }

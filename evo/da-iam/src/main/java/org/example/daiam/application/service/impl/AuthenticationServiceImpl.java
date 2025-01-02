@@ -2,6 +2,7 @@ package org.example.daiam.application.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import org.example.daiam.application.dto.DefaultCredentials;
 import org.example.daiam.application.dto.request.ChangePasswordRequest;
 import org.example.daiam.application.dto.request.LoginRequest;
@@ -16,10 +17,12 @@ import org.example.daiam.domain.User;
 import org.example.daiam.domain.command.CreateUserCommand;
 
 import org.example.daiam.application.dto.request.RegisterRequest;
-import org.example.daiam.infrastruture.domainrepository.RoleDomainRepositoryImpl;
-import org.example.daiam.infrastruture.domainrepository.UserDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.RoleDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.UserDomainRepositoryImpl;
+import org.example.daiam.infrastruture.persistence.entity.ClientEntity;
 import org.example.daiam.infrastruture.persistence.repository.ClientEntityRepository;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
+import org.example.model.dto.response.ClientTokens;
 import org.example.web.support.MessageUtils;
 import org.example.model.dto.response.AbstractTokens;
 
@@ -49,7 +52,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final EmailService emailService;
     private final UserEntityRepository userEntityRepository;
     private final CommonService commonService;
-
+private final ClientEntityRepository clientEntityRepository;
     public AuthenticationServiceImpl(RoleDomainRepositoryImpl roleDomainRepositoryImpl,
                                      UserDomainRepositoryImpl userDomainRepositoryImpl,
                                      PasswordEncoder passwordEncoder,
@@ -58,7 +61,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                      UserRequestAndCommandMapper userRequestAndCommandMapper,
                                      UserEntityRepository userEntityRepository,
                                      JwtService jwtService,
-                                     EmailService emailService, CommonService commonService
+                                     EmailService emailService, CommonService commonService, ClientEntityRepository clientEntityRepository
     ) {
         this.roleDomainRepositoryImpl = roleDomainRepositoryImpl;
         this.userDomainRepositoryImpl = userDomainRepositoryImpl;
@@ -69,6 +72,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.emailService = emailService;
         this.userEntityRepository = userEntityRepository;
         this.commonService = commonService;
+        this.clientEntityRepository = clientEntityRepository;
     }
 
 
@@ -144,14 +148,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public AbstractTokens getClientToken(UUID clientId, String clientSecret) {
-//        ClientEntity entity = serviceClientRepo.findByClientIdAndClientSecret(clientId, clientSecret)
-//                .orElseThrow(() -> new NotFoundException("Service client not found"));
-//        return DefaultClientTokenResponse.builder()
-//                .accessToken(commonService.jwtService.generateClientToken(serviceClient.getClientId().toString(), serviceClient.getClientHost(), refreshExpiration))
-//                .tokenType("Bearer")
-//                .expiresIn(60)
-//                .build();
-        return null;
+        ClientEntity entity = clientEntityRepository.findById(clientId)
+                .orElseThrow(() -> new NotFoundException("Service client not found"));
+        if(!entity.getClientSecret().equals(clientSecret)){
+            throw new BadCredentialsException("Invalid client credentials");
+        }
+        int clientExpireIn = 3600;
+        String tokens = jwtService.generateClientToken(entity.getClientId().toString(),entity.getClientHost(),clientExpireIn);
+        return ClientTokens.builder()
+                .accessToken(tokens)
+                .tokenType("Bearer")
+                .expiresIn(clientExpireIn)
+                .build();
+
     }
 
 

@@ -1,9 +1,14 @@
 package org.example.daiam.presentation;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.RequiredArgsConstructor;
 import org.example.client.storage.StorageClient;
-import org.example.model.dto.request.FilterFileRequest;
+import org.example.model.dto.request.SearchExactFileRequest;
+import org.example.model.dto.request.SearchKeywordFileRequest;
 import org.example.model.dto.response.Response;
+import org.example.web.support.MessageUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,82 +16,61 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/files/private")
+@RequestMapping("/api")
+@RequiredArgsConstructor
 public class PrivateFileController {
     private final StorageClient storageClient;
 
-    public PrivateFileController(StorageClient storageClient) {
-        this.storageClient = storageClient;
-    }
-
-    @PreAuthorize("hasPermission('FILES','UPDATE')")
-    @GetMapping("/image-resize/{userId}/{fileId}")
+    @PreAuthorize("hasPermission('#fileId','file.read')")
+    @GetMapping("/files/private/images/{userId}/{fileId}")
     public ResponseEntity<?> getImage(
-            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId,
+            @PathVariable @NotBlank(message = MessageUtils.FILE_ID_EMPTY) String fileId,
+            @PathVariable @NotBlank(message = MessageUtils.USER_ID_EMPTY) String userId,
             @RequestParam(required = false, defaultValue = "0") int width,
             @RequestParam(required = false, defaultValue = "0") int height
     ) {
         return storageClient.getPrivateImage(fileId, userId, width, height);
     }
 
-    @PreAuthorize("hasPermission('FILES','CREATE')")
-    @PostMapping("/upload")
-    public Response<?> uploadFiles(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
+    @PreAuthorize("hasPermission('#fileId','files.create')")
+    @PostMapping("/files/private/upload")
+    public Response<?> upload(@RequestPart("files") MultipartFile[] files, @RequestParam String userId) {
         storageClient.uploadPrivateFiles(files, userId);
-        return Response.success("Upload successful", null);
+        return storageClient.uploadPrivateFiles(files, userId);
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
-    @GetMapping("/download/{fileId}/{userId}")
-    public ResponseEntity<Resource> downloadFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                                     @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
-    ) {
-        if (fileId == null || fileId.isEmpty()) {
-            throw new IllegalArgumentException("Illegal input");
-        }
+    @PreAuthorize("hasPermission('#fileId','files.read')")
+    @GetMapping("/files/private/download/{fileId}/{userId}")
+    public ResponseEntity<Resource> download(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+                                             @PathVariable @NotEmpty(message = "User id cannot be empty") String userId) {
         return storageClient.downloadPrivateFileById(fileId, userId);
     }
 
-    @PreAuthorize("hasPermission('FILES','DELETE')")
-    @DeleteMapping("/{fileId}/{userId}")
-    public Response<?> deleteById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                  @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
-    ) {
-        storageClient.deletePrivateFileById(fileId, userId);
-        return Response.success("Delete file successful", null);
+    @PreAuthorize("hasPermission('#fileId','files.delete')")
+    @DeleteMapping("/files/private/{fileId}/{userId}")
+    public Response<?> delete(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+                              @PathVariable @NotEmpty(message = "User id cannot be empty") String userId) {
+        return storageClient.deletePrivateFileById(fileId, userId);
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
-    @GetMapping("/{fileId}/{userId}")
-    public Response<?> getFileById(
+    @PreAuthorize("hasPermission('#fileId','files.read')")
+    @GetMapping("/files/private/{fileId}/{userId}")
+    public Response<?> getById(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
-    ) {
-        return Response.success("Get file successful",
-                storageClient.getPrivateFileById(fileId, userId).getData());
+            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId) {
+        return storageClient.getPrivateFileById(fileId, userId);
     }
 
 
-    @PreAuthorize("hasPermission('FILES','READ')")
-    @GetMapping("/search")
-    public Response<?> searchFiles(
-            @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-        return storageClient.searchPrivateFiles(keyword, currentPage, currentSize, sortBy, sort);
+    @PreAuthorize("hasPermission('#fileId','files.read')")
+    @GetMapping("/files/private/search-keyword")
+    public Response<?> searchKeyword(@ModelAttribute @Valid SearchKeywordFileRequest request) {
+        return storageClient.searchPrivateKeyword(request);
     }
 
-    @PreAuthorize("hasPermission('FILES','READ')")
-    @GetMapping("/filter")
-    public Response<?> filterFiles(
-            @ModelAttribute FilterFileRequest filterFileRequest,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort) {
-        return storageClient.filterPrivateFiles(filterFileRequest, currentPage, currentSize, sortBy, sort);
+    @PreAuthorize("hasPermission('#fileId','files.read')")
+    @GetMapping("/files/private/search-exact")
+    public Response<?> searchExact(@ModelAttribute @Valid SearchExactFileRequest request) {
+        return storageClient.searchPrivateExact(request);
     }
 }

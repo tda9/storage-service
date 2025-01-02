@@ -1,13 +1,13 @@
-package org.example.daiam.infrastruture.domainrepository;
+package org.example.daiam.infrastruture.domainrepository.impl;
 
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.domain.Permission;
+import org.example.daiam.infrastruture.domainrepository.DomainRepository;
 import org.example.daiam.infrastruture.persistence.domain_entity_mapper.PermissionDomainAndEntityMapper;
 import org.example.daiam.infrastruture.persistence.entity.PermissionEntity;
 import org.example.daiam.infrastruture.persistence.repository.PermissionEntityRepository;
 import org.example.daiam.infrastruture.support.dto.PermissionDto;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +17,11 @@ import java.util.Set;
 import java.util.UUID;
 @Service
 @RequiredArgsConstructor
-public class PermissionDomainRepositoryImpl {
+public class PermissionDomainRepositoryImpl implements DomainRepository<Permission> {
     private final PermissionEntityRepository permissionEntityRepository;
     private final PermissionDomainAndEntityMapper permissionDomainAndEntityMapper;
 
+    @Override
     @Transactional
     public Permission save(Permission domain) {
         PermissionEntity permissionEntity = permissionDomainAndEntityMapper.toEntity(domain);
@@ -47,6 +48,7 @@ public class PermissionDomainRepositoryImpl {
                 .toList();
     }
 
+    @Override
     public Permission getById(UUID permissionId) {
         PermissionEntity permissionEntity = permissionEntityRepository.findById(permissionId)
                 .orElseThrow(() -> new NotFoundException("Permission not found"));

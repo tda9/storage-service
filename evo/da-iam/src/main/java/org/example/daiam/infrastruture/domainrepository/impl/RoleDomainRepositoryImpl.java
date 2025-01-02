@@ -1,10 +1,11 @@
-package org.example.daiam.infrastruture.domainrepository;
+package org.example.daiam.infrastruture.domainrepository.impl;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.daiam.domain.Role;
 import org.example.daiam.domain.RolePermission;
+import org.example.daiam.infrastruture.domainrepository.DomainRepository;
 import org.example.daiam.infrastruture.persistence.domain_entity_mapper.RoleDomainAndEntityMapper;
 import org.example.daiam.infrastruture.persistence.domain_entity_mapper.RolePermissionDomainAndEntityMapper;
 import org.example.daiam.infrastruture.persistence.entity.RoleEntity;
@@ -12,7 +13,6 @@ import org.example.daiam.infrastruture.persistence.entity.RolePermissionEntity;
 import org.example.daiam.infrastruture.persistence.repository.RoleEntityRepository;
 import org.example.daiam.infrastruture.persistence.repository.RolePermissionEntityRepository;
 import org.example.daiam.infrastruture.support.dto.RoleDto;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -21,12 +21,13 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class RoleDomainRepositoryImpl {
+public class RoleDomainRepositoryImpl implements DomainRepository<Role> {
     private final RoleEntityRepository roleEntityRepository;
     private final RolePermissionEntityRepository rolePermissionEntityRepository;
     private final RoleDomainAndEntityMapper roleDomainAndEntityMapper;
     private final RolePermissionDomainAndEntityMapper rolePermissionDomainAndEntityMapper;
 
+    @Override
     @Transactional
     public Role save(Role domain) {
         RoleEntity entity = roleDomainAndEntityMapper.toEntity(domain);
@@ -55,6 +56,7 @@ public class RoleDomainRepositoryImpl {
                 }).toList();
     }
 
+    @Override
     @Transactional
     public Role getById(UUID RoleId) {
         RoleEntity RoleEntity = roleEntityRepository.findById(RoleId).orElseThrow(() -> new NotFoundException("Role not found"));

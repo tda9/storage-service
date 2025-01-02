@@ -70,34 +70,9 @@ public class PageResponse<T> extends Response<List<T>> {
     protected long totalSize;
     protected String sortBy;
     protected String sort;
-//
-//    // Constructor with all parameters
-//    public PageResponse(int currentPage, int totalPage,
-//                        int pageSize, long totalSize,
-//                        String sortBy, String sort,
-//                        List<T> data) {
-//        super();
-//        this.currentPage = currentPage;
-//        this.totalPage = totalPage;
-//        this.pageSize = pageSize;
-//        this.totalSize = totalSize;
-//        this.sortBy = sortBy;
-//        this.sort = sort;
-//    }
-//
-//    // Constructor using PagingRequest
-//    public PageResponse(PagingRequest request, List<T> data, long totalSize) {
-//        super();
-//        this.currentPage = request.getCurrentPage();
-//        this.totalPage = calculateTotalPage(totalSize, request.getPageSize());
-//        this.pageSize = request.getPageSize();
-//        this.totalSize = totalSize;
-//        this.sortBy = request.getSortBy();
-//        this.sort = request.getSort();
-//    }
 
     public PageResponse(PagingRequest request, List<T> data, long totalSize) {
-        super(data); // Initialize Response with data
+        super(data);
         this.currentPage = request.getCurrentPage();
         this.pageSize = request.getPageSize();
         this.sortBy = request.getSortBy();
@@ -106,7 +81,6 @@ public class PageResponse<T> extends Response<List<T>> {
         this.totalPage = calculateTotalPages(totalSize, request.getPageSize());
     }
     public static <T> PageResponse<T> of(PagingRequest request, List<T> data, long totalSize) {
-        int totalPage = calculateTotalPages(totalSize, request.getPageSize());
         return new PageResponse<>(request, data, totalSize);
     }
 

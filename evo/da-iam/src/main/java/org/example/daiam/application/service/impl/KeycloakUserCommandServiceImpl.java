@@ -1,7 +1,6 @@
 package org.example.daiam.application.service.impl;
 
 import jakarta.ws.rs.NotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.example.daiam.application.dto.request.CreateUserRequest;
 import org.example.daiam.application.dto.request.UpdateUserRequest;
 import org.example.daiam.application.request_command_mapper.UserRequestAndCommandMapper;
@@ -11,17 +10,15 @@ import org.example.daiam.application.service.others.CommonService;
 import org.example.daiam.application.service.others.EmailService;
 import org.example.daiam.domain.User;
 import org.example.daiam.domain.command.CreateUserCommand;
-import org.example.daiam.infrastruture.domainrepository.RoleDomainRepositoryImpl;
-import org.example.daiam.infrastruture.domainrepository.UserDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.RoleDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.UserDomainRepositoryImpl;
 import org.example.daiam.infrastruture.persistence.repository.UserEntityRepository;
-import org.example.web.support.RedisService;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 

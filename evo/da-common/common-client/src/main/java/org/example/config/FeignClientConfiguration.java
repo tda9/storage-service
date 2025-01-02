@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @Slf4j
 @Configuration
-@EnableAsync
+//@EnableAsync
 public class FeignClientConfiguration {
 
     @Bean

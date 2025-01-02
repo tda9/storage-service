@@ -13,21 +13,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.UUID;
 
 @FeignClient(
-        url = "http://localhost:8080",
+        url = "http://localhost:8081",
         name = "iam",
         contextId = "da-iam",
         configuration = FeignClientConfiguration.class
-        //,fallbackFactory = IamClientFallback.class
+        ,fallbackFactory = IamClientFallback.class
 )
 public interface IamClient {
-    @GetMapping("/users/{username}/authorities-by-username")
+    @GetMapping("/api/users/{username}/authorities-by-username")
     @LoadBalanced
     Response<UserAuthority> getUserAuthority(@PathVariable @NotBlank String username);
-    @GetMapping("/users/{clientId}/authorities-by-clientId")
+    @GetMapping("/api/{clientId}/authorities-by-clientId")
     @LoadBalanced
     Response<UserAuthority> getClientAuthority(@PathVariable UUID clientId);
 
-    @GetMapping("/auth/client/token/{clientId}/{clientSecret}")
+    @GetMapping("/api/auth/client/token/{clientId}/{clientSecret}")
     @LoadBalanced
     Response<String> getClientToken(@PathVariable @NotBlank String clientId,
                                     @PathVariable @NotBlank String clientSecret);

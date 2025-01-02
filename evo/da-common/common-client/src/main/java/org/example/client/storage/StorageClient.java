@@ -1,9 +1,13 @@
 package org.example.client.storage;
 
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import org.example.client.iam.IamClientFallback;
 import org.example.config.FeignClientConfiguration;
-import org.example.model.dto.request.FilterFileRequest;
+import org.example.model.dto.request.SearchExactFileRequest;
+import org.example.model.dto.request.SearchKeywordFileRequest;
 import org.example.model.dto.response.Response;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,100 +17,91 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.concurrent.CompletableFuture;
+
 @FeignClient(
         url = "http://localhost:8083",
         name = "storage",
         contextId = "da-storage",
         configuration = FeignClientConfiguration.class
-        //,fallbackFactory = IamClientFallback.class
+        ,fallbackFactory = IamClientFallback.class
 )
 public interface StorageClient {
-    @GetMapping("/files/private/image-resize/{userId}/{fileId}")
+    @GetMapping("/api/files/private/images/{fileId}/{userId}")
     @LoadBalanced
     ResponseEntity<?> getPrivateImage(
-            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId,
+            @PathVariable @NotBlank(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotBlank(message = "User id cannot be empty") String userId,
             @RequestParam(required = false, defaultValue = "0") int width,
             @RequestParam(required = false, defaultValue = "0") int height);
 
-    @PostMapping(value = "/files/private/upload", consumes = "multipart/form-data")
-    Response<?> uploadPrivateFiles(@RequestPart("files") MultipartFile[] files, @RequestParam("userId") String userId);
 
-
-    @PostMapping(value = "/files/private/import-excel-history", consumes = "multipart/form-data")
-    @Async
-    Response<?> saveImportExcelHistory(@RequestPart("files") MultipartFile[] files, @RequestParam("userId") String userId);
-
-    @GetMapping("/files/private/download/{fileId}/{userId}")
+    //FIXME: MultipartException: Current request is not a multipart request when files is null
+    @PostMapping(value = "/api/files/private/upload", consumes = "multipart/form-data")
     @LoadBalanced
-    ResponseEntity<Resource> downloadPrivateFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                                     @PathVariable @NotEmpty(message = "User id cannot be empty") String userId);
+    Response<?> uploadPrivateFiles(
+            @RequestPart("files") MultipartFile[] files,
+            @RequestParam("userId") @NotBlank String userId);
 
-    @DeleteMapping("/files/private/{fileId}/{userId}")
+    @PostMapping(value = "/api/files/private/import-excel-history", consumes = "multipart/form-data")
+    @LoadBalanced
+    @Async
+    CompletableFuture<Response<?>> saveImportExcelHistory(
+            @RequestPart("files") MultipartFile[] files,
+            @RequestParam("userId") String userId);
+
+    @GetMapping("/api/files/private/download/{fileId}/{userId}")
+    @LoadBalanced
+    ResponseEntity<Resource> downloadPrivateFileById(
+            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId);
+
+    @DeleteMapping("/api/files/private/{fileId}/{userId}")
     @LoadBalanced
     Response<?> deletePrivateFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-                                      @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
-    );
+                                      @PathVariable @NotEmpty(message = "User id cannot be empty") String userId);
 
-    @GetMapping("/files/private/{fileId}/{userId}")
+    @GetMapping("/api/files/private/{fileId}/{userId}")
     @LoadBalanced
     Response<?> getPrivateFileById(
-            @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
-            @PathVariable @NotEmpty(message = "User id cannot be empty") String userId
+            @PathVariable @NotBlank(message = "File id cannot be empty") String fileId,
+            @PathVariable @NotBlank(message = "User id cannot be empty") String userId
     );
 
-    @GetMapping("/files/private/search")
-    Response<?> searchPrivateFiles(
-            @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort);
+    @GetMapping("/api/files/private/search-keyword")
+    @LoadBalanced
+    Response<?> searchPrivateKeyword(@ModelAttribute @Valid SearchKeywordFileRequest request);
 
-    @GetMapping("/files/private/filter")
-    Response<?> filterPrivateFiles(
-            @ModelAttribute FilterFileRequest filterFileRequest,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort);
+    @GetMapping("/api/files/private/search-exact")
+    @LoadBalanced
+    Response<?> searchPrivateExact(@ModelAttribute @Valid SearchExactFileRequest request);
 
     //------------------------- public -------------------------
     //HttpMessageConverter
-    @GetMapping("/files/public/image-resize/{fileId}")
+    @GetMapping("/api/files/public/images/{fileId}")
     @LoadBalanced
     ResponseEntity<byte[]> getPublicImage(
             @PathVariable @NotEmpty(message = "File id cannot be empty") String fileId,
             @RequestParam(required = false, defaultValue = "0") int width,
             @RequestParam(required = false, defaultValue = "0") int height);
 
-    @PostMapping(value = "/files/public/upload", consumes = "multipart/form-data")
+    @PostMapping(value = "/api/files/public/upload", consumes = "multipart/form-data")
+    @LoadBalanced
     Response<?> uploadPublicFiles(@RequestPart("files") MultipartFile[] files);
 
-    @GetMapping("/files/public/download/{fileId}")
+    @GetMapping("/api/files/public/{fileId}/download")
     @LoadBalanced
     ResponseEntity<Resource> downloadPublicFileById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId);
 
-    @DeleteMapping("/files/public/{fileId}")
+    @DeleteMapping("/api/files/public/{fileId}")
     @LoadBalanced
-    Response<?> deletePublicById(@PathVariable @NotEmpty(message = "File id cannot be empty") String fileId
-    );
+    Response<?> deletePublicById(@PathVariable @NotBlank(message = "File id cannot be empty") String fileId);
 
-    @GetMapping("/files/public/search")
-    Response<?> searchPublicFiles(
-            @RequestParam String keyword,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort);
+    @GetMapping("/api/files/public/search-keyword")
+    @LoadBalanced
+    Response<?> searchKeyword(@ModelAttribute @Valid SearchKeywordFileRequest request);
 
-    @GetMapping("files/public/filter")
-    Response<?> filterPublicFiles(
-            @ModelAttribute FilterFileRequest filterFileRequest,
-            @RequestParam(required = false, defaultValue = "1") int currentPage,
-            @RequestParam(required = false, defaultValue = "1") int currentSize,
-            @RequestParam(required = false, defaultValue = "fileName") String sortBy,
-            @RequestParam(required = false, defaultValue = "ASC") String sort);
-
-
+    @GetMapping("/api/files/public/search-exact")
+    @LoadBalanced
+    Response<?> searchExact(@ModelAttribute @Valid SearchExactFileRequest request);
 }

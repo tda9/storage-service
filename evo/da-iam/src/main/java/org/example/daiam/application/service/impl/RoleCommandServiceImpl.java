@@ -12,8 +12,8 @@ import org.example.daiam.domain.Role;
 import org.example.daiam.domain.command.CreateRoleCommand;
 import org.example.daiam.domain.command.UpdateRoleCommand;
 import org.example.daiam.domain.command_domain_mapper.RoleCommandAndDomainMapper;
-import org.example.daiam.infrastruture.domainrepository.PermissionDomainRepositoryImpl;
-import org.example.daiam.infrastruture.domainrepository.RoleDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.PermissionDomainRepositoryImpl;
+import org.example.daiam.infrastruture.domainrepository.impl.RoleDomainRepositoryImpl;
 import org.example.daiam.infrastruture.persistence.repository.RolePermissionEntityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +25,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class RoleCommandServiceImpl implements RoleCommandService {
-    private final RoleCommandAndDomainMapper roleCommandAndDomainMapper;
     private final RoleRequestAndCommandMapper roleRequestAndCommandMapper;
     private final RoleDomainRepositoryImpl roleDomainRepositoryImpl;
     private final PermissionDomainRepositoryImpl permissionDomainRepositoryImpl;
-    private final RolePermissionEntityRepository permissionEntityRepository;
     private final CommonService commonService;
 
     @Override

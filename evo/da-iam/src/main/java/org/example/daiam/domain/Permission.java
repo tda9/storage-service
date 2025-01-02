@@ -41,6 +41,7 @@ public class Permission extends AuditDomain {
             this.setScope(cmd.getScope());
         }
     }
+
     public void delete() {
         this.setDeleted(true);
     }

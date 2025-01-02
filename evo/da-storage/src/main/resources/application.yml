@@ -35,7 +35,7 @@ spring:
         jwt:
           jwk-set-uris:
             sso: ${JWK_SSO_URL:http://localhost:8082/realms/master/protocol/openid-connect/certs}
-            internal: ${JWK_INTERNAL_URL:http://localhost:8080/auth/certificate/.well-known/jwks.json}
+            internal: ${JWK_INTERNAL_URL:http://localhost:8081/api/auth/certificate/.well-known/jwks.json}
 
   cloud:
     openfeign:
@@ -62,35 +62,35 @@ management:
     ratelimiters:
       enabled: true
 
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        registerHealthIndicator: true
-    instances:
-      userAuthorityService:
-        minimumNumberOfCalls: 2
-        failureRateThreshold: 50
-  timelimiter:
-    instances:
-      userAuthorityService:
-        timeout-duration: 2s
-  retry:
-    instances:
-      userAuthorityService:
-        max-attempts: 3
-        wait-duration: 5s
-  bulkhead:
-    instances:
-      userAuthorityService:
-        max-concurrent-calls: 3
-        max-wait-duration: 3s
-  ratelimiter:
-    instances:
-      userAuthorityService:
-        limit-for-period: 3
-        limit-refresh-period: 3s
-        timeout-duration: 3s
+#resilience4j:
+#  circuitbreaker:
+#    configs:
+#      default:
+#        registerHealthIndicator: true
+#    instances:
+#      userAuthorityService:
+#        minimumNumberOfCalls: 2
+#        failureRateThreshold: 50
+#  timelimiter:
+#    instances:
+#      userAuthorityService:
+#        timeout-duration: 2s
+#  retry:
+#    instances:
+#      userAuthorityService:
+#        max-attempts: 3
+#        wait-duration: 5s
+#  bulkhead:
+#    instances:
+#      userAuthorityService:
+#        max-concurrent-calls: 3
+#        max-wait-duration: 3s
+#  ratelimiter:
+#    instances:
+#      userAuthorityService:
+#        limit-for-period: 3
+#        limit-refresh-period: 3s
+#        timeout-duration: 3s
 
 eureka:
   instance:

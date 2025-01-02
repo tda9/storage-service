@@ -15,6 +15,7 @@ import org.example.daiam.application.service.others.ExcelService;
 import org.example.daiam.application.service.impl.AuthorityServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.daiam.domain.User;
 import org.example.daiam.presentation.factory.UserServiceFactory;
 import org.example.web.support.MessageUtils;
 import org.example.model.UserAuthority;
@@ -43,27 +44,28 @@ public class UserResource {
 
     @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/{id}")
-    public Response<?> get(@PathVariable String id) {
+    public Response<User> get(@PathVariable String id) {
         return Response.success(MessageUtils.USER_FOUND_BY_ID_MESSAGE, userQueryService.getById(id));
     }
 
     @PreAuthorize("hasPermission(null,'user.create')")
     @PostMapping("/users/create")
-    public Response<?> create(@RequestBody @Valid CreateUserRequest request) {
+    public Response<User> create(@RequestBody @Valid CreateUserRequest request) {
         return Response.created(MessageUtils.CREATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.getUserService().create(request));
     }
 
     @PreAuthorize("hasPermission(null,'user.update')")
     @PutMapping("/users/{id}/update")
-    public Response<?> update(
-            @PathVariable String id,
+    public Response<User> update(
+            @PathVariable @NotBlank String id,
             @RequestBody @Valid UpdateUserRequest request) {
-        return Response.success(MessageUtils.UPDATE_USER_REQUEST_SUCCESSFUL_MESSAGE, userCommandService.getUserService().update(request, id));
+        return Response.success(MessageUtils.UPDATE_USER_REQUEST_SUCCESSFUL_MESSAGE,
+                userCommandService.getUserService().update(request, id));
     }
 
     @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/search-keyword")
-    public Response<?> searchKeyword(@ModelAttribute @Valid SearchKeywordUserRequest request) {
+    public Response<List<UserDto>> searchKeyword(@ModelAttribute @Valid SearchKeywordUserRequest request) {
         List<UserDto> users = userQueryService.searchKeyword(request);
         Long totalSize = userQueryService.getTotalSize(request);
         return PageResponse.of(request, users, totalSize);
@@ -71,7 +73,7 @@ public class UserResource {
 
     @PreAuthorize("hasPermission(null,'user.read')")
     @GetMapping("/users/search-exact")
-    public Response<?> searchExact(@ModelAttribute SearchExactUserRequest request) {
+    public Response<List<UserDto>> searchExact(@ModelAttribute SearchExactUserRequest request) {
         List<UserDto> users = userQueryService.searchExact(request);
         Long totalSize = userQueryService.getTotalSize(request);
         return PageResponse.of(request, users, totalSize);

@@ -83,8 +83,9 @@
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>4.0.0</version> <!-- Match your Jakarta EE version -->
+            <scope>provided</scope>
         </dependency>
-
     </dependencies>
 
     <build>

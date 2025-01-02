@@ -4,6 +4,7 @@ package org.example.daiam.infrastruture.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.daiam.audit.entity.AuditEntity;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Builder
+@DynamicUpdate
 public class UserEntity extends AuditEntity {
 
     @Id
